@@ -2,7 +2,7 @@
 
 A IA do tributarista brasileiro: pesquisa, cálculo e redação com fonte verificável, começando pela Reforma Tributária (EC 132/2023 e LC 214/2025).
 
-Este repositório contém a fase 1 do MVP: landing page com calculadora IBS/CBS gratuita, o motor determinístico de transição e o esquema do banco com base normativa versionada e isolamento por escritório. A arquitetura completa está em [docs/ARQUITETURA.md](docs/ARQUITETURA.md).
+Este repositório contém a landing com calculadora IBS/CBS gratuita e o app do advogado: login por escritório, pesquisa fundamentada com verificador de citações, cálculo da transição (linha do tempo, comparador de regimes, apuração com créditos) e classificação NCM/NBS, tudo sobre um motor determinístico e uma base normativa versionada com isolamento por escritório. A arquitetura completa está em [docs/ARQUITETURA.md](docs/ARQUITETURA.md).
 
 ## Rodar localmente
 
@@ -10,9 +10,24 @@ Requisitos: Node 22+ e PostgreSQL 16 (com pgvector em produção).
 
 ```bash
 npm install
-npm run dev            # http://localhost:3000
-npm test               # motor de cálculo
+npm run dev            # http://localhost:3000 (landing)
+npm test               # motor, verificador de citações, leitura do Planalto
 ```
+
+### App do advogado (/entrar, /app)
+
+Precisa de PostgreSQL. Com um superusuário em `ADMIN_URL`:
+
+```bash
+psql "$ADMIN_URL" -f db/migrations/001_init.sql
+psql "$ADMIN_URL" -f db/migrations/002_app.sql
+psql "$ADMIN_URL" -f db/seeds/semente_reforma.sql
+psql "$ADMIN_URL" -c "create role advfin_web login password 'dev' in role app_user"
+cp .env.example .env.local   # ajuste DATABASE_URL; LLM_CHAVE é opcional
+npm run dev                  # http://localhost:3000/cadastro
+```
+
+Sem `LLM_CHAVE`, a pesquisa roda no modo extrativo: devolve os dispositivos mais relevantes, literalmente, pelo mesmo verificador. Deploy: [docs/DEPLOY.md](docs/DEPLOY.md).
 
 Sem `DATABASE_URL`, a lista de espera grava em `data/lista-espera.jsonl` (só em desenvolvimento).
 
@@ -51,11 +66,17 @@ A landing também roda como site estático, com a calculadora inteira no navegad
 ## Estrutura
 
 ```
-src/lib/tax/        motor determinístico (money, cronograma, engine) + testes
-src/components/     calculadora e lista de espera
-src/app/            landing e API da lista de espera
+src/lib/tax/        motor determinístico (money, cronograma, engine, apuracao, classificacao) + testes
+src/lib/pesquisa/   recuperação, geração, verificador de citações, orquestrador + testes
+src/lib/llm/        camada de modelo (Anthropic, compatível OpenAI, extrativo)
+src/lib/auth/       senha (scrypt), sessão em cookie httpOnly, ações de login e cadastro
+src/components/     landing; components/app: telas do app
+src/app/            landing e API da lista de espera; (app)/: entrar, cadastro e área logada
+src/proxy.ts        barra /app sem cookie de sessão
+db/seeds/           semente provisória da base (não conferida)
+scripts/            publicação da landing e ingestão do Planalto
 db/migrations/      esquema, RLS e permissões
-db/tests/           portão de segurança: isolamento entre escritórios
+db/tests/           portão de segurança: isolamento entre escritórios, login, sessões e pesquisa
 docs/               arquitetura e decisões
 ```
 

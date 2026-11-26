@@ -1,6 +1,8 @@
 # Fase 2: o advogado calcula e consulta de verdade
 
-**Situação em 26/11/2026.** O que está no ar é uma landing estática. A calculadora funciona, mas só no navegador e só para um cálculo isolado. A pesquisa fundamentada com citações **ainda não existe**: não há login, servidor, base normativa carregada nem modelo de linguagem ligado.
+**Atualização, 26/11/2026 (tarde):** as decisões foram tomadas (Anthropic; Vercel `gru1` + Supabase São Paulo; texto oficial do Planalto) e as etapas 1 a 5 estão implementadas, com o passo a passo de publicação em [DEPLOY.md](DEPLOY.md). Faltam: contas e chave (Eduardo), o tributarista curador, exportação em Word (hoje há impressão em PDF), salvar simulações por caso (a tabela já existe), convite da equipe e o banco de avaliação.
+
+**Situação inicial em 26/11/2026.** O que está no ar é uma landing estática. A calculadora funciona, mas só no navegador e só para um cálculo isolado. A pesquisa fundamentada com citações **ainda não existe**: não há login, servidor, base normativa carregada nem modelo de linguagem ligado.
 
 Este documento lista o que falta para o produto funcionar, em que ordem, e o que depende de decisões do Eduardo.
 

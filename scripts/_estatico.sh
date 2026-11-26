@@ -1,10 +1,27 @@
-# Uso interno: gera out/ estático no próprio repositório, tirando a rota de API do caminho e devolvendo-a ao fim.
+# Uso interno: gera out/ estático no próprio repositório. Tira do caminho tudo o que exige servidor
+# (API, área logada, proxy) e devolve ao fim, mesmo se o build falhar.
+SO_SERVIDOR=("src/app/api" "src/app/(app)" "src/proxy.ts")
+
 construir_estatico() {
   local raiz; raiz=$(git rev-parse --show-toplevel)
   cd "$raiz"
-  local guarda; guarda=$(mktemp -d)
-  if [ -d src/app/api ]; then mv src/app/api "$guarda/api"; fi
-  trap 'if [ -d "'"$guarda"'/api" ]; then mv "'"$guarda"'/api" "'"$raiz"'/src/app/api"; fi' EXIT
+  ESTATICO_GUARDA=$(mktemp -d)
+  ESTATICO_RAIZ=$raiz
+  local i=0
+  for p in "${SO_SERVIDOR[@]}"; do
+    if [ -e "$p" ]; then mkdir -p "$ESTATICO_GUARDA/$i"; mv "$p" "$ESTATICO_GUARDA/$i/"; echo "$p" > "$ESTATICO_GUARDA/$i.caminho"; fi
+    i=$((i + 1))
+  done
+  trap devolver_servidor EXIT
   rm -rf .next out
   "$@" npx next build
+}
+
+devolver_servidor() {
+  local f p
+  for f in "$ESTATICO_GUARDA"/*.caminho; do
+    [ -e "$f" ] || continue
+    p=$(cat "$f")
+    mv "${f%.caminho}/$(basename "$p")" "$ESTATICO_RAIZ/$p"
+  done
 }

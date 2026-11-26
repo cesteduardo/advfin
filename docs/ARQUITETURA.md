@@ -48,12 +48,13 @@ A confiança do produto vem de uma separação: **o que o modelo escreve, o sist
 | Hospedagem | Região brasileira (ex.: AWS `sa-east-1` ou GCP `southamerica-east1`) | LGPD e promessa de sigilo. |
 | Landing | Página estática; calculadora no cliente | LCP baixo e nenhum dado de simulação sai do navegador. |
 
-## Verificador de citações (a implementar na fase seguinte)
+## Verificador de citações (`src/lib/pesquisa/verificador.ts`)
 
 1. O modelo recebe apenas trechos recuperados de `dispositivos_vigentes_em(data_referencia)` e devolve citações estruturadas: `{norma, dispositivo, trecho}`.
 2. Cada citação é resolvida contra a base: a norma existe, o dispositivo existe, estava vigente na data, e o trecho citado é substring normalizada do texto oficial.
 3. Uma única falha muda a consulta para `bloqueada_citacao`; o advogado vê o motivo, não a resposta.
 4. A resposta exibida carrega, por citação, trecho original, link oficial, status e data de vigência.
+5. Também bloqueia: marca [Dn] sem trecho correspondente, parágrafo sem fonte, citação curta demais (< 20 caracteres), dispositivo rejeitado pelo curador e JSON fora do formato.
 
 ## O que já está no repositório
 

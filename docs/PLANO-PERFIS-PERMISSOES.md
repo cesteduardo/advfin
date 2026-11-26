@@ -1,6 +1,6 @@
 # Plano: perfis, permissões e administração do escritório
 
-> Status: **plano, não implementado.** Escrito em 26/11/2026 a pedido de Eduardo.
+> Status: **plano, não implementado.** Escrito em 26/11/2026 a pedido de Eduardo; quatro decisões tomadas no mesmo dia (seção 8).
 > Parte do que já existe no PR #2 (cadastro, login, sessões, RLS por escritório, auditoria append-only, tabelas de LGPD)
 > e propõe o que falta para um escritório de verdade usar o AdvFin com várias pessoas.
 
@@ -40,8 +40,8 @@ administrar o escritório sem fazer consultas jurídicas. Hoje o `papel_escritor
 |---|---|---|
 | **Titular** | uma pessoa por escritório, quem contratou | tudo, inclusive faturamento, transferir a titularidade e encerrar a conta |
 | **Administrador** | sócios ou gestão | gente, papéis, convites, auditoria, configurações; não encerra a conta |
-| **Membro** | advogados | usa as ferramentas, cria e compartilha casos, exporta |
-| **Supervisionado** | estagiários, paralegais | usa as ferramentas; exportar ou compartilhar pede revisão de um membro |
+| **Membro** | advogados | usa as ferramentas, cria casos, inclui colegas, exporta |
+| **Supervisionado** | estagiários, paralegais | usa as ferramentas; exportar ou incluir pessoas pede revisão de um membro |
 
 Há também um nível opcional, **Leitura**, para clientes ou auditores externos que só veem os casos compartilhados com
 eles. Fica para a etapa 5, se Eduardo quiser.
@@ -54,9 +54,9 @@ eles. Fica para a etapa 5, se Eduardo quiser.
 |---|:-:|:-:|:-:|:-:|
 | Pesquisa, cálculo e NCM/NBS | ✓ | ✓ | ✓ | ✓ |
 | Ver as próprias consultas e simulações | ✓ | ✓ | ✓ | ✓ |
-| Ver as consultas dos colegas nos casos compartilhados | ✓ | ✓ | ✓ | ✓ |
+| Ver casos e consultas dos colegas | todos | todos | os de Membros e Supervisionados, e os seus | só os seus e aqueles em que foi incluído |
 | Criar caso | ✓ | ✓ | ✓ | ✓ |
-| Compartilhar caso com o escritório | ✓ | ✓ | ✓ | ◐ |
+| Incluir um colega num caso | ✓ | ✓ | ✓ | ◐ |
 | Exportar parecer (PDF/DOCX) | ✓ | ✓ | ✓ | ◐ |
 | Enviar documentos privados do escritório | ✓ | ✓ | ✓ | — |
 | Ver a trilha de auditoria do escritório | ✓ | ✓ | — (só a própria) | — (só a própria) |
@@ -71,6 +71,12 @@ eles. Fica para a etapa 5, se Eduardo quiser.
 | Encerrar a conta do escritório | ✓ | — | — | — |
 
 Regras que a matriz não mostra:
+
+- **Visibilidade por nível** (decisão 2): um caso nasce visível ao autor e a quem tem nível igual ou superior ao dele,
+  com piso em Membro. O caso de um Membro é visto pelos Membros, pelos Admins e pelo Titular. O de um Supervisionado
+  é visto por ele e pelos Membros para cima, e não pelos outros estagiários. O de um Admin só é visto por Admins e pelo
+  Titular. Para mostrar um caso a quem está abaixo, a pessoa é incluída nele. O Titular e os Admins veem tudo,
+  porque respondem pelo escritório.
 
 - Sempre existe **exatamente um Titular**. Ele não pode sair nem ser removido sem antes transferir a titularidade.
 - Um Admin **não promove ninguém acima de si** e não rebaixa outro Admin. Só o Titular rebaixa Admins.
@@ -103,8 +109,9 @@ Abas em pílula, no mesmo padrão da calculadora:
 4. **Consumo:** consultas por mês e por pessoa, custo de IA, e limite do plano.
 5. **Configurações:** nome e logo (para o cabeçalho do parecer exportado), 2FA obrigatório para todos ou só para
    Admins, tempo da sessão, domínio de e-mail.
-6. **Plano e cobrança** (só Titular): plano, assentos usados de quantos, forma de pagamento, notas fiscais,
-   e trocar ou cancelar o plano.
+6. **Plano e cobrança** (só Titular): cobrança **por pessoa** no **Stripe**. Mostra o plano, os assentos em uso,
+   o cartão, as faturas e as notas fiscais, e permite trocar ou cancelar o plano. Convidar alguém acima dos assentos
+   contratados pede confirmação do Titular e ajusta a assinatura com valor proporcional. Pessoas suspensas não contam.
 7. **Dados e encerramento** (só Titular): exportar tudo, transferir a titularidade e encerrar a conta, com
    prazo de carência de 30 dias antes do expurgo.
 
@@ -120,7 +127,7 @@ Abas em pílula, no mesmo padrão da calculadora:
 
 ```sql
 -- Nível de acesso, separado do cargo.
-create type nivel_acesso as enum ('titular', 'admin', 'membro', 'supervisionado');
+create type nivel_acesso as enum ('supervisionado', 'membro', 'admin', 'titular');  -- em ordem crescente
 alter table membros add column nivel nivel_acesso;
 update membros set nivel = case papel when 'socio' then 'titular' when 'associado' then 'membro' else 'supervisionado' end;
 alter table membros alter column nivel set not null;
@@ -156,7 +163,8 @@ create table equipe_plataforma (usuario_id uuid primary key references usuarios(
                                 papel text not null check (papel in ('admin', 'curador', 'suporte')));
 
 -- Casos: privado (só quem criou e os convidados) ou do escritório.
-alter table casos add column visibilidade text not null default 'escritorio' check (visibilidade in ('privado','escritorio'));
+-- Casos: visíveis ao autor, aos incluídos e a quem tem nível >= nivel_minimo = max(nível do autor, 'membro').
+alter table casos add column nivel_minimo nivel_acesso not null default 'membro';
 create table casos_membros (caso_id uuid references casos(id) on delete cascade, usuario_id uuid references usuarios(id),
                             primary key (caso_id, usuario_id));
 ```
@@ -168,6 +176,8 @@ fixa de permissões (a matriz da seção 3, em dados, não espalhada pelo códig
 - `membros`: todos leem, e só `app.pode('gerir_pessoas')` escreve. As regras de "não acima de si" e de "um Titular"
   ficam numa função `security definer` `app.mudar_nivel()`, porque a RLS sozinha não expressa comparação entre linhas.
 - `auditoria`: Admin e Titular leem tudo; os demais leem só as linhas com `usuario_id = app.usuario_atual()`.
+- `casos`: `app.nivel_atual() >= nivel_minimo` (a ordem do enum é supervisionado < membro < admin < titular),
+  ou o usuário está em `casos_membros`, ou é o autor.
 - `consultas` e `simulacoes`: as próprias, mais as de casos visíveis ao usuário.
 - `convites`: só quem pode gerir pessoas; a aceitação passa por `app.aceitar_convite(token)`.
 
@@ -195,27 +205,37 @@ como os 38 de hoje.
 | 1 | Migração 003, funções `nivel_atual`/`pode`/`mudar_nivel`, RLS por nível e testes de banco | — |
 | 2 | Tela de perfil: dados, senha, sessões e preferências | 1 |
 | 3 | Administração: Pessoas, Convites e Auditoria; e-mail transacional para os convites | 1, provedor de e-mail |
-| 4 | 2FA, configurações do escritório e casos privados ou compartilhados | 2, 3 |
-| 5 | Plano e cobrança, consumo, limites por plano, nível Leitura (opcional) | provedor de pagamento |
+| 4 | 2FA, configurações do escritório e visibilidade dos casos por nível | 2, 3 |
+| 5 | Cobrança no Stripe por pessoa (assento), consumo, nível Leitura (opcional) | conta Stripe |
 | 6 | Plataforma `/admin`: curadoria, suporte e LGPD; o laboratório passa a usar o papel de plataforma | 1 |
 | 7 | Dados e encerramento: exportação completa, transferência de titularidade e carência de 30 dias | 3 |
 
 As etapas 1 a 3 já fazem do AdvFin um produto para escritórios com várias pessoas. A etapa 6 é a que desbloqueia o
 curador, então pode vir antes da 5, se o curador chegar antes da cobrança.
 
-## 8. Decisões em aberto (para Eduardo)
+## 8. Decisões
 
-1. **Quatro níveis (Titular, Admin, Membro, Supervisionado)** como na seção 3, ou começar com três, juntando
-   Supervisionado com Membro? *Recomendação: quatro, porque a revisão do trabalho do estagiário é prática comum.*
-2. **Revisão do Supervisionado:** exportar e compartilhar pedem aprovação de um Membro, ou só ficam marcados
-   como "não revisado"? *Recomendação: aprovação.*
-3. **Casos privados:** o padrão de um caso novo é ser visível ao escritório inteiro ou privado?
-   *Recomendação: visível ao escritório, com a opção de torná-lo privado.*
-4. **Um advogado em vários escritórios** (sócio num, consultor noutro): entra já no lançamento?
+### Tomadas por Eduardo em 26/11/2026
+
+1. **Quatro níveis:** Titular, Administrador, Membro e Supervisionado.
+2. **Visibilidade do caso por nível de acesso:** o caso novo aparece para quem tem nível igual ou superior ao de quem
+   o criou, e para quem for incluído nele (regra na seção 3).
+3. **Cobrança no Stripe.**
+4. **Cobrança por pessoa** (assento).
+
+Consequências no esquema: `casos.nivel_minimo` no lugar de "privado ou escritório", e `escritorios` ganha
+`stripe_cliente_id`, `stripe_assinatura_id` e `assentos`. Os eventos do Stripe chegam por webhook, que só
+atualiza a assinatura. O Stripe guarda os cartões, então o AdvFin não guarda nenhum.
+
+### Ainda em aberto
+
+1. **Revisão do Supervisionado:** exportar e incluir pessoas pedem aprovação de um Membro, ou só ficam marcados como
+   "não revisado"? *Recomendação: aprovação.*
+2. **Um advogado em vários escritórios** (sócio num, consultor noutro): entra já no lançamento?
    *Recomendação: sim; o banco já permite, falta só o seletor.*
-5. **Entrar com Google ou Microsoft** além de e-mail e senha? E o 2FA, é obrigatório para Admins desde o início?
-6. **Verificação da OAB:** só declarada, conferida à mão pela equipe, ou pelo Cadastro Nacional dos Advogados?
-7. **Cobrança:** Stripe (cartão, internacional) ou um provedor brasileiro com PIX e boleto (Asaas, Pagar.me, Iugu)?
-   E o plano é cobrado por assento ou por faixa de consultas?
-8. **Saída e exclusão:** as consultas de quem sai ficam com o escritório (proposta da seção 6) ou saem com a pessoa?
-9. **Nível Leitura** para clientes do escritório verem casos compartilhados: entra no plano ou fica para depois?
+3. **Entrar com Google ou Microsoft** além de e-mail e senha? E o 2FA, é obrigatório para Admins desde o início?
+4. **Verificação da OAB:** só declarada, conferida à mão pela equipe, ou pelo Cadastro Nacional dos Advogados?
+5. **Formas de pagamento no Stripe:** só cartão, ou também boleto e PIX, que o Stripe oferece no Brasil?
+   E há período de teste grátis?
+6. **Saída e exclusão:** as consultas de quem sai ficam com o escritório (proposta da seção 6) ou saem com a pessoa?
+7. **Nível Leitura** para clientes do escritório verem casos compartilhados: entra no plano ou fica para depois?

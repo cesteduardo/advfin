@@ -64,6 +64,9 @@ Sem chave de API, um provedor **extrativo** responde só com os trechos mais rel
 - Banco de perguntas tributárias com gabarito do curador, rodado a cada troca de modelo ou de base.
 - Metas da fase: precisão de citação ≥ 98% e 40% de uso semanal no beta.
 
+### 8. Perfis, permissões e administração do escritório
+- Planejado em [`PLANO-PERFIS-PERMISSOES.md`](PLANO-PERFIS-PERMISSOES.md): níveis de acesso separados do cargo, convites, painel do administrador, cobrança, curadoria e LGPD. Aguarda as decisões listadas no fim daquele documento.
+
 ## Cuidado permanente
 
 Dispositivos citados de memória no código (cronograma, regimes, tabela NCM) são pontos de partida, não norma verificada. Até a conferência do curador, a interface deve dizer isso ao lado de cada número e de cada trecho.

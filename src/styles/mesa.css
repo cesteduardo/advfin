@@ -56,8 +56,8 @@
 .mesa-usuario { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: auto; padding: 14px 16px; border-radius: 16px; background: #fff; box-shadow: 0 0 0 1px var(--anel); font-size: 13px; color: var(--muted); }
 .mesa-usuario span { display: grid; min-width: 0; }
 .mesa-usuario strong { overflow: hidden; color: var(--ink); font-size: 14px; white-space: nowrap; text-overflow: ellipsis; }
-.mesa-usuario button { flex: none; padding: 7px 14px; border: 0; border-radius: 999px; background: #f2f1ec; color: var(--ink-2); font-size: 13px; font-weight: 600; cursor: pointer; }
-.mesa-usuario button:hover { background: var(--marinho); color: #fff; }
+.mesa-usuario button, .mesa-usuario-acao { flex: none; text-decoration: none; padding: 7px 14px; border: 0; border-radius: 999px; background: #f2f1ec; color: var(--ink-2); font-size: 13px; font-weight: 600; cursor: pointer; }
+.mesa-usuario button:hover, .mesa-usuario-acao:hover { background: var(--marinho); color: #fff; }
 
 .mesa-principal { display: flex; flex-direction: column; gap: 24px; min-width: 0; padding: 30px clamp(16px, 3vw, 44px) 56px; }
 .mesa-topo { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 16px 24px; }
@@ -254,3 +254,9 @@
 .lab-chave { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 12px 16px; }
 .lab-chave .caixa-aceite { grid-column: 1 / -1; margin: 0; }
 @media (max-width: 700px) { .lab-chave { grid-template-columns: minmax(0, 1fr); } }
+
+/* ── Demonstração estática (/app no GitHub Pages) ── */
+.demo-faixa { margin: 0; }
+.demo-faixa a { color: inherit; font-weight: 600; }
+.demo-origem { gap: 10px; padding-block: 16px; }
+.demo-origem-linha { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; }

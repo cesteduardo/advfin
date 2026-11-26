@@ -1,13 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Segmentado } from "@/components/Segmentado";
-import { MODELOS_LAB, rodarLab, type ModoLab } from "@/lib/pesquisa/laboratorio";
+import { rodarLab, type ModoLab } from "@/lib/pesquisa/laboratorio";
 import { BASE_LOCAL } from "@/lib/pesquisa/base-local";
+import { CamposChave, useChaveAnthropic } from "./ChaveAnthropic";
 import { Icone } from "./Icone";
 import { RodadaView, hoje, type Rodada } from "./RodadaDev";
-
-const GUARDA = "advfin-lab-chave";
 
 const MODOS: { id: ModoLab; nome: string }[] = [
   { id: "extrativo", nome: "Sem IA" },
@@ -15,47 +14,19 @@ const MODOS: { id: ModoLab; nome: string }[] = [
   { id: "anthropic", nome: "Claude (minha chave)" },
 ];
 
-const lerGuardada = () => {
-  try {
-    return localStorage.getItem(GUARDA) ?? "";
-  } catch {
-    return "";
-  }
-};
-
 /**
  * Laboratório estático do chat: recuperação, modelo e verificador rodam no navegador.
  * A chave só vive na memória da aba; fica no navegador apenas se o desenvolvedor pedir.
  */
 export function LabChat() {
   const [modo, setModo] = useState<ModoLab>("extrativo");
-  const [chave, setChave] = useState("");
-  const [lembrar, setLembrar] = useState(false);
-  const [modelo, setModelo] = useState<string>(MODELOS_LAB[0].id);
+  const c = useChaveAnthropic();
   const [pergunta, setPergunta] = useState("");
   const [data, setData] = useState(hoje);
   const [rodadas, setRodadas] = useState<Rodada[]>([]);
   const [pendente, setPendente] = useState(false);
 
-  useEffect(() => {
-    const g = lerGuardada();
-    if (g) {
-      setChave(g);
-      setLembrar(true);
-    }
-  }, []);
-
-  const guardar = (sim: boolean, valor = chave) => {
-    setLembrar(sim);
-    try {
-      if (sim && valor) localStorage.setItem(GUARDA, valor);
-      else localStorage.removeItem(GUARDA);
-    } catch {
-      /* navegador sem armazenamento: a chave fica só na memória da aba */
-    }
-  };
-
-  const semChave = modo === "anthropic" && !chave.trim();
+  const semChave = modo === "anthropic" && !c.chave.trim();
   const podeEnviar = !pendente && pergunta.trim().length >= 8 && !semChave;
 
   const enviar = async () => {
@@ -65,7 +36,7 @@ export function LabChat() {
     setPendente(true);
     let r: Rodada["r"];
     try {
-      r = await rodarLab({ pergunta: q, data, modo, chave: chave.trim(), modelo });
+      r = await rodarLab({ pergunta: q, data, modo, chave: c.chave.trim(), modelo: c.modelo });
     } catch (e) {
       r = { erro: (e as Error).message };
     }
@@ -91,42 +62,7 @@ export function LabChat() {
             "Chama a API da Anthropic direto deste navegador, com a sua chave. O custo sai da sua conta, e cada pergunta custa centavos."}
         </p>
 
-        {modo === "anthropic" && (
-          <div className="lab-chave">
-            <div className="campo">
-              <label htmlFor="lab-chave-input">Chave da API da Anthropic</label>
-              <input
-                id="lab-chave-input"
-                type="password"
-                autoComplete="off"
-                spellCheck={false}
-                placeholder="sk-ant-…"
-                value={chave}
-                onChange={(e) => {
-                  setChave(e.target.value);
-                  if (lembrar) guardar(true, e.target.value);
-                }}
-              />
-            </div>
-            <div className="campo">
-              <label htmlFor="lab-modelo">Modelo</label>
-              <select id="lab-modelo" value={modelo} onChange={(e) => setModelo(e.target.value)}>
-                {MODELOS_LAB.map((m) => (
-                  <option key={m.id} value={m.id}>
-                    {m.nome} (US$ {m.entrada.toLocaleString("pt-BR")} / {m.saida.toLocaleString("pt-BR")} por milhão de tokens)
-                  </option>
-                ))}
-              </select>
-            </div>
-            <label className="caixa-aceite">
-              <input type="checkbox" checked={lembrar} onChange={(e) => guardar(e.target.checked)} />
-              <span>
-                Lembrar a chave neste navegador. Sem marcar, ela some ao fechar a aba. A chave só vai para a Anthropic; nenhum
-                servidor do AdvFin a recebe.
-              </span>
-            </label>
-          </div>
-        )}
+        {modo === "anthropic" && <CamposChave c={c} />}
       </div>
 
       <form

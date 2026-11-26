@@ -3,36 +3,10 @@ import { consultar, noEscritorio, type Contexto } from "@/lib/db";
 import { ProvedorExtrativo, provedor } from "@/lib/llm/provedores";
 import { ErroLLM } from "@/lib/llm/tipos";
 import { SISTEMA_PESQUISA, lerResposta, montarMensagem, respostaExtrativa } from "./geracao";
-import type { CitacaoVerificada, Trecho } from "./tipos";
+import type { DesfechoPesquisa, Diagnostico, Trecho } from "./tipos";
 import { verificarCitacoes } from "./verificador";
 
-export type DesfechoPesquisa =
-  | {
-      status: "respondida";
-      id: string;
-      paragrafos: string[];
-      citacoes: CitacaoVerificada[];
-      fontes: Trecho[];
-      redigida: boolean;
-      modelo: string;
-    }
-  | { status: "bloqueada_citacao"; id: string; motivos: string[]; fontes: Trecho[]; modelo: string }
-  | { status: "sem_resultado"; id: string; fontes: [] }
-  | { status: "erro"; id: string; mensagem: string; fontes: Trecho[] };
-
-/** Bastidores de uma consulta, para a página de desenvolvedor. Nunca vai para o advogado. */
-export interface Diagnostico {
-  provedor: string;
-  modelo: string;
-  sistema: string | null;
-  mensagem: string | null;
-  saidaBruta: string | null;
-  respostaLida: unknown;
-  ms: { recuperacao: number; modelo: number; verificacao: number; total: number };
-  tokens: { entrada: number | null; saida: number | null };
-  custoMicroreais: number | null;
-  erro?: string;
-}
+export type { DesfechoPesquisa, Diagnostico } from "./tipos";
 
 /** Em produção, só o que o curador publicou. Em desenvolvimento ou beta sem curador, tudo (marcado). */
 export function incluirNaoRevisados(): boolean {

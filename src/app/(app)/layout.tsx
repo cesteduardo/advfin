@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import "./app.css";
+import "@/styles/mesa.css";
 
 export const metadata: Metadata = {
   title: "AdvFin — área do advogado",

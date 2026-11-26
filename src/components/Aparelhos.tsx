@@ -1,6 +1,6 @@
 /**
  * Vitrine do herói com as molduras do GR Frames (cesteduardo/gr-frames):
- * MacBook Pro 14" prateado, iPhone Duo aberto (Night Sky) e iPhone 18 Pro (Deep Blue).
+ * MacBook Pro 14" prateado, iPhone Duo fechado (Night Sky) e iPhone 18 Pro (Deep Blue).
  * Cada aparelho é desenhado no tamanho real e reduzido por escala, então cada
  * tela tem as medidas de verdade e um conteúdo pensado para aquele formato:
  * o Mac mostra a mesa de trabalho, o Duo a simulação e o iPhone a conversa.
@@ -11,6 +11,7 @@ import type { ReactNode } from "react";
 import { linhaDoTempo } from "@/lib/tax/engine";
 import { formatarPercentual, formatarReais } from "@/lib/tax/money";
 import { EscalaAparelhos } from "./EscalaAparelhos";
+import { IPhone, IPhoneDuo, MacBook } from "./Molduras";
 
 const DATA = "26/11/2026";
 const TRECHO = "“Em 2026, o imposto previsto no art. 156-A será cobrado à alíquota estadual de 0,1%…”";
@@ -30,22 +31,6 @@ function Simbolo() {
 
 const Marca = () => (
   <span className="app-marca"><Simbolo /><span>Adv<i>Fin</i></span></span>
-);
-
-const Sinal = () => (
-  <svg width="19" height="12" viewBox="0 0 19 12"><rect x="0" y="8" width="3.2" height="4" rx="1" /><rect x="5.2" y="5.6" width="3.2" height="6.4" rx="1" /><rect x="10.4" y="3" width="3.2" height="9" rx="1" /><rect x="15.6" y="0" width="3.2" height="12" rx="1" /></svg>
-);
-const Wifi = () => (
-  <svg width="17" height="12" viewBox="-.5 0 17 12.2" stroke="currentColor" strokeWidth=".5" strokeLinejoin="round"><path d="M.01 3.61A11.3 11.3 0 0 1 15.99 3.61L13.8 5.8A8.2 8.2 0 0 0 2.2 5.8Z" /><path d="M2.98 6.58A7.1 7.1 0 0 1 13.02 6.58L10.83 8.77A4 4 0 0 0 5.17 8.77Z" /><path d="M5.95 9.55A2.9 2.9 0 0 1 10.05 9.55L8 11.6Z" /></svg>
-);
-const Bateria = () => (
-  <svg width="28" height="13" viewBox="0 0 28 13"><rect x=".5" y=".5" width="24" height="12" rx="3.8" fill="none" stroke="currentColor" opacity=".4" /><rect x="2" y="2" width="21" height="9" rx="2.4" /><path d="M26 4.4v4.2c.9-.3 1.5-1.1 1.5-2.1s-.6-1.8-1.5-2.1Z" opacity=".45" /></svg>
-);
-const StatusIOS = ({ classe = "" }: { classe?: string }) => (
-  <div className={`ios-status ${classe}`}>
-    <span className="ios-time">9:41</span>
-    <span className="ios-icons"><Sinal /><Wifi /><Bateria /></span>
-  </div>
 );
 
 /* Ícones de traço simples, no desenho das abas do app */
@@ -142,37 +127,6 @@ function TelaMac() {
   );
 }
 
-function MacBook() {
-  return (
-    <div className="aparelho aparelho-mac" data-largura="1842" aria-hidden="true">
-      <div className="dev macbook">
-        <div className="mb-lid">
-          <div className="mb-bezel">
-            <div className="screen mb-screen">
-              <div className="mac-menu">
-                <div className="l"><b>Safari</b><span>Arquivo</span><span>Editar</span><span>Visualizar</span><span>Histórico</span><span>Janela</span></div>
-                <div className="r"><Wifi /><span>qui. 26 de nov. 9:41</span></div>
-              </div>
-              <div className="saf-mac">
-                <div className="lights"><i /><i /><i /></div>
-                <div className="saf-field"><span className="addr">app.advfin.com.br</span></div>
-              </div>
-              <TelaMac />
-              <div className="mb-notch"><i /></div>
-            </div>
-            <i className="rim mb-rim" />
-            <div className="glare" />
-          </div>
-        </div>
-        <div className="mb-hinge" />
-        <div className="mb-base"><i /></div>
-        <div className="mb-feet"><i /><i /></div>
-        <i className="floor mb-floor" />
-      </div>
-    </div>
-  );
-}
-
 /* ---------- iPhone Duo aberto: a simulação da transição ---------- */
 function TelaDuo() {
   const maior = Math.max(...EXEMPLO.map((r) => Math.max(r.ano_.total, r.base.total)));
@@ -233,30 +187,6 @@ function TelaDuo() {
   );
 }
 
-function IPhoneDuo() {
-  return (
-    <div className="aparelho aparelho-duo" data-largura="665" aria-hidden="true">
-      <div className="dev duo open">
-        <i className="dz-btn dz-b1" /><i className="dz-btn dz-b2" /><i className="dz-btn dz-side" />
-        <i className="dz-shade" />
-        <div className="dz-band">
-          <i className="dz-hinge" /><i className="dz-hm a" /><i className="dz-hm b" />
-          <div className="dz-bezel">
-            <div className="screen dz-screen">
-              <StatusIOS classe="dz-status" />
-              <TelaDuo />
-              <div className="ios-home" />
-              <i className="dz-crease" />
-            </div>
-            <i className="rim dz-rim" />
-            <div className="glare" />
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 /* ---------- iPhone: a conversa ---------- */
 function TelaIPhone() {
   return (
@@ -290,44 +220,14 @@ function TelaIPhone() {
   );
 }
 
-function IPhone() {
-  return (
-    <div className="aparelho aparelho-iphone" data-largura="436" aria-hidden="true">
-      <div className="dev iphone">
-        <div className="ip-body">
-          <i className="ip-btn l ip-action" /><i className="ip-btn l ip-volup" /><i className="ip-btn l ip-voldn" />
-          <i className="ip-btn r ip-power" />
-          <div className="ip-band">
-            <i className="ip-btn r ip-cam" />
-            <div className="ip-bezel">
-              <i className="ip-ear" />
-              <div className="screen ip-screen">
-                <div className="scr-in">
-                  <StatusIOS />
-                  <TelaIPhone />
-                  <div className="ios-home" />
-                </div>
-                <div className="ip-island" />
-              </div>
-              <i className="rim ip-rim" />
-              <div className="glare" />
-            </div>
-          </div>
-          <i className="ant al" /><i className="ant ar" /><i className="ant bl" /><i className="ant br" />
-        </div>
-      </div>
-    </div>
-  );
-}
-
 export function Aparelhos() {
   const foco = EXEMPLO.find((r) => r.ano === ANO_EM_FOCO)!;
   return (
     <figure className="vitrine">
       <div className="vitrine-palco">
-        <MacBook />
-        <IPhoneDuo />
-        <IPhone />
+        <MacBook><TelaMac /></MacBook>
+        <IPhoneDuo><TelaDuo /></IPhoneDuo>
+        <IPhone><TelaIPhone /></IPhone>
       </div>
       <EscalaAparelhos />
       <figcaption className="so-leitor">

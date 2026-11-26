@@ -239,6 +239,29 @@
   .mesa-cartao, .mesa-resposta { padding: 20px; }
 }
 
+/* ── Dock do celular: pílula que desliza, ícone que salta, recolhe ao ler ── */
+.dock { display: none; }
+@media (max-width: 900px) {
+  .mesa-abas.dock { display: flex; isolation: isolate; transform-origin: 50% 100%; animation: dock-entra .7s var(--mola) .15s backwards; transition: transform .55s var(--mola), opacity .35s var(--ease), box-shadow .35s var(--ease); will-change: transform; }
+  .mesa-abas.dock[data-recolhida] { transform: translateY(calc(100% + 18px)) scale(.92); opacity: 0; box-shadow: none; pointer-events: none; transition: transform .4s var(--ease), opacity .3s var(--ease), box-shadow .3s; }
+  .mesa-abas.dock .dock-pilula { inset: 0 auto auto 0; box-shadow: 0 1px 2px rgb(15 39 66 / .22), 0 8px 18px -8px rgb(15 39 66 / .55), inset 0 1px 0 rgb(255 255 255 / .12); }
+  .mesa-abas.dock[data-pronta] .dock-pilula { transition: transform .55s var(--mola), width .55s var(--mola), height .4s var(--mola); }
+  .mesa-abas.dock a { position: relative; z-index: 1; background: transparent; -webkit-tap-highlight-color: transparent; transition: color .3s var(--ease), transform .25s var(--mola); }
+  .mesa-abas.dock a.ativo { background: transparent; color: #fff; }
+  .mesa-abas.dock a:active { transform: scale(.9); transition-duration: .08s; }
+  .mesa-abas.dock a:focus-visible { outline: 2px solid var(--azul); outline-offset: -3px; }
+  .dock-ico { display: grid; place-items: center; }
+  .mesa-abas.dock a.ativo .dock-ico { animation: dock-salta .6s var(--mola) backwards; }
+  .mesa-abas.dock a.ativo .dock-ico .ico { color: var(--ouro-claro, #d9bf86); }
+}
+@keyframes dock-entra { from { opacity: 0; transform: translateY(28px) scale(.9); filter: blur(6px); } to { opacity: 1; transform: none; filter: none; } }
+@keyframes dock-salta { 0% { transform: translateY(0) scale(.86); } 45% { transform: translateY(-3px) scale(1.12); } 100% { transform: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .mesa-abas.dock, .mesa-abas.dock .dock-ico { animation: none !important; }
+  .mesa-abas.dock, .mesa-abas.dock[data-recolhida], .mesa-abas.dock[data-pronta] .dock-pilula, .mesa-abas.dock a { transition: opacity .2s linear; }
+  .mesa-abas.dock[data-recolhida] { transform: none; }
+}
+
 @media print {
   .mesa-lateral, .mesa-topo-movel, .mesa-abas, .mesa-campo, .mesa-acoes, .mesa-topo .segmentado { display: none !important; }
   .mesa, .mesa-grade { display: block; }

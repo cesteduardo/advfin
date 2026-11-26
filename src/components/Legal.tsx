@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { EMAIL_INSCRICOES } from "@/config/site";
+import { CreditoGR } from "./CreditoGR";
 
 /**
  * Política de Privacidade e Termos de Uso em pop-up (<dialog> nativo: Esc fecha, foco preso, leitor de tela anuncia).
@@ -78,10 +79,7 @@ export function Legal() {
           {doc === "privacidade" ? <Privacidade /> : <Termos />}
           <p className="legal-assinatura">
             AdvFin é um projeto feito por{" "}
-            <a href="https://grbrands.com.br" target="_blank" rel="noopener">
-              GR Brands
-            </a>
-            .
+            <CreditoGR id="gr-legal" />
           </p>
         </div>
       </div>

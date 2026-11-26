@@ -1,5 +1,6 @@
 import { Calculadora } from "@/components/Calculadora";
 import { ListaEspera } from "@/components/ListaEspera";
+import { CreditoGR } from "@/components/CreditoGR";
 import { Legal } from "@/components/Legal";
 import { NavIlha } from "@/components/NavIlha";
 import { Planos } from "@/components/Planos";
@@ -23,9 +24,6 @@ export default function Inicio() {
             </span>
           </a>
           <NavIlha />
-          <a href="#lista" className="botao peq">
-            Lista de espera
-          </a>
         </div>
       </header>
 
@@ -183,10 +181,8 @@ export default function Inicio() {
             </nav>
             <p>© 2026 AdvFin · Dados tratados conforme a LGPD (Lei 13.709/2018).</p>
             <p className="feito-por">
-              Feito por{" "}
-              <a href="https://grbrands.com.br" target="_blank" rel="noopener">
-                GR Brands
-              </a>
+              <span>Feito por</span>
+              <CreditoGR id="gr-rodape" />
             </p>
           </div>
         </div>

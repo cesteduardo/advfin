@@ -19,7 +19,7 @@ export default async function Inicio() {
   const consultas = await noEscritorio(s, async (c) =>
     (
       await c.query(
-        `select id, pergunta, status, data_referencia, criado_em from consultas order by criado_em desc limit 8`,
+        `select id, pergunta, status, data_referencia, criado_em, usuario_id from consultas order by criado_em desc limit 8`,
       )
     ).rows,
   );
@@ -56,14 +56,14 @@ export default async function Inicio() {
       </div>
 
       <section className="bloco" aria-labelledby="recentes">
-        <p className="mesa-rotulo" id="recentes">Consultas recentes do escritório</p>
+        <p className="mesa-rotulo" id="recentes">{s.nivel === "supervisionado" ? "Suas consultas recentes" : "Consultas recentes que você pode ver"}</p>
         {consultas.length === 0 ? (
           <p className="mesa-vazio-cartao">Nenhuma consulta ainda. Comece pela pesquisa.</p>
         ) : (
           <ul className="mesa-lista">
             {consultas.map((c: any) => (
               <li key={c.id}>
-                <span>{c.pergunta}</span>
+                <Link href={`/app/consultas/${c.id}`}>{c.pergunta}</Link>
                 <span>
                   {ROTULO[c.status] ?? c.status} · {new Date(c.criado_em).toLocaleDateString("pt-BR")}
                 </span>

@@ -47,7 +47,7 @@ beforeAll(async () => {
   db = new Client({ connectionString: url.toString() });
   await db.connect();
   await db.query("set client_min_messages = warning");
-  for (const f of ["001_init.sql", "002_app.sql"]) await db.query(readFileSync(join(__dirname, "../migrations", f), "utf8"));
+  for (const f of ["001_init.sql", "002_app.sql", "003_perfis.sql"]) await db.query(readFileSync(join(__dirname, "../migrations", f), "utf8"));
   await db.query(readFileSync(join(__dirname, "../seeds/semente_reforma.sql"), "utf8"));
 });
 
@@ -61,12 +61,12 @@ describe("cadastro, login e sessão", () => {
   let ana: { usuario_id: string; escritorio_id: string };
   let bruno: { usuario_id: string; escritorio_id: string };
 
-  it("app_user cadastra e cria escritório com sócio", async () => {
+  it("app_user cadastra e cria escritório com o Titular", async () => {
     ana = await comoAppConfirmado(async () => (await db.query(`select * from app.cadastrar('Ana@A.adv.br', 'Ana', 'scrypt$hash', 'Escritório A')`)).rows[0]);
     bruno = await comoAppConfirmado(async () => (await db.query(`select * from app.cadastrar('bruno@b.adv.br', 'Bruno', 'scrypt$h2', 'Escritório B')`)).rows[0]);
     expect(ana.usuario_id).toBeTruthy();
-    const { rows } = await db.query(`select papel from membros where usuario_id = $1`, [ana.usuario_id]);
-    expect(rows[0].papel).toBe("socio");
+    const { rows } = await db.query(`select nivel from membros where usuario_id = $1`, [ana.usuario_id]);
+    expect(rows[0].nivel).toBe("titular");
   });
 
   it("e-mail repetido é recusado, sem distinção de caixa", async () => {
@@ -75,7 +75,7 @@ describe("cadastro, login e sessão", () => {
 
   it("credenciais devolvem hash e escritório; e-mail inexistente devolve vazio", async () => {
     const r = await comoApp(async () => (await db.query(`select * from app.credenciais('ANA@a.adv.br')`)).rows);
-    expect(r[0]).toMatchObject({ usuario_id: ana.usuario_id, senha_hash: "scrypt$hash", escritorio_id: ana.escritorio_id });
+    expect(r[0]).toMatchObject({ usuario_id: ana.usuario_id, senha_hash: "scrypt$hash", escritorio_id: ana.escritorio_id, totp_ativo: false });
     expect(await comoApp(async () => (await db.query(`select * from app.credenciais('ninguem@x.com')`)).rows)).toEqual([]);
   });
 
@@ -88,7 +88,7 @@ describe("cadastro, login e sessão", () => {
   it("sessão resolve, expira e encerra", async () => {
     await comoAppConfirmado(() => db.query(`select app.criar_sessao('tok-ana', $1, $2, 14)`, [ana.usuario_id, ana.escritorio_id]));
     const s = await comoApp(async () => (await db.query(`select * from app.resolver_sessao('tok-ana')`)).rows[0]);
-    expect(s).toMatchObject({ nome: "Ana", escritorio: "Escritório A", papel: "socio" });
+    expect(s).toMatchObject({ nome: "Ana", escritorio: "Escritório A", nivel: "titular" });
     await db.query(`update sessoes set expira_em = now() - interval '1 second' where token_hash = 'tok-ana'`);
     expect(await comoApp(async () => (await db.query(`select * from app.resolver_sessao('tok-ana')`)).rows)).toEqual([]);
     await comoAppConfirmado(() => db.query(`select app.encerrar_sessao('tok-ana')`));

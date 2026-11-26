@@ -1,6 +1,6 @@
 # Plano: perfis, permissões e administração do escritório
 
-> Status: **plano, não implementado.** Escrito em 26/11/2026 a pedido de Eduardo; quatro decisões tomadas no mesmo dia (seção 8).
+> Status: *implementado em 26/11/2026* (etapas 1 a 4, 6 e 7 completas; etapa 5 pronta, esperando a conta Stripe). Escrito em 26/11/2026 a pedido de Eduardo; quatro decisões tomadas no mesmo dia (seção 8).
 > Parte do que já existe no PR #2 (cadastro, login, sessões, RLS por escritório, auditoria append-only, tabelas de LGPD)
 > e propõe o que falta para um escritório de verdade usar o AdvFin com várias pessoas.
 
@@ -239,3 +239,36 @@ atualiza a assinatura. O Stripe guarda os cartões, então o AdvFin não guarda 
    E há período de teste grátis?
 6. **Saída e exclusão:** as consultas de quem sai ficam com o escritório (proposta da seção 6) ou saem com a pessoa?
 7. **Nível Leitura** para clientes do escritório verem casos compartilhados: entra no plano ou fica para depois?
+
+## 9. Como ficou (implementação de 26/11/2026)
+
+Migração `db/migrations/003_perfis.sql`, 59 testes novos em `db/tests/perfis.test.ts` e telas em `/app/perfil`,
+`/app/escritorio`, `/app/casos`, `/app/consultas/[id]`, `/convite/[token]` e `/admin`.
+
+### Itens em aberto: o que ficou como padrão até Eduardo decidir
+
+| # | Pergunta | Como ficou | Para mudar |
+|---|---|---|---|
+| 1 | Revisão do Supervisionado | Aprovação de um Membro (a recomendação) | `app.permissoes`, efeito `revisao` |
+| 2 | Vários escritórios | Já no lançamento: aba "Meus escritórios" no perfil troca de escritório | nada |
+| 3 | Google/Microsoft e 2FA | Só e-mail e senha. 2FA por aplicativo, opcional por padrão; cada escritório escolhe exigir de Admins ou de todos | coluna `escritorios.exige_2fa` |
+| 4 | Verificação da OAB | Declarada pela pessoa, conferida à mão pela equipe na aba OAB de `/admin` | `app.plat_oab_verificar` |
+| 5 | Pagamento no Stripe | Só cartão, sem período de teste | `payment_method_types` em `src/lib/stripe.ts` |
+| 6 | Saída e exclusão | As consultas ficam com o escritório (a proposta da seção 6) | `app.desvincular` |
+| 7 | Nível Leitura | Não entrou | um quinto valor no enum e linhas na matriz |
+
+### Onde a implementação interpretou o plano
+
+- **Teto da visibilidade em Admin.** A regra "nível igual ou superior ao do autor" faria o caso do Titular sumir para os
+  Admins, o que contradiz "o Titular e os Admins veem tudo". O nível mínimo é `max(membro, min(nível do autor, admin))`.
+- **Admin não remove nem suspende outro Admin.** A matriz diz "Remover: Admin, exceto Titular", mas o plano também diz que
+  um Admin não rebaixa outro Admin; remover seria um rebaixamento maior. Só o Titular age sobre Admins.
+- **Consultas e simulações fora de caso** seguem a mesma regra dos casos (nível mínimo calculado do autor); dentro de um
+  caso, valem as pessoas que veem o caso.
+- **Exportar parecer** é o PDF pela impressão do navegador, na página `/app/consultas/[id]`, com o logo do escritório no
+  cabeçalho e a assinatura de quem consultou. O DOCX ainda não existe.
+- **Convite acima dos assentos**: só conta quando há assinatura no Stripe. Sem ela (beta), não há limite.
+- **Troca de e-mail** depende de provedor de e-mail em produção; fora de produção, a tela mostra o link.
+- **Laboratório do chat**: em produção exige papel de plataforma (admin ou curador); fora de produção continua aberto.
+- **Notas fiscais**: o Stripe não emite NFS-e. A aba de cobrança mostra as faturas do Stripe e avisa que a nota depende de
+  um emissor brasileiro, ainda por escolher.

@@ -18,9 +18,32 @@ export interface ConsultaRecente {
   pergunta: string;
 }
 
+export interface LinkExtra {
+  href: string;
+  nome: string;
+  icone: NomeIcone;
+  /** Número pequeno ao lado (pendências). */
+  conta?: number;
+}
+
+/** Iniciais para o avatar sem foto. */
+function iniciais(nome: string) {
+  const p = nome.trim().split(/\s+/);
+  return ((p[0]?.[0] ?? "") + (p.length > 1 ? p[p.length - 1][0] : "")).toUpperCase();
+}
+
+export function Avatar({ nome, foto, grande }: { nome: string; foto?: string | null; grande?: boolean }) {
+  return (
+    <span className={`avatar${grande ? " avatar-grande" : ""}`} aria-hidden="true">
+      {foto ? <img src={foto} alt="" /> : iniciais(nome)}
+    </span>
+  );
+}
+
 /**
  * Menu lateral da mesa de trabalho (desktop) e abas em pílula de vidro (celular), como na demonstração.
  * `acao` é o botão do cartão do usuário: Sair no app, o caminho de volta na demonstração estática.
+ * `extras` entram depois das ferramentas (Casos, Escritório, Plataforma, conforme o nível).
  */
 export function NavegacaoMesa({
   nome,
@@ -28,57 +51,84 @@ export function NavegacaoMesa({
   recentes,
   dev,
   acao,
+  extras = [],
+  foto,
+  perfilHref,
+  hrefConsulta,
 }: {
   nome: string;
   escritorio: string;
   recentes: ConsultaRecente[];
   dev: boolean;
   acao: ReactNode;
+  extras?: LinkExtra[];
+  foto?: string | null;
+  perfilHref?: string;
+  hrefConsulta?: (id: string) => string;
 }) {
   const caminho = usePathname();
   const ativo = (href: string) => (href === "/app" ? caminho === "/app" : caminho.startsWith(href));
   const hoje = new Date().toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" });
+  const link = (l: { href: string; nome: string; icone: NomeIcone; conta?: number }) => (
+    <Link key={l.href} href={l.href} className={ativo(l.href) ? "ativo" : undefined} aria-current={ativo(l.href) ? "page" : undefined}>
+      <Icone nome={l.icone} />
+      {l.nome}
+      {l.conta ? <span className="mesa-conta" aria-label={`${l.conta} pendente${l.conta > 1 ? "s" : ""}`}>{l.conta}</span> : null}
+    </Link>
+  );
+
+  const usuario = (
+    <span className="mesa-usuario-quem">
+      {perfilHref && <Avatar nome={nome} foto={foto} />}
+      <span>
+        <strong>{nome}</strong>
+        {escritorio}
+      </span>
+    </span>
+  );
 
   return (
     <>
       <aside className="mesa-lateral">
         <Marca href="/app" />
         <nav aria-label="Ferramentas">
-          {LINKS.map((l) => (
-            <Link key={l.href} href={l.href} className={ativo(l.href) ? "ativo" : undefined} aria-current={ativo(l.href) ? "page" : undefined}>
-              <Icone nome={l.icone} />
-              {l.nome}
-            </Link>
-          ))}
-          {dev && (
-            <Link href="/app/dev" className={ativo("/app/dev") ? "ativo" : undefined} aria-current={ativo("/app/dev") ? "page" : undefined}>
-              <Icone nome="auditoria" />
-              Laboratório
-            </Link>
-          )}
+          {LINKS.map(link)}
+          {extras.map(link)}
+          {dev && link({ href: "/app/dev", nome: "Laboratório", icone: "auditoria" })}
         </nav>
         <p className="mesa-rotulo">Consultas recentes</p>
         {recentes.length ? (
           <ul>
             {recentes.map((r) => (
-              <li key={r.id} title={r.pergunta}>{r.pergunta}</li>
+              <li key={r.id} title={r.pergunta}>
+                {hrefConsulta ? <Link href={hrefConsulta(r.id)}>{r.pergunta}</Link> : r.pergunta}
+              </li>
             ))}
           </ul>
         ) : (
           <p className="mesa-vazio">Suas perguntas aparecem aqui.</p>
         )}
         <div className="mesa-usuario">
-          <span>
-            <strong>{nome}</strong>
-            {escritorio}
-          </span>
+          {perfilHref ? (
+            <Link href={perfilHref} className="mesa-usuario-perfil" aria-label={`Perfil de ${nome}`}>
+              {usuario}
+            </Link>
+          ) : (
+            usuario
+          )}
           {acao}
         </div>
       </aside>
 
       <header className="app-topo mesa-topo-movel">
         <Marca href="/app" />
-        <span className="app-data">Vigência {hoje}</span>
+        {perfilHref ? (
+          <Link href={perfilHref} className="mesa-topo-perfil" aria-label="Perfil e escritório">
+            <Avatar nome={nome} foto={foto} />
+          </Link>
+        ) : (
+          <span className="app-data">Vigência {hoje}</span>
+        )}
       </header>
       <nav className="app-abas mesa-abas" aria-label="Ferramentas">
         {LINKS.map((l) => (

@@ -21,11 +21,14 @@ Precisa de PostgreSQL. Com um superusuário em `ADMIN_URL`:
 ```bash
 psql "$ADMIN_URL" -f db/migrations/001_init.sql
 psql "$ADMIN_URL" -f db/migrations/002_app.sql
+psql "$ADMIN_URL" -f db/migrations/003_perfis.sql
 psql "$ADMIN_URL" -f db/seeds/semente_reforma.sql
 psql "$ADMIN_URL" -c "create role advfin_web login password 'dev' in role app_user"
 cp .env.example .env.local   # ajuste DATABASE_URL; LLM_CHAVE é opcional
 npm run dev                  # http://localhost:3000/cadastro
 ```
+
+Quem cadastra vira o Titular do escritório e convida a equipe em `/app/escritorio`. Sem provedor de e-mail, a tela mostra o link do convite para copiar. Os níveis (Titular, Administrador, Membro, Supervisionado), a visibilidade dos casos e a administração seguem [docs/PLANO-PERFIS-PERMISSOES.md](docs/PLANO-PERFIS-PERMISSOES.md).
 
 Sem `LLM_CHAVE`, a pesquisa roda no modo extrativo: devolve os dispositivos mais relevantes, literalmente, pelo mesmo verificador. Deploy: [docs/DEPLOY.md](docs/DEPLOY.md).
 
@@ -38,6 +41,8 @@ Precisam de um PostgreSQL acessível como superusuário; o teste cria e apaga um
 ```bash
 TEST_DATABASE_ADMIN_URL=postgres://postgres@localhost:5432/postgres npm run test:db
 ```
+
+Os arquivos rodam um de cada vez (`--no-file-parallelism`): todos criam o papel global `app_user`, e em paralelo disputam a criação.
 
 ## Landing no GitHub Pages
 
@@ -69,14 +74,21 @@ A landing também roda como site estático, com a calculadora inteira no navegad
 src/lib/tax/        motor determinístico (money, cronograma, engine, apuracao, classificacao) + testes
 src/lib/pesquisa/   recuperação, geração, verificador de citações, orquestrador + testes
 src/lib/llm/        camada de modelo (Anthropic, compatível OpenAI, extrativo)
-src/lib/auth/       senha (scrypt), sessão em cookie httpOnly, ações de login e cadastro
+src/lib/auth/       senha (scrypt), sessão com nível e permissões, 2FA (TOTP), login, cadastro e convites
+src/lib/perfil/     ações do perfil (dados, senha, sessões, 2FA, preferências, LGPD)
+src/lib/escritorio/ ações da administração (pessoas, convites, configurações, cobrança, encerramento)
+src/lib/casos/      casos, inclusão de colegas, revisões e exportação do parecer
+src/lib/plataforma/ curadoria, OAB e equipe da plataforma (/admin)
+src/lib/stripe.ts   cobrança por pessoa no Stripe, pela API REST, e conferência do webhook
+src/lib/email.ts    e-mail transacional (Resend, ou nenhum: a tela mostra o link)
 src/components/     landing; components/app: telas do app
 src/app/            landing e API da lista de espera; (app)/: entrar, cadastro e área logada
 src/proxy.ts        barra /app sem cookie de sessão
 db/seeds/           semente provisória da base (não conferida)
 scripts/            publicação da landing e ingestão do Planalto
 db/migrations/      esquema, RLS e permissões
-db/tests/           portão de segurança: isolamento entre escritórios, login, sessões e pesquisa
+db/tests/           portão de segurança: isolamento, níveis, visibilidade, convites, 2FA, LGPD e plataforma
+scripts/expurgo.mjs expurgo diário (LGPD): contas excluídas e escritórios encerrados há 30 dias
 docs/               arquitetura e decisões
 ```
 

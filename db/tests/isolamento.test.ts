@@ -50,7 +50,7 @@ beforeAll(async () => {
   db = new Client({ connectionString: url.toString() });
   await db.connect();
   await db.query("set client_min_messages = warning");
-  await db.query(readFileSync(join(__dirname, "../migrations/001_init.sql"), "utf8"));
+  for (const f of ["001_init.sql", "002_app.sql", "003_perfis.sql"]) await db.query(readFileSync(join(__dirname, "../migrations", f), "utf8"));
 
   await db.query(
     `insert into usuarios (id, email, nome) values ($1, 'ana@a.adv.br', 'Ana'), ($2, 'bruno@b.adv.br', 'Bruno')`,
@@ -60,7 +60,7 @@ beforeAll(async () => {
     ids.escA,
     ids.escB,
   ]);
-  await db.query(`insert into membros values ($1, $2, 'socio'), ($3, $4, 'socio')`, [
+  await db.query(`insert into membros (escritorio_id, usuario_id, nivel) values ($1, $2, 'titular'), ($3, $4, 'titular')`, [
     ids.escA,
     ids.ana,
     ids.escB,
@@ -129,7 +129,7 @@ describe("isolamento por escritório (RLS)", () => {
   it("não é possível mover um caso próprio para outro escritório", async () => {
     await expect(
       comoApp(ids.escA, ids.ana, () => db.query("update casos set escritorio_id = $1 where id = $2", [ids.escB, ids.casoA])),
-    ).rejects.toThrow(/row-level security/);
+    ).rejects.toThrow(/row-level security|permission denied/); // desde a 003, a coluna nem é gravável
   });
 
   it("update e delete em dados alheios não afetam nenhuma linha", async () => {

@@ -135,7 +135,7 @@ export function Calculadora() {
 
         <details>
           <summary>Alíquotas de referência (estimativa)</summary>
-          <div className="dupla" style={{ marginTop: 12 }}>
+          <div className="dupla">
             <div className="campo">
               <label htmlFor={`${id}-rcbs`}>CBS (%)</label>
               <input id={`${id}-rcbs`} type="text" inputMode="decimal" value={refCbs} onChange={(e) => setRefCbs(e.target.value)} aria-invalid={entradas.refCbs === null} />
@@ -240,7 +240,7 @@ export function Calculadora() {
               <span>Ano selecionado em destaque</span>
             </p>
 
-            <h3 style={{ marginTop: 32 }}>Fontes e premissas deste cálculo</h3>
+            <h3 className="titulo-fontes">Fontes e premissas deste cálculo</h3>
             <ul className="fontes">
               {resultado.fontes.map((f, i) => (
                 <li key={i}>

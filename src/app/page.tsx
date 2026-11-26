@@ -39,19 +39,25 @@ export default function Inicio() {
       <a className="pular" href="#conteudo">
         Pular para o conteúdo
       </a>
-      <header className="topo">
-        <div className="envoltorio">
-          <a href="/" className="marca">
-            Adv<span>Fin</span>
+      <header className="topbar">
+        <div className="ilha">
+          <a href="#conteudo" className="marca" aria-label="AdvFin, início">
+            <svg className="simbolo" viewBox="0 0 28 28" aria-hidden="true">
+              <rect width="28" height="28" rx="9" fill="#0f2742" />
+              <path d="M8 19.5h12M9.5 17V11.5M14 17V11.5M18.5 17V11.5M7.5 10 14 6.5l6.5 3.5" stroke="#d9bf86" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+            </svg>
+            <span>
+              Adv<i>Fin</i>
+            </span>
           </a>
-          <nav aria-label="Principal">
+          <nav className="nav-links" aria-label="Principal">
             <a href="#calculadora">Calculadora IBS/CBS</a>
             <a href="#como-funciona">Como funciona</a>
             <a href="#planos">Planos</a>
-            <a href="#lista" className="botao">
-              Lista de espera
-            </a>
           </nav>
+          <a href="#lista" className="botao peq">
+            Lista de espera
+          </a>
         </div>
       </header>
 
@@ -68,7 +74,7 @@ export default function Inicio() {
                 prepara; você revisa e assina.
               </p>
               <div className="acoes">
-                <a className="botao" href="#calculadora">
+                <a className="botao ouro" href="#calculadora">
                   Simular IBS/CBS agora
                 </a>
                 <a className="botao secundario" href="#lista">
@@ -92,7 +98,7 @@ export default function Inicio() {
                   </p>
                 </div>
                 <aside className="demo-fonte" aria-label="Fonte da citação 1">
-                  <p>
+                    <p>
                     <strong>1 · ADCT, art. 125</strong>
                     <br />
                     <span className="nota-pequena">Incluído pela EC 132/2023</span>
@@ -108,8 +114,12 @@ export default function Inicio() {
 
         <section id="como-funciona">
           <div className="envoltorio">
-            <p className="sobretitulo">Como funciona</p>
-            <h2>O que a IA escreve, o sistema confere.</h2>
+            <div className="secao-cabeca">
+              <p className="sobretitulo">Como funciona</p>
+              <h2>
+                O que a IA escreve, <em>o sistema confere.</em>
+              </h2>
+            </div>
             <div className="tres">
               <div>
                 <span className="numero">I.</span>
@@ -139,31 +149,37 @@ export default function Inicio() {
           </div>
         </section>
 
-        <section id="calculadora">
+        <section id="calculadora" className="faixa">
           <div className="envoltorio">
-            <p className="sobretitulo">Ferramenta gratuita</p>
-            <h2>Calculadora da transição IBS/CBS</h2>
-            <p className="lead">
-              Compare a carga de hoje com a de qualquer ano entre 2026 e 2033. Cada número mostra se vem de norma, de
-              estimativa ou de premissa do cálculo.
-            </p>
+            <div className="secao-cabeca">
+              <p className="sobretitulo">Ferramenta gratuita</p>
+              <h2>
+                Calculadora da transição. <em>De 2026 a 2033.</em>
+              </h2>
+              <p className="lead">
+                Compare a carga de hoje com a de qualquer ano da transição. Cada número mostra se vem de norma, de
+                estimativa ou de premissa do cálculo.
+              </p>
+            </div>
             <Calculadora />
           </div>
         </section>
 
         <section id="planos">
           <div className="envoltorio">
-            <p className="sobretitulo">Planos</p>
-            <h2>Assinatura mensal, em reais.</h2>
-            <p className="lead">Teste de 7 dias sem cartão. Plano anual com dois meses de desconto.</p>
+            <div className="secao-cabeca">
+              <p className="sobretitulo">Planos</p>
+              <h2>
+                Assinatura mensal, <em>em reais.</em>
+              </h2>
+              <p className="lead">Teste de 7 dias sem cartão. Plano anual com dois meses de desconto.</p>
+            </div>
             <div className="planos">
               {PLANOS.map((p) => (
                 <article key={p.nome} className={`plano${p.recomendado ? " recomendado" : ""}`}>
-                  {p.recomendado && <p className="sobretitulo" style={{ marginBottom: 4 }}>Mais escolhido</p>}
+                  {p.recomendado && <p className="sobretitulo">Recomendado</p>}
                   <h3>{p.nome}</h3>
-                  <p className="nota-pequena" style={{ margin: 0 }}>
-                    {p.publico}
-                  </p>
+                  <p className="nota-pequena">{p.publico}</p>
                   <p className="preco">
                     {p.preco} <small>{p.unidade}</small>
                   </p>
@@ -172,7 +188,7 @@ export default function Inicio() {
                       <li key={i}>{i}</li>
                     ))}
                   </ul>
-                  <a className={`botao${p.recomendado ? "" : " secundario"}`} href="#lista">
+                  <a className={`botao${p.recomendado ? " ouro" : " secundario"}`} href="#lista">
                     {p.preco === "Sob consulta" ? "Falar conosco" : "Entrar no beta"}
                   </a>
                 </article>
@@ -182,15 +198,19 @@ export default function Inicio() {
         </section>
 
         <section id="lista">
-          <div className="envoltorio espera">
+          <div className="envoltorio">
+          <div className="espera">
             <div>
               <p className="sobretitulo">Programa fundador</p>
-              <h2>Ajude a construir a ferramenta que você vai usar.</h2>
+              <h2>
+                Ajude a construir <em>a ferramenta que você vai usar.</em>
+              </h2>
               <p className="lead">
                 Os 50 primeiros escritórios têm desconto vitalício em troca de uma conversa quinzenal sobre o produto.
               </p>
             </div>
             <ListaEspera />
+          </div>
           </div>
         </section>
       </main>

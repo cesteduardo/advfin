@@ -1,14 +1,38 @@
 "use client";
 
 import { useId, useState } from "react";
+import { EMAIL_INSCRICOES, ROTULO_PERFIL } from "@/config/site";
 
 /**
- * Destino das inscrições. No servidor Next, a rota própria (/api/lista-espera).
- * Na versão estática (GitHub Pages) não há servidor: usa NEXT_PUBLIC_LISTA_ESPERA_URL
- * (ex.: um formulário Formspree ou uma função serverless). Sem ela, o formulário avisa e não finge enviar.
+ * Destino das inscrições:
+ *  - site estático (domínio próprio ou GitHub Pages): e-mail via FormSubmit;
+ *  - servidor Next com banco: a rota própria /api/lista-espera;
+ *  - NEXT_PUBLIC_LISTA_ESPERA_URL, se definida, tem prioridade sobre os dois.
  */
+const ESTATICO = process.env.NEXT_PUBLIC_ESTATICO === "1";
+const URL_PROPRIA = process.env.NEXT_PUBLIC_LISTA_ESPERA_URL;
 const DESTINO =
-  process.env.NEXT_PUBLIC_LISTA_ESPERA_URL || (process.env.NEXT_PUBLIC_ESTATICO === "1" ? null : "/api/lista-espera");
+  URL_PROPRIA ||
+  (ESTATICO ? (EMAIL_INSCRICOES ? `https://formsubmit.co/ajax/${EMAIL_INSCRICOES}` : null) : "/api/lista-espera");
+const POR_EMAIL = DESTINO?.startsWith("https://formsubmit.co/") ?? false;
+
+function corpo(dados: Record<string, FormDataEntryValue>) {
+  const consentimento = dados.consentimento === "on";
+  if (!POR_EMAIL) return { ...dados, consentimento, origem: "landing" };
+  const perfil = String(dados.perfil ?? "");
+  return {
+    Nome: dados.nome,
+    "E-mail": dados.email,
+    "Atua como": ROTULO_PERFIL[perfil] ?? perfil,
+    "Consentimento LGPD": consentimento ? `Sim, em ${new Date().toLocaleString("pt-BR")}` : "Não",
+    Origem: typeof window !== "undefined" ? window.location.href : "landing",
+    _subject: `AdvFin · nova inscrição na lista de espera: ${dados.nome}`,
+    _replyto: dados.email,
+    _template: "table",
+    _captcha: "false",
+    _honey: dados.site ?? "",
+  };
+}
 
 export function ListaEspera() {
   const id = useId();
@@ -28,10 +52,11 @@ export function ListaEspera() {
       const r = await fetch(DESTINO, {
         method: "POST",
         headers: { "content-type": "application/json", accept: "application/json" },
-        body: JSON.stringify({ ...dados, consentimento: dados.consentimento === "on", origem: "landing" }),
+        body: JSON.stringify(corpo(dados)),
       });
       const j = await r.json().catch(() => ({}));
-      if (!r.ok) throw new Error(j.erro ?? "Não foi possível registrar agora.");
+      // FormSubmit responde 200 com success "false" quando recusa o envio.
+      if (!r.ok || String(j.success) === "false") throw new Error(j.erro ?? "Não foi possível registrar agora. Tente em instantes.");
       setEstado("ok");
     } catch (err) {
       setMensagem((err as Error).message);
@@ -70,8 +95,8 @@ export function ListaEspera() {
       <label className="check campo">
         <input name="consentimento" type="checkbox" required />
         <span>
-          Autorizo o uso do meu e-mail para receber o convite do beta e o boletim, conforme a LGPD. Posso cancelar a
-          qualquer momento.
+          Autorizo o uso do meu e-mail para receber o convite do beta e o boletim, conforme a{" "}
+          <a href="#privacidade">Política de Privacidade</a>. Posso cancelar a qualquer momento.
         </span>
       </label>
       <button className="botao" type="submit" disabled={estado === "enviando"}>

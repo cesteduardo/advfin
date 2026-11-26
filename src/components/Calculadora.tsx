@@ -3,6 +3,7 @@
 import { useId, useMemo, useState } from "react";
 import { calcular, linhaDoTempo, type ResultadoCalculo } from "@/lib/tax/engine";
 import { REFERENCIA_ESTIMADA, REGIMES, type Regime, type StatusFonte } from "@/lib/tax/cronograma";
+import { Segmentado } from "./Segmentado";
 import { formatarPercentual, formatarReais, percentualParaPpm, reaisParaCentavos } from "@/lib/tax/money";
 
 const ANOS = [2026, 2027, 2028, 2029, 2030, 2031, 2032, 2033];
@@ -71,29 +72,34 @@ export function Calculadora() {
           {entradas.valor === null && <span className="erro">Informe um valor como 10.000,00</span>}
         </div>
 
-        <fieldset className="campo">
-          <legend>Tipo de operação</legend>
-          <div className="segmentos">
-            {(["mercadoria", "servico"] as const).map((t) => (
-              <label key={t}>
-                <input type="radio" name={`${id}-tipo`} value={t} checked={tipo === t} onChange={() => setTipo(t)} />
-                <span>{t === "mercadoria" ? "Mercadoria (ICMS)" : "Serviço (ISS)"}</span>
-              </label>
-            ))}
-          </div>
-        </fieldset>
+        <div className="campo">
+          <span className="rotulo" id={`${id}-tipo`}>Tipo de operação</span>
+          <Segmentado
+            rotulo="Tipo de operação"
+            idRotulo={`${id}-tipo`}
+            cheio
+            valor={tipo}
+            muda={setTipo}
+            opcoes={[
+              { id: "mercadoria", nome: "Mercadoria (ICMS)" },
+              { id: "servico", nome: "Serviço (ISS)" },
+            ]}
+          />
+        </div>
+
+        <div className="campo">
+          <span className="rotulo" id={`${id}-ano`}>Ano</span>
+          <Segmentado
+            rotulo="Ano"
+            idRotulo={`${id}-ano`}
+            cheio
+            valor={ano}
+            muda={setAno}
+            opcoes={ANOS.map((a) => ({ id: a, nome: a }))}
+          />
+        </div>
 
         <div className="dupla">
-          <div className="campo">
-            <label htmlFor={`${id}-ano`}>Ano</label>
-            <select id={`${id}-ano`} value={ano} onChange={(e) => setAno(Number(e.target.value))}>
-              {ANOS.map((a) => (
-                <option key={a} value={a}>
-                  {a}
-                </option>
-              ))}
-            </select>
-          </div>
           <div className="campo">
             <label htmlFor={`${id}-pis`}>PIS/Cofins atual (%)</label>
             <input
@@ -105,8 +111,6 @@ export function Calculadora() {
               aria-invalid={entradas.pisCofins === null}
             />
           </div>
-        </div>
-
         <div className="campo">
           {tipo === "mercadoria" ? (
             <>
@@ -119,6 +123,7 @@ export function Calculadora() {
               <input id={`${id}-iss`} type="text" inputMode="decimal" value={iss} onChange={(e) => setIss(e.target.value)} aria-invalid={entradas.iss === null} />
             </>
           )}
+        </div>
         </div>
 
         <div className="campo">

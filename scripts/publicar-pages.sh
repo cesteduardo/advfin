@@ -1,15 +1,16 @@
 #!/usr/bin/env bash
 # Gera a landing estática e publica no branch gh-pages (GitHub Pages servindo de branch, sem Actions).
+# Domínio próprio no Pages: DOMINIO=advfin.com.br BASE_PATH= npm run pages
 set -euo pipefail
-raiz=$(git rev-parse --show-toplevel)
-tmp=$(mktemp -d)
-cp -r "$raiz"/. "$tmp/src-copia"
-cd "$tmp/src-copia"
-rm -rf src/app/api .next out
-GITHUB_PAGES=1 npx next build
+source "$(dirname "$0")/_estatico.sh"
+construir_estatico env GITHUB_PAGES=1
+origem=$(git remote get-url origin); versao=$(git rev-parse --short HEAD)
+rm -f out/.htaccess out/_headers
 touch out/.nojekyll
+if [ -n "${DOMINIO:-}" ]; then echo "$DOMINIO" > out/CNAME; fi
 cd out
 git init -q -b gh-pages
 git add -A
-git -c user.name="${GIT_AUTHOR_NAME:-AdvFin}" -c user.email="${GIT_AUTHOR_EMAIL:-noreply@users.noreply.github.com}" commit -q -m "Landing estática $(git -C "$raiz" rev-parse --short HEAD)"
-git push -f "$(git -C "$raiz" remote get-url origin)" gh-pages
+git -c user.name="${GIT_AUTHOR_NAME:-AdvFin}" -c user.email="${GIT_AUTHOR_EMAIL:-noreply@users.noreply.github.com}" commit -q -m "Landing estática $versao"
+git push -qf "$origem" gh-pages
+rm -rf .git

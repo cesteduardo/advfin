@@ -9,7 +9,8 @@
     "test": "vitest run src",
     "test:db": "vitest run db/tests",
     "typecheck": "tsc --noEmit",
-    "pages": "bash scripts/publicar-pages.sh"
+    "pages": "bash scripts/publicar-pages.sh",
+    "site": "bash scripts/gerar-site.sh"
   },
   "author": "",
   "license": "ISC",

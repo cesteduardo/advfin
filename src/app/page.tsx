@@ -1,37 +1,9 @@
 import { Calculadora } from "@/components/Calculadora";
 import { ListaEspera } from "@/components/ListaEspera";
+import { Legal } from "@/components/Legal";
+import { NavIlha } from "@/components/NavIlha";
+import { Planos } from "@/components/Planos";
 
-const PLANOS = [
-  {
-    nome: "Essencial",
-    publico: "Advogado autônomo",
-    preco: "R$ 197",
-    unidade: "/mês",
-    itens: ["Pesquisa fundamentada", "Copiloto da Reforma", "Exportação para Word e PDF", "Limite mensal de consultas"],
-  },
-  {
-    nome: "Escritório",
-    publico: "3 a 20 usuários",
-    preco: "R$ 249",
-    unidade: "/usuário/mês",
-    itens: ["Tudo do Essencial", "Base privada do escritório", "Modelos e estilo próprios", "Colaboração e papéis"],
-    recomendado: true,
-  },
-  {
-    nome: "Tributário Pro",
-    publico: "Escritórios e jurídicos de empresa",
-    preco: "R$ 449",
-    unidade: "/usuário/mês",
-    itens: ["Tudo do Escritório", "Simulador avançado de créditos", "Análise de SPED", "Monitoramento por cliente"],
-  },
-  {
-    nome: "Corporativo",
-    publico: "Grandes bancas e empresas",
-    preco: "Sob consulta",
-    unidade: "",
-    itens: ["SSO e API", "Auditoria dedicada", "Contrato e SLA próprios"],
-  },
-];
 
 export default function Inicio() {
   return (
@@ -50,11 +22,7 @@ export default function Inicio() {
               Adv<i>Fin</i>
             </span>
           </a>
-          <nav className="nav-links" aria-label="Principal">
-            <a href="#calculadora">Calculadora IBS/CBS</a>
-            <a href="#como-funciona">Como funciona</a>
-            <a href="#planos">Planos</a>
-          </nav>
+          <NavIlha />
           <a href="#lista" className="botao peq">
             Lista de espera
           </a>
@@ -174,26 +142,7 @@ export default function Inicio() {
               </h2>
               <p className="lead">Teste de 7 dias sem cartão. Plano anual com dois meses de desconto.</p>
             </div>
-            <div className="planos">
-              {PLANOS.map((p) => (
-                <article key={p.nome} className={`plano${p.recomendado ? " recomendado" : ""}`}>
-                  {p.recomendado && <p className="sobretitulo">Recomendado</p>}
-                  <h3>{p.nome}</h3>
-                  <p className="nota-pequena">{p.publico}</p>
-                  <p className="preco">
-                    {p.preco} <small>{p.unidade}</small>
-                  </p>
-                  <ul>
-                    {p.itens.map((i) => (
-                      <li key={i}>{i}</li>
-                    ))}
-                  </ul>
-                  <a className={`botao${p.recomendado ? " ouro" : " secundario"}`} href="#lista">
-                    {p.preco === "Sob consulta" ? "Falar conosco" : "Entrar no beta"}
-                  </a>
-                </article>
-              ))}
-            </div>
+            <Planos />
           </div>
         </section>
 
@@ -217,14 +166,32 @@ export default function Inicio() {
 
       <footer>
         <div className="envoltorio">
-          <p>
-            AdvFin é uma ferramenta de apoio para profissionais do Direito e da contabilidade. Não presta serviço
-            jurídico, não substitui a análise do advogado e não promete resultado. As simulações usam premissas
-            declaradas e estimativas oficiais sujeitas a alteração.
-          </p>
-          <p>© 2026 AdvFin · Dados tratados conforme a LGPD (Lei 13.709/2018).</p>
+          <div className="rodape-texto">
+            <p className="marca rodape-marca">
+              Adv<i>Fin</i>
+            </p>
+            <p>
+              Ferramenta de apoio para profissionais do Direito e da contabilidade. Não presta serviço jurídico, não
+              substitui a análise do advogado e não promete resultado. As simulações usam premissas declaradas e
+              estimativas oficiais sujeitas a alteração.
+            </p>
+          </div>
+          <div className="rodape-lado">
+            <nav className="rodape-links" aria-label="Documentos legais">
+              <a href="#privacidade">Política de Privacidade</a>
+              <a href="#termos">Termos de Uso</a>
+            </nav>
+            <p>© 2026 AdvFin · Dados tratados conforme a LGPD (Lei 13.709/2018).</p>
+            <p className="feito-por">
+              Feito por{" "}
+              <a href="https://grbrands.com.br" target="_blank" rel="noopener">
+                GR Brands
+              </a>
+            </p>
+          </div>
         </div>
       </footer>
+      <Legal />
     </>
   );
 }

@@ -1,10 +1,14 @@
+import type { CSSProperties } from "react";
 import { Aparelhos } from "@/components/Aparelhos";
+import { Palavras } from "@/components/Palavras";
 import { Calculadora } from "@/components/Calculadora";
 import { ListaEspera } from "@/components/ListaEspera";
 import { CreditoGR } from "@/components/CreditoGR";
 import { Legal } from "@/components/Legal";
 import { NavIlha } from "@/components/NavIlha";
+import { Perguntas } from "@/components/Perguntas";
 import { Planos } from "@/components/Planos";
+import { Revelar } from "@/components/Revelar";
 
 
 export default function Inicio() {
@@ -32,15 +36,16 @@ export default function Inicio() {
         <section className="heroi">
           <div className="envoltorio heroi-grade">
             <div>
-              <p className="sobretitulo">A IA do tributarista · Reforma Tributária</p>
-              <h1>
-                Cada resposta com a norma ao lado. <em>Cada norma com a data em que vale.</em>
+              <p className="sobretitulo heroi-selo"><span className="pulso" aria-hidden="true" />A IA do tributarista · Reforma Tributária</p>
+              <h1 className="heroi-titulo" aria-label="Cada resposta com a norma ao lado. Cada norma com a data em que vale.">
+                <span className="linha"><Palavras texto="Cada resposta com a norma ao lado." /></span>{" "}
+                <em><Palavras texto="Cada norma com a data em que vale." inicio={7} /></em>
               </h1>
-              <p className="lead">
+              <p className="lead heroi-entra" style={{ "--d": "0.75s" } as CSSProperties}>
                 Pesquisa e cálculo para a transição de 2026 a 2033, com fonte verificável em cada afirmação. A IA
                 prepara; você revisa e assina.
               </p>
-              <div className="acoes">
+              <div className="acoes heroi-entra" style={{ "--d": "0.9s" } as CSSProperties}>
                 <a className="botao ouro" href="#calculadora">
                   Simular IBS/CBS agora
                 </a>
@@ -48,7 +53,7 @@ export default function Inicio() {
                   Entrar no beta
                 </a>
               </div>
-              <p className="nota-pequena">Gratuito, sem cartão. Beta para os primeiros 50 escritórios.</p>
+              <p className="nota-pequena heroi-entra" style={{ "--d": "1.02s" } as CSSProperties}>Gratuito, sem cartão. Beta para os primeiros 50 escritórios.</p>
             </div>
 
             <Aparelhos />
@@ -121,6 +126,19 @@ export default function Inicio() {
           </div>
         </section>
 
+        <section id="perguntas">
+          <div className="envoltorio">
+            <div className="secao-cabeca">
+              <p className="sobretitulo">Perguntas frequentes</p>
+              <h2>
+                O que perguntam antes <em>de entrar no beta.</em>
+              </h2>
+              <p className="lead">Sobre fontes, cálculo, sigilo e assinatura. Se a sua dúvida não estiver aqui, conte para nós ao <a href="#lista">entrar na lista de espera</a>.</p>
+            </div>
+            <Perguntas />
+          </div>
+        </section>
+
         <section id="lista">
           <div className="envoltorio">
           <div className="espera">
@@ -165,6 +183,7 @@ export default function Inicio() {
         </div>
       </footer>
       <Legal />
+      <Revelar />
     </>
   );
 }

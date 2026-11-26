@@ -7,6 +7,7 @@ const LINKS = [
   { href: "#calculadora", nome: "Calculadora IBS/CBS" },
   { href: "#como-funciona", nome: "Como funciona" },
   { href: "#planos", nome: "Planos" },
+  { href: "#perguntas", nome: "Perguntas" },
 ];
 const SECOES = [...LINKS.map((l) => l.href), "#lista"];
 

@@ -85,7 +85,7 @@ export function ListaEspera() {
       <div className="campo">
         <label htmlFor={`${id}-perfil`}>Você atua como</label>
         <select id={`${id}-perfil`} name="perfil" defaultValue="tributarista_pequeno">
-          <option value="tributarista_pequeno">Tributarista autônomo ou em escritório de até 5 advogados</option>
+          <option value="tributarista_pequeno">Autônomo ou escritório de até 5 advogados</option>
           <option value="escritorio_medio">Escritório de 6 a 50 advogados</option>
           <option value="juridico_interno">Jurídico ou fiscal de empresa</option>
           <option value="contador">Contador ou consultor tributário</option>

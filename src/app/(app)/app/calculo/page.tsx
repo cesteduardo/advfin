@@ -1,22 +1,9 @@
 import { Calculo } from "@/components/app/Calculo";
+import { exigirSessao } from "@/lib/auth/sessao";
 
 export const metadata = { title: "Cálculo — AdvFin" };
 
-export default function PaginaCalculo() {
-  return (
-    <>
-      <div className="palco-cabeca">
-        <div>
-          <h1>
-            Cálculo da transição. <em>Feito por código, não por IA.</em>
-          </h1>
-          <p>
-            Motor determinístico com aritmética exata em centavos. Cada número mostra se vem de norma, estimativa ou premissa, e
-            se o curador já conferiu.
-          </p>
-        </div>
-      </div>
-      <Calculo />
-    </>
-  );
+export default async function PaginaCalculo() {
+  const s = await exigirSessao();
+  return <Calculo trilha={`${s.escritorio} / Calculadora`} />;
 }

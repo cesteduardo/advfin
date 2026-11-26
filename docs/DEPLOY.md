@@ -44,6 +44,7 @@ Sem a chave, o app já funciona: a pesquisa responde no modo extrativo, só com 
    | `LLM_PROVEDOR` | `anthropic` |
    | `LLM_CHAVE` | do passo 2 |
    | `BASE_INCLUIR_NAO_REVISADOS` | `1` durante o beta sem curador; remover quando a base estiver conferida |
+   | `DEV_EMAILS` | seu e-mail, para abrir o laboratório do chat em `/app/dev` (sem ele, a página dá 404 em produção) |
 
 3. *Deploy*. Testar: `/cadastro`, criar conta, `/app/pesquisa`.
 4. **[Eduardo]** Domínio: em *Settings → Domains*, adicionar `app.advfin.com.br` (ou outro) e criar o CNAME indicado no seu provedor de DNS.

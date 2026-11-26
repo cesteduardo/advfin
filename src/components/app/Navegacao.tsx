@@ -3,49 +3,58 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { sair } from "@/lib/auth/acoes";
+import { Icone, type NomeIcone } from "./Icone";
 import { Marca } from "./Marca";
 
-const I = {
-  inicio: <path d="M4 11.5 12 5l8 6.5V19a1 1 0 0 1-1 1h-4.5v-5h-5v5H5a1 1 0 0 1-1-1z" />,
-  pesquisa: <><circle cx="11" cy="11" r="6" /><path d="m20 20-4.2-4.2" /></>,
-  calculo: <><rect x="5" y="3.5" width="14" height="17" rx="2.5" /><path d="M8.5 7.5h7M8.5 12h1M12 12h1M15.5 12h0M8.5 15.5h1M12 15.5h1M15.5 15.5v0" /></>,
-  classificacao: <><path d="M4 7h16M4 12h10M4 17h6" /><circle cx="17.5" cy="16" r="2.5" /></>,
-};
-
-const LINKS = [
-  { href: "/app", nome: "Início", icone: I.inicio },
-  { href: "/app/pesquisa", nome: "Pesquisa", icone: I.pesquisa },
-  { href: "/app/calculo", nome: "Cálculo", icone: I.calculo },
-  { href: "/app/classificacao", nome: "NCM/NBS", icone: I.classificacao },
+const LINKS: { href: string; nome: string; curto: string; icone: NomeIcone }[] = [
+  { href: "/app", nome: "Início", curto: "Início", icone: "inicio" },
+  { href: "/app/pesquisa", nome: "Pesquisa", curto: "Pesquisa", icone: "pesquisa" },
+  { href: "/app/calculo", nome: "Calculadora", curto: "Cálculo", icone: "calculo" },
+  { href: "/app/classificacao", nome: "NCM/NBS", curto: "NCM/NBS", icone: "classificacao" },
 ];
 
-function Icone({ children }: { children: React.ReactNode }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      {children}
-    </svg>
-  );
+export interface ConsultaRecente {
+  id: string;
+  pergunta: string;
 }
 
-export function Navegacao({ nome, escritorio }: { nome: string; escritorio: string }) {
+/** Menu lateral da mesa de trabalho (desktop) e abas em pílula de vidro (celular), como na demonstração. */
+export function Navegacao({ nome, escritorio, recentes, dev }: { nome: string; escritorio: string; recentes: ConsultaRecente[]; dev: boolean }) {
   const caminho = usePathname();
-  const atual = (href: string) => (href === "/app" ? caminho === "/app" : caminho.startsWith(href)) ? "page" : undefined;
+  const ativo = (href: string) => (href === "/app" ? caminho === "/app" : caminho.startsWith(href));
+  const hoje = new Date().toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" });
+
   return (
     <>
-      <aside className="lateral">
+      <aside className="mesa-lateral">
         <Marca href="/app" />
         <nav aria-label="Ferramentas">
           {LINKS.map((l) => (
-            <Link key={l.href} href={l.href} aria-current={atual(l.href)}>
-              <Icone>{l.icone}</Icone>
+            <Link key={l.href} href={l.href} className={ativo(l.href) ? "ativo" : undefined} aria-current={ativo(l.href) ? "page" : undefined}>
+              <Icone nome={l.icone} />
               {l.nome}
             </Link>
           ))}
+          {dev && (
+            <Link href="/app/dev" className={ativo("/app/dev") ? "ativo" : undefined} aria-current={ativo("/app/dev") ? "page" : undefined}>
+              <Icone nome="auditoria" />
+              Laboratório
+            </Link>
+          )}
         </nav>
-        <div className="lateral-pe">
+        <p className="mesa-rotulo">Consultas recentes</p>
+        {recentes.length ? (
+          <ul>
+            {recentes.map((r) => (
+              <li key={r.id} title={r.pergunta}>{r.pergunta}</li>
+            ))}
+          </ul>
+        ) : (
+          <p className="mesa-vazio">Suas perguntas aparecem aqui.</p>
+        )}
+        <div className="mesa-usuario">
           <span>
             <strong>{nome}</strong>
-            <br />
             {escritorio}
           </span>
           <form action={sair}>
@@ -53,21 +62,19 @@ export function Navegacao({ nome, escritorio }: { nome: string; escritorio: stri
           </form>
         </div>
       </aside>
-      <header className="topo-movel">
-        <div className="linha">
-          <Marca href="/app" />
-          <form action={sair}>
-            <button>Sair</button>
-          </form>
-        </div>
-        <nav aria-label="Ferramentas">
-          {LINKS.map((l) => (
-            <Link key={l.href} href={l.href} aria-current={atual(l.href)}>
-              {l.nome}
-            </Link>
-          ))}
-        </nav>
+
+      <header className="app-topo mesa-topo-movel">
+        <Marca href="/app" />
+        <span className="app-data">Vigência {hoje}</span>
       </header>
+      <nav className="app-abas mesa-abas" aria-label="Ferramentas">
+        {LINKS.map((l) => (
+          <Link key={l.href} href={l.href} className={ativo(l.href) ? "ativo" : undefined} aria-current={ativo(l.href) ? "page" : undefined}>
+            <Icone nome={l.icone} />
+            {l.curto}
+          </Link>
+        ))}
+      </nav>
     </>
   );
 }

@@ -3,7 +3,7 @@ import { Marca } from "./Marca";
 export function LadoAcesso() {
   return (
     <aside className="acesso-lado">
-      <Marca />
+      <Marca claro />
       <h1>
         Cada resposta com a norma ao lado.
         <em>Cada norma com a data em que vale.</em>

@@ -1,10 +1,14 @@
 "use client";
 
-import { Fragment, useState, useTransition } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { Fragment, useRef, useState, useTransition } from "react";
 import { acaoPesquisar } from "@/lib/pesquisa/acao";
 import type { DesfechoPesquisa } from "@/lib/pesquisa/orquestrador";
 import type { Trecho } from "@/lib/pesquisa/tipos";
 import { normalizar, normalizarComMapa } from "@/lib/pesquisa/verificador";
+import { Icone } from "./Icone";
+import { Simbolo } from "./Marca";
 
 const SUGESTOES = [
   "Qual a alíquota da CBS e do IBS em 2026?",
@@ -17,6 +21,7 @@ type Desfecho = DesfechoPesquisa | { status: "invalida"; mensagem: string };
 
 const dataBR = (iso: string) => iso.split("-").reverse().join("/");
 const hoje = () => new Date().toLocaleDateString("sv-SE", { timeZone: "America/Sao_Paulo" });
+const hora = () => new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", timeZone: "America/Sao_Paulo" });
 
 /** Destaca no texto do dispositivo o trecho citado (comparação normalizada, posição no original). */
 function Destaque({ texto, trechos }: { texto: string; trechos: string[] }) {
@@ -40,26 +45,86 @@ function Destaque({ texto, trechos }: { texto: string; trechos: string[] }) {
   return <>{partes}</>;
 }
 
-function SeloCuradoria({ t }: { t: Trecho }) {
-  if (t.origem === "semente") return <span className="selo semente">Texto provisório, não conferido</span>;
-  if (t.curadoria === "publicado") return <span className="selo publicado">Conferido pelo curador</span>;
-  return <span className="selo em_revisao">Aguardando curador</span>;
+function vigente(t: Trecho, data: string) {
+  return t.vigenciaInicio <= data && (!t.vigenciaFim || t.vigenciaFim > data);
+}
+
+/** Cartão de fonte, igual ao da demonstração: número e dispositivo, selo de vigência, norma e trecho. */
+function CartaoFonte({ t, data, citados, ativa, aoClicar }: { t: Trecho; data: string; citados: string[]; ativa: boolean; aoClicar: () => void }) {
+  return (
+    <section id={`fonte-${t.ref}`} className="cartao-fonte" data-ativa={ativa ? "" : undefined} onClick={aoClicar}>
+      <div className="cartao-fonte-topo">
+        <strong>
+          {t.ref.slice(1)} · {t.rotulo}
+        </strong>
+        {vigente(t, data) && <span className="selo vigente">Vigente em {dataBR(data)}</span>}
+      </div>
+      <span className="cartao-fonte-sub">
+        {t.norma} ·{" "}
+        <a href={t.url} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()}>
+          texto oficial
+        </a>
+      </span>
+      <blockquote>
+        <Destaque texto={t.texto} trechos={citados} />
+      </blockquote>
+      {t.origem === "semente" ? (
+        <span className="selo semente">Texto provisório, não conferido pelo curador</span>
+      ) : t.curadoria === "publicado" ? (
+        <span className="selo publicado">Conferido pelo curador</span>
+      ) : (
+        <span className="selo em_revisao">Aguardando o curador</span>
+      )}
+    </section>
+  );
+}
+
+/** Régua de vigência do dispositivo em foco, de 2023 a 2033, com a data de referência marcada. */
+function Regua({ t, data }: { t: Trecho; data: string }) {
+  const ini = Date.UTC(2023, 0, 1);
+  const fim = Date.UTC(2034, 0, 1);
+  const pos = (iso: string) => Math.min(100, Math.max(0, ((Date.parse(iso) - ini) / (fim - ini)) * 100));
+  const a = pos(t.vigenciaInicio);
+  const b = t.vigenciaFim ? pos(t.vigenciaFim) : 100;
+  return (
+    <div className="mesa-vigencia">
+      <p className="mesa-rotulo">Vigência do dispositivo {t.ref.slice(1)}</p>
+      <div className="regua" role="img" aria-label={`Vigente desde ${dataBR(t.vigenciaInicio)}${t.vigenciaFim ? ` até ${dataBR(t.vigenciaFim)}` : ", sem data final"}; consulta em ${dataBR(data)}`}>
+        <b style={{ left: `${a}%`, width: `${b - a}%` }} />
+        <i style={{ left: `${pos(data)}%` }} />
+      </div>
+      <div className="regua-anos">
+        <span>2023</span>
+        <span>{dataBR(data)}</span>
+        <span>2033</span>
+      </div>
+      <p className="mesa-nota">
+        Desde {dataBR(t.vigenciaInicio)}
+        {t.vigenciaFim ? ` até ${dataBR(t.vigenciaFim)}` : ", sem revogação registrada"}.
+      </p>
+    </div>
+  );
 }
 
 export function Pesquisa() {
   const [pergunta, setPergunta] = useState("");
+  const [enviada, setEnviada] = useState<{ texto: string; data: string; hora: string } | null>(null);
   const [data, setData] = useState(hoje);
   const [desfecho, setDesfecho] = useState<Desfecho | null>(null);
   const [ativa, setAtiva] = useState<string | null>(null);
   const [pendente, iniciar] = useTransition();
+  const campo = useRef<HTMLTextAreaElement>(null);
+  const router = useRouter();
 
   const enviar = (q = pergunta) => {
-    if (!q.trim()) return;
-    setPergunta(q);
+    if (q.trim().length < 8) return;
+    setEnviada({ texto: q.trim(), data, hora: hora() });
+    setPergunta("");
     setAtiva(null);
     iniciar(async () => {
       try {
         setDesfecho(await acaoPesquisar(q, data));
+        router.refresh(); // atualiza "Consultas recentes" no menu
       } catch {
         setDesfecho({ status: "erro", id: "", mensagem: "Não foi possível falar com o servidor.", fontes: [] });
       }
@@ -71,153 +136,190 @@ export function Pesquisa() {
     document.getElementById(`fonte-${ref}`)?.scrollIntoView({ behavior: "smooth", block: "nearest" });
   };
 
+  const dataRef = enviada?.data ?? data;
   const fontes = desfecho && "fontes" in desfecho ? desfecho.fontes : [];
-  const citadosPorRef = new Map<string, string[]>();
+  const citados = new Map<string, string[]>();
   if (desfecho?.status === "respondida") {
-    for (const c of desfecho.citacoes) citadosPorRef.set(c.ref, [...(citadosPorRef.get(c.ref) ?? []), c.trecho]);
+    for (const c of desfecho.citacoes) citados.set(c.ref, [...(citados.get(c.ref) ?? []), c.trecho]);
   }
-  const fontesExibidas = desfecho?.status === "respondida" ? fontes.filter((f) => citadosPorRef.has(f.ref)) : fontes;
-  const temProvisorio = fontesExibidas.some((f) => f.origem === "semente" || f.curadoria !== "publicado");
+  const exibidas = desfecho?.status === "respondida" ? fontes.filter((f) => citados.has(f.ref)) : fontes;
+  const foco = exibidas.find((f) => f.ref === ativa) ?? exibidas[0];
+  const provisorio = exibidas.some((f) => f.origem === "semente" || f.curadoria !== "publicado");
 
   return (
-    <div className="pesquisa">
-      <div>
-        <form
-          className="pergunta-form"
-          onSubmit={(e) => {
-            e.preventDefault();
-            enviar();
-          }}
-        >
-          <label htmlFor="pergunta" className="so-leitor">Pergunta</label>
-          <textarea
-            id="pergunta"
-            value={pergunta}
-            onChange={(e) => setPergunta(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) enviar();
-            }}
-            placeholder="Ex.: Qual a alíquota da CBS em 2026 e como ela se compensa com o PIS/Cofins?"
-            maxLength={2000}
-          />
-          <div className="pergunta-linha">
-            <label className="data-ref">
-              O que valia em
-              <input type="date" value={data} min="2023-12-21" onChange={(e) => setData(e.target.value)} required />
-            </label>
-            <button className="botao peq" disabled={pendente || pergunta.trim().length < 8}>
-              {pendente ? "Pesquisando…" : "Pesquisar"}
-            </button>
-          </div>
-          {!desfecho && (
-            <div className="sugestoes" aria-label="Sugestões">
+    <div className="mesa-grade">
+      <section className="mesa-conversa" aria-live="polite">
+        {!enviada && (
+          <div className="mesa-resposta mesa-boas-vindas">
+            <p className="mesa-autor">
+              <Simbolo /> AdvFin · pesquisa fundamentada
+            </p>
+            <p>
+              Pergunte em linguagem natural. A resposta usa só dispositivos vigentes na data escolhida, com o trecho ao lado. Se
+              alguma citação não existir na base, a resposta é bloqueada.
+            </p>
+            <div className="mesa-acoes">
               {SUGESTOES.map((s) => (
                 <button type="button" key={s} onClick={() => enviar(s)}>
                   {s}
                 </button>
               ))}
             </div>
-          )}
-        </form>
+          </div>
+        )}
 
-        <div aria-live="polite">
-          {pendente && <p className="resposta nota-pequena">Buscando dispositivos vigentes em {dataBR(data)} e conferindo citações…</p>}
+        {enviada && <p className="mesa-pergunta">{enviada.texto}</p>}
 
-          {!pendente && desfecho?.status === "respondida" && (
-            <article className="resposta">
-              <div className="resposta-cabeca">
-                <h2>{desfecho.redigida ? "Resposta" : "Dispositivos mais relevantes"}</h2>
-                <span className="selo vigente">Citações conferidas na base · {dataBR(data)}</span>
-              </div>
-              {temProvisorio && (
-                <p className="alerta aviso">
-                  Há fontes ainda não conferidas pelo tributarista curador. Use como ponto de partida, não em peça.
-                </p>
+        {pendente && (
+          <div className="mesa-resposta">
+            <p className="mesa-autor">
+              <Simbolo /> AdvFin · conferindo citações
+            </p>
+            <p className="mesa-carregando">Buscando dispositivos vigentes em {dataBR(dataRef)}…</p>
+          </div>
+        )}
+
+        {!pendente && desfecho?.status === "respondida" && (
+          <>
+            <article className="mesa-resposta">
+              <p className="mesa-autor">
+                <Simbolo /> AdvFin · {desfecho.redigida ? "revisão pendente" : "trechos literais, sem redação"}
+              </p>
+              {provisorio && (
+                <p className="alerta aviso">Fontes ainda não conferidas pelo tributarista curador. Use como ponto de partida, não em peça.</p>
               )}
-              <div className="resposta-texto">
-                {desfecho.paragrafos.map((p, i) => (
-                  <p key={i}>
-                    {p.split(/(\[D\d{1,2}\])/).map((parte, j) => {
-                      const m = /^\[(D\d{1,2})\]$/.exec(parte);
-                      return m ? (
-                        <button key={j} type="button" className="marca-fonte" aria-pressed={ativa === m[1]} onClick={() => focar(m[1])} aria-label={`Ver fonte ${m[1]}`}>
+              {desfecho.paragrafos.map((p, i) => (
+                <p key={i}>
+                  {p.split(/(\[D\d{1,2}\])/).map((parte, j) => {
+                    const m = /^\[(D\d{1,2})\]$/.exec(parte);
+                    return m ? (
+                      <sup key={j} className="cit">
+                        <button type="button" aria-pressed={ativa === m[1]} onClick={() => focar(m[1])} aria-label={`Ver fonte ${m[1].slice(1)}`}>
                           {m[1].slice(1)}
                         </button>
-                      ) : (
-                        <Fragment key={j}>{parte}</Fragment>
-                      );
-                    })}
-                  </p>
-                ))}
-              </div>
-              <div className="resposta-pe">
-                <span>
-                  {desfecho.redigida ? `Redigido por IA (${desfecho.modelo}) e conferido pelo verificador.` : "Sem redação por IA: trechos literais da base."} A
-                  decisão é do advogado.
-                </span>
-                <button type="button" onClick={() => window.print()}>Imprimir ou salvar em PDF</button>
+                      </sup>
+                    ) : (
+                      <Fragment key={j}>{parte}</Fragment>
+                    );
+                  })}
+                </p>
+              ))}
+              <div className="mesa-acoes">
+                <button type="button" className="primaria" onClick={() => window.print()}>
+                  Imprimir ou salvar PDF
+                </button>
+                <Link href="/app/calculo">Simular a transição</Link>
+                <button type="button" onClick={() => campo.current?.focus()}>
+                  Nova pergunta
+                </button>
               </div>
             </article>
-          )}
+            <div className="mesa-auditoria">
+              <p className="mesa-rotulo">Trilha de auditoria</p>
+              <ul>
+                <li>
+                  <i className="ok" />
+                  {desfecho.citacoes.length === 1 ? "Citação conferida" : `${desfecho.citacoes.length} citações conferidas`} na base versionada
+                  <span>{enviada?.hora}</span>
+                </li>
+                <li>
+                  <i className="ok" />
+                  Vigência confirmada em {dataBR(dataRef)}
+                  <span>{enviada?.hora}</span>
+                </li>
+                <li>
+                  <i />
+                  Aguardando revisão do advogado<span>agora</span>
+                </li>
+              </ul>
+            </div>
+          </>
+        )}
 
-          {!pendente && desfecho?.status === "bloqueada_citacao" && (
-            <article className="resposta">
-              <div className="resposta-cabeca">
-                <h2>Resposta bloqueada</h2>
-                <span className="selo bloqueada">Verificador de citações</span>
-              </div>
-              <p>
-                A resposta não foi exibida porque não se sustenta inteiramente na base. Reformule a pergunta ou consulte os
-                dispositivos ao lado.
+        {!pendente && desfecho?.status === "bloqueada_citacao" && (
+          <>
+            <article className="mesa-resposta">
+              <p className="mesa-autor">
+                <Simbolo /> AdvFin · resposta bloqueada
               </p>
-              <ul className="motivos">
+              <p>A resposta não foi exibida porque não se sustenta inteiramente na base. Reformule a pergunta ou leia os dispositivos ao lado.</p>
+            </article>
+            <div className="mesa-auditoria">
+              <p className="mesa-rotulo">Trilha de auditoria</p>
+              <ul>
                 {desfecho.motivos.map((m, i) => (
-                  <li key={i}>{m}</li>
+                  <li key={i}>
+                    <i className="falha" />
+                    {m}
+                  </li>
                 ))}
               </ul>
-            </article>
-          )}
+            </div>
+          </>
+        )}
 
-          {!pendente && desfecho?.status === "sem_resultado" && (
-            <p className="resposta">
-              Nenhum dispositivo vigente em {dataBR(data)} trata disso na base atual. A base ainda cobre só o núcleo da Reforma
-              (EC 132/2023 e LC 214/2025).
+        {!pendente && desfecho?.status === "sem_resultado" && (
+          <div className="mesa-resposta">
+            <p className="mesa-autor">
+              <Simbolo /> AdvFin · sem dispositivos
             </p>
-          )}
+            <p>
+              Nenhum dispositivo vigente em {dataBR(dataRef)} trata disso na base atual, que ainda cobre só o núcleo da Reforma (EC
+              132/2023 e LC 214/2025).
+            </p>
+          </div>
+        )}
 
-          {!pendente && (desfecho?.status === "erro" || desfecho?.status === "invalida") && (
-            <p className="resposta alerta erro" role="alert">{desfecho.mensagem}</p>
-          )}
-        </div>
-      </div>
+        {!pendente && (desfecho?.status === "erro" || desfecho?.status === "invalida") && (
+          <p className="alerta erro" role="alert">
+            {desfecho.mensagem}
+          </p>
+        )}
 
-      <aside className="fontes" aria-label="Fontes">
-        <div className="fontes-cabeca">
-          <span>Fontes {fontesExibidas.length ? `(${fontesExibidas.length})` : ""}</span>
-        </div>
-        {fontesExibidas.length === 0 && <p className="vazio">As fontes aparecem aqui, com o trecho original e a vigência.</p>}
-        {fontesExibidas.map((f) => (
-          <section key={f.id} id={`fonte-${f.ref}`} className="fonte" data-ativa={ativa === f.ref ? "" : undefined}>
-            <div className="fonte-topo">
-              <strong>
-                <span className="fonte-ref">{f.ref.slice(1)}</span> {f.norma}, {f.rotulo}
-              </strong>
-              <SeloCuradoria t={f} />
-            </div>
-            <blockquote>
-              <Destaque texto={f.texto} trechos={citadosPorRef.get(f.ref) ?? []} />
-            </blockquote>
-            <div className="fonte-meta">
-              <span>
-                Vigente desde {dataBR(f.vigenciaInicio)}
-                {f.vigenciaFim ? ` até ${dataBR(f.vigenciaFim)}` : ""}
-              </span>
-              <a href={f.url} target="_blank" rel="noopener noreferrer">
-                Texto oficial
-              </a>
-            </div>
-          </section>
+        <form
+          className="mesa-campo"
+          onSubmit={(e) => {
+            e.preventDefault();
+            enviar();
+          }}
+        >
+          <label htmlFor="pergunta" className="so-leitor">
+            Pergunta
+          </label>
+          <textarea
+            id="pergunta"
+            ref={campo}
+            rows={2}
+            value={pergunta}
+            onChange={(e) => setPergunta(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                enviar();
+              }
+            }}
+            placeholder="Pergunte sobre a transição…"
+            maxLength={2000}
+          />
+          <div className="mesa-campo-pe">
+            <label className="app-data">
+              Vigência em
+              <input type="date" value={data} min="2023-12-21" onChange={(e) => setData(e.target.value)} required />
+            </label>
+            <button className="app-enviar" disabled={pendente || pergunta.trim().length < 8} aria-label="Pesquisar">
+              <Icone nome="enviar" />
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <aside className="mesa-fontes" aria-label="Fontes">
+        <p className="mesa-rotulo">{desfecho?.status === "respondida" ? "Fontes conferidas" : "Dispositivos encontrados"}</p>
+        {exibidas.length === 0 && <p className="mesa-vazio-cartao">As fontes aparecem aqui, com o trecho original e a vigência.</p>}
+        {exibidas.map((f) => (
+          <CartaoFonte key={f.id} t={f} data={dataRef} citados={citados.get(f.ref) ?? []} ativa={foco?.ref === f.ref && exibidas.length > 1} aoClicar={() => setAtiva(f.ref)} />
         ))}
+        {foco && <Regua t={foco} data={dataRef} />}
       </aside>
     </div>
   );

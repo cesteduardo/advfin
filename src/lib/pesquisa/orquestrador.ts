@@ -1,6 +1,6 @@
 import "server-only";
 import { consultar, noEscritorio, type Contexto } from "@/lib/db";
-import { provedor } from "@/lib/llm/provedores";
+import { ProvedorExtrativo, provedor } from "@/lib/llm/provedores";
 import { ErroLLM } from "@/lib/llm/tipos";
 import { SISTEMA_PESQUISA, lerResposta, montarMensagem, respostaExtrativa } from "./geracao";
 import type { CitacaoVerificada, Trecho } from "./tipos";
@@ -19,6 +19,20 @@ export type DesfechoPesquisa =
   | { status: "bloqueada_citacao"; id: string; motivos: string[]; fontes: Trecho[]; modelo: string }
   | { status: "sem_resultado"; id: string; fontes: [] }
   | { status: "erro"; id: string; mensagem: string; fontes: Trecho[] };
+
+/** Bastidores de uma consulta, para a página de desenvolvedor. Nunca vai para o advogado. */
+export interface Diagnostico {
+  provedor: string;
+  modelo: string;
+  sistema: string | null;
+  mensagem: string | null;
+  saidaBruta: string | null;
+  respostaLida: unknown;
+  ms: { recuperacao: number; modelo: number; verificacao: number; total: number };
+  tokens: { entrada: number | null; saida: number | null };
+  custoMicroreais: number | null;
+  erro?: string;
+}
 
 /** Em produção, só o que o curador publicou. Em desenvolvimento ou beta sem curador, tudo (marcado). */
 export function incluirNaoRevisados(): boolean {
@@ -52,9 +66,19 @@ function iso(d: Date | string): string {
 }
 
 /** Recuperar → gerar → verificar → registrar. Cada passo explícito e auditável. */
-export async function pesquisar(ctx: Contexto, pergunta: string, data: string, casoId?: string | null): Promise<DesfechoPesquisa> {
+export async function pesquisar(
+  ctx: Contexto,
+  pergunta: string,
+  data: string,
+  casoId?: string | null,
+  opcoes: { forcarExtrativo?: boolean; aoDiagnosticar?: (d: Diagnostico) => void } = {},
+): Promise<DesfechoPesquisa> {
   const inicio = Date.now();
-  const llm = provedor();
+  const llm = opcoes.forcarExtrativo ? new ProvedorExtrativo() : provedor();
+  const diag: Diagnostico = {
+    provedor: llm.nome, modelo: llm.nome, sistema: null, mensagem: null, saidaBruta: null, respostaLida: null,
+    ms: { recuperacao: 0, modelo: 0, verificacao: 0, total: 0 }, tokens: { entrada: null, saida: null }, custoMicroreais: null,
+  };
 
   const { id } = await noEscritorio(ctx, async (c) => {
     const r = await c.query(
@@ -69,24 +93,27 @@ export async function pesquisar(ctx: Contexto, pergunta: string, data: string, c
   let tokens = { ent: null as number | null, sai: null as number | null, custo: null as number | null, modelo: llm.nome };
 
   try {
+    let t = Date.now();
     const fontes = await recuperar(pergunta, data);
+    diag.ms.recuperacao = Date.now() - t;
     if (fontes.length === 0) {
       desfecho = { status: "sem_resultado", id, fontes: [] };
     } else {
       let resposta;
+      t = Date.now();
       if (llm.redige) {
-        const r = await llm.gerar({
-          tarefa: "pesquisa",
-          sistema: SISTEMA_PESQUISA,
-          mensagem: montarMensagem(pergunta, data, fontes),
-          json: true,
-          maxTokens: 2048,
-        });
+        diag.sistema = SISTEMA_PESQUISA;
+        diag.mensagem = montarMensagem(pergunta, data, fontes);
+        const r = await llm.gerar({ tarefa: "pesquisa", sistema: diag.sistema, mensagem: diag.mensagem, json: true, maxTokens: 2048 });
         tokens = { ent: r.tokensEntrada, sai: r.tokensSaida, custo: r.custoMicroreais, modelo: r.modelo };
+        diag.saidaBruta = r.texto;
         resposta = lerResposta(r.texto);
       } else {
         resposta = respostaExtrativa(fontes);
       }
+      diag.ms.modelo = Date.now() - t;
+      diag.respostaLida = resposta;
+      t = Date.now();
       if (!resposta) {
         desfecho = { status: "bloqueada_citacao", id, motivos: ["A resposta do modelo não veio no formato verificável."], fontes, modelo: tokens.modelo };
       } else {
@@ -95,9 +122,11 @@ export async function pesquisar(ctx: Contexto, pergunta: string, data: string, c
           ? { status: "respondida", id, paragrafos: resposta.paragrafos, citacoes: v.citacoes, fontes, redigida: llm.redige, modelo: tokens.modelo }
           : { status: "bloqueada_citacao", id, motivos: v.motivos, fontes, modelo: tokens.modelo };
       }
+      diag.ms.verificacao = Date.now() - t;
     }
   } catch (e) {
     console.error("pesquisa", (e as Error).message);
+    diag.erro = (e as Error).message;
     desfecho = {
       status: "erro",
       id,
@@ -137,5 +166,10 @@ export async function pesquisar(ctx: Contexto, pergunta: string, data: string, c
     ]);
   });
 
+  diag.modelo = tokens.modelo;
+  diag.tokens = { entrada: tokens.ent, saida: tokens.sai };
+  diag.custoMicroreais = tokens.custo;
+  diag.ms.total = Date.now() - inicio;
+  opcoes.aoDiagnosticar?.(diag);
   return desfecho;
 }

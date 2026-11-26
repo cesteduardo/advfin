@@ -1,21 +1,18 @@
+import { Cabeca } from "@/components/app/Cabeca";
 import { Classificacao } from "@/components/app/Classificacao";
+import { exigirSessao } from "@/lib/auth/sessao";
 
 export const metadata = { title: "Classificação NCM/NBS — AdvFin" };
 
-export default function PaginaClassificacao() {
+export default async function PaginaClassificacao() {
+  const s = await exigirSessao();
   return (
     <>
-      <div className="palco-cabeca">
-        <div>
-          <h1>
-            Classificação NCM/NBS. <em>O regime e o fundamento.</em>
-          </h1>
-          <p>
-            Busque pelo código (o prefixo mais específico vence) ou pela descrição. Leve o regime encontrado para o comparador na
-            aba Cálculo.
-          </p>
-        </div>
-      </div>
+      <Cabeca
+        trilha={`${s.escritorio} / NCM/NBS`}
+        titulo="Classificação NCM/NBS"
+        descricao="Busque pelo código (o prefixo mais específico vence) ou pela descrição. Nada aqui é escolhido por IA."
+      />
       <Classificacao />
     </>
   );

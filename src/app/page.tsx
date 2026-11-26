@@ -1,3 +1,4 @@
+import { Aparelhos } from "@/components/Aparelhos";
 import { Calculadora } from "@/components/Calculadora";
 import { ListaEspera } from "@/components/ListaEspera";
 import { CreditoGR } from "@/components/CreditoGR";
@@ -50,31 +51,7 @@ export default function Inicio() {
               <p className="nota-pequena">Gratuito, sem cartão. Beta para os primeiros 50 escritórios.</p>
             </div>
 
-            <figure className="demo" aria-label="Exemplo de resposta com fonte ao lado">
-              <div className="demo-barra">
-                <span>Pesquisa fundamentada</span>
-                <span>Vigência consultada: 26/11/2026</span>
-              </div>
-              <div className="demo-corpo">
-                <div className="demo-resposta">
-                  <p className="demo-pergunta">Em 2026, a CBS destacada na nota é devida?</p>
-                  <p>
-                    Em 2026 a CBS é cobrada à alíquota de 0,9% e o IBS a 0,1%, e o valor pago pode ser compensado com
-                    PIS/Cofins devidos.<sup className="cit">1</sup> Trata-se de ano de teste da apuração.
-                  </p>
-                </div>
-                <aside className="demo-fonte" aria-label="Fonte da citação 1">
-                    <p>
-                    <strong>1 · ADCT, art. 125</strong>
-                    <br />
-                    <span className="nota-pequena">Incluído pela EC 132/2023</span>
-                  </p>
-                  <span className="selo vigente">Vigente em 26/11/2026</span>
-                  <blockquote>“Em 2026, o imposto previsto no art. 156-A será cobrado à alíquota estadual de 0,1%…”</blockquote>
-                  <p className="nota-pequena">Trecho ilustrativo. No produto, o texto vem da base oficial versionada.</p>
-                </aside>
-              </div>
-            </figure>
+            <Aparelhos />
           </div>
         </section>
 

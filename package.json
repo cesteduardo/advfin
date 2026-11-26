@@ -8,7 +8,8 @@
     "start": "next start",
     "test": "vitest run src",
     "test:db": "vitest run db/tests",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "pages": "bash scripts/publicar-pages.sh"
   },
   "author": "",
   "license": "ISC",

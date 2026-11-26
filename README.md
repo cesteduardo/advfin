@@ -24,7 +24,20 @@ Precisam de um PostgreSQL acessível como superusuário; o teste cria e apaga um
 TEST_DATABASE_ADMIN_URL=postgres://postgres@localhost:5432/postgres npm run test:db
 ```
 
-## Deploy
+## Landing no GitHub Pages
+
+A landing também roda como site estático, com a calculadora inteira no navegador:
+`https://cesteduardo.github.io/advfin/`.
+
+- **Publicar:** `npm run pages` gera a versão estática e envia para o branch `gh-pages`.
+  Em *Settings → Pages*, a fonte deve ser *Deploy from a branch → gh-pages / (root)*.
+- **Automático:** o workflow `.github/workflows/pages.yml` faz o mesmo a cada push na `main`
+  (fonte *GitHub Actions*), quando o GitHub Actions estiver disponível na conta.
+- **Lista de espera:** o site estático não tem servidor. Defina a variável de repositório
+  `LISTA_ESPERA_URL` (por exemplo, um endpoint Formspree) ou exporte-a antes de `npm run pages`
+  como `NEXT_PUBLIC_LISTA_ESPERA_URL`. Sem ela, o formulário avisa que as inscrições ainda não estão abertas.
+
+## Deploy da aplicação
 
 1. **Banco:** PostgreSQL 16 gerenciado em região brasileira (AWS RDS `sa-east-1` ou Cloud SQL `southamerica-east1`), com a extensão `vector` habilitada e criptografia em repouso.
 2. **Migração:** `psql "$ADMIN_URL" -f db/migrations/001_init.sql`.

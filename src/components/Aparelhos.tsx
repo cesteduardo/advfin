@@ -1,9 +1,11 @@
 /**
- * Vitrine do herói com as molduras do GR Frames (grbrands.com.br/frames):
+ * Vitrine do herói com as molduras do GR Frames (cesteduardo/gr-frames):
  * MacBook Pro 14" prateado e iPhone 18 Pro Deep Blue, desenhados em CSS no
  * tamanho real e reduzidos por escala, para a tela de dentro ter as medidas
  * de um aparelho de verdade (1512 × 982 no Mac, 402 × 874 no iPhone).
  */
+
+import { EscalaAparelhos } from "./EscalaAparelhos";
 
 const DATA = "26/11/2026";
 const TRECHO = "“Em 2026, o imposto previsto no art. 156-A será cobrado à alíquota estadual de 0,1%…”";
@@ -37,7 +39,7 @@ const Sugestoes = () => (
 
 function MacBook() {
   return (
-    <div className="aparelho aparelho-mac" aria-hidden="true">
+    <div className="aparelho aparelho-mac" data-largura="1842" aria-hidden="true">
       <div className="dev macbook">
         <div className="mb-lid">
           <div className="mb-bezel">
@@ -92,7 +94,7 @@ function MacBook() {
 
 function IPhone() {
   return (
-    <div className="aparelho aparelho-iphone" aria-hidden="true">
+    <div className="aparelho aparelho-iphone" data-largura="436" aria-hidden="true">
       <div className="dev iphone">
         <div className="ip-body">
           <i className="ip-btn l ip-action" /><i className="ip-btn l ip-volup" /><i className="ip-btn l ip-voldn" />
@@ -156,6 +158,7 @@ export function Aparelhos() {
         <MacBook />
         <IPhone />
       </div>
+      <EscalaAparelhos />
       <figcaption className="so-leitor">
         Exemplo de resposta: em 2026 a CBS é cobrada a 0,9% e o IBS a 0,1%, compensáveis com PIS/Cofins. Fonte
         citada ao lado: ADCT, art. 125, incluído pela EC 132/2023, vigente em {DATA}.

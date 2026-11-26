@@ -59,14 +59,18 @@ const linha = (tributo: LinhaTributo["tributo"], aliquota: Ppm, valor: Centavos)
 
 const soma = (ls: LinhaTributo[]) => ls.reduce((s, l) => s + l.valor, 0);
 
-export function calcular(e: EntradaCalculo): ResultadoCalculo {
-  validar(e);
-  const regra = regraDoAno(e.ano);
-  const regime = REGIMES[e.regime];
-  const ref = e.referencia ?? { cbs: REFERENCIA_ESTIMADA.cbs, ibs: REFERENCIA_ESTIMADA.ibs };
-  const fontes: Fonte[] = [...regra.fontes, regime.fonte];
-
-  // Alíquotas cheias de CBS/IBS no ano, antes do regime diferenciado.
+/**
+ * Alíquotas efetivas de CBS e IBS no ano, já com o redutor do regime diferenciado.
+ * Compartilhada pela calculadora, pelo comparador e pela apuração com créditos.
+ */
+export function aliquotasIbsCbs(
+  ano: number,
+  regimeId: Regime,
+  ref: { cbs: Ppm; ibs: Ppm } = { cbs: REFERENCIA_ESTIMADA.cbs, ibs: REFERENCIA_ESTIMADA.ibs },
+): { cbs: Ppm; ibs: Ppm; usaReferencia: boolean } {
+  const regra = regraDoAno(ano);
+  const regime = REGIMES[regimeId];
+  if (!regime) throw new RangeError(`regime desconhecido: ${regimeId}`);
   let cbsCheia: Ppm;
   switch (regra.cbs.tipo) {
     case "fixa":
@@ -81,17 +85,29 @@ export function calcular(e: EntradaCalculo): ResultadoCalculo {
   }
   const ibsCheia: Ppm =
     regra.ibs.tipo === "fixa" ? regra.ibs.ppm : escalarPpm(ref.ibs, regra.ibs.num, regra.ibs.den);
+  return {
+    cbs: escalarPpm(cbsCheia, regime.fator.num, regime.fator.den),
+    ibs: escalarPpm(ibsCheia, regime.fator.num, regime.fator.den),
+    usaReferencia: regra.cbs.tipo !== "fixa" || regra.ibs.tipo !== "fixa",
+  };
+}
 
-  if (regra.cbs.tipo !== "fixa" || regra.ibs.tipo !== "fixa") {
+export function calcular(e: EntradaCalculo): ResultadoCalculo {
+  validar(e);
+  const regra = regraDoAno(e.ano);
+  const regime = REGIMES[e.regime];
+  const ref = e.referencia ?? { cbs: REFERENCIA_ESTIMADA.cbs, ibs: REFERENCIA_ESTIMADA.ibs };
+  const fontes: Fonte[] = [...regra.fontes, regime.fonte];
+
+  const { cbs, ibs, usaReferencia } = aliquotasIbsCbs(e.ano, e.regime, ref);
+
+  if (usaReferencia) {
     fontes.push(
       e.referencia
         ? { rotulo: "Alíquotas de referência informadas pelo usuário", status: "premissa", conferido: false }
         : REFERENCIA_ESTIMADA.fonte,
     );
   }
-
-  const cbs = escalarPpm(cbsCheia, regime.fator.num, regime.fator.den);
-  const ibs = escalarPpm(ibsCheia, regime.fator.num, regime.fator.den);
 
   const { num, den } = regra.icmsIssFracao;
   const linhasAno: LinhaTributo[] = [];

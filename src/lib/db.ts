@@ -29,13 +29,22 @@ export interface Contexto {
 }
 
 /** Executa fn numa transação com o contexto do escritório; o RLS isola o resto. */
-export async function noEscritorio<T>(ctx: Contexto, fn: (c: PoolClient) => Promise<T>): Promise<T> {
+export function noEscritorio<T>(ctx: Contexto, fn: (c: PoolClient) => Promise<T>): Promise<T> {
+  return emTransacao(ctx.escritorioId, ctx.usuarioId, fn);
+}
+
+/** Contexto só do usuário, sem escritório: perfil, aceite de convite e plataforma. */
+export function comoUsuario<T>(usuarioId: string, fn: (c: PoolClient) => Promise<T>): Promise<T> {
+  return emTransacao("", usuarioId, fn);
+}
+
+async function emTransacao<T>(escritorioId: string, usuarioId: string, fn: (c: PoolClient) => Promise<T>): Promise<T> {
   const c = await obterPool().connect();
   try {
     await c.query("begin");
     await c.query("select set_config('app.escritorio_id', $1, true), set_config('app.usuario_id', $2, true)", [
-      ctx.escritorioId,
-      ctx.usuarioId,
+      escritorioId,
+      usuarioId,
     ]);
     const r = await fn(c);
     await c.query("commit");

@@ -9,12 +9,12 @@ export const metadata = { title: "Laboratório do chat — AdvFin", robots: { in
 
 /**
  * Laboratório do desenvolvedor: testa o chat da IA mostrando os bastidores
- * (saída bruta, verificador, tempos, tokens e custo). Em produção, só para os
- * e-mails listados em DEV_EMAILS; para os demais, a página não existe.
+ * (saída bruta, verificador, tempos, tokens e custo). Em produção, só para a equipe
+ * da plataforma (admin ou curador); para os demais, a página não existe.
  */
 export default async function PaginaDev() {
   const s = await exigirSessao();
-  if (!(await podeUsarDev(s.email))) notFound();
+  if (!(await podeUsarDev(s))) notFound();
   const llm = provedor();
   return (
     <>

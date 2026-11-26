@@ -16,6 +16,7 @@ O que só o Eduardo pode fazer está marcado com **[Eduardo]**. O resto é coman
    ```bash
    psql "$ADMIN_URL" -f db/migrations/001_init.sql
    psql "$ADMIN_URL" -f db/migrations/002_app.sql
+   psql "$ADMIN_URL" -f db/migrations/003_perfis.sql   # níveis, convites, 2FA, cobrança, plataforma
    psql "$ADMIN_URL" -f db/seeds/semente_reforma.sql   # textos provisórios, marcados como não conferidos
    ```
 4. Criar o login da aplicação, que herda `app_user` e por isso fica preso ao RLS:
@@ -44,7 +45,10 @@ Sem a chave, o app já funciona: a pesquisa responde no modo extrativo, só com 
    | `LLM_PROVEDOR` | `anthropic` |
    | `LLM_CHAVE` | do passo 2 |
    | `BASE_INCLUIR_NAO_REVISADOS` | `1` durante o beta sem curador; remover quando a base estiver conferida |
-   | `DEV_EMAILS` | seu e-mail, para abrir o laboratório do chat em `/app/dev` (sem ele, a página dá 404 em produção) |
+   | `APP_URL` | o endereço público do app (ex.: `https://app.advfin.com.br`), para os links dos e-mails |
+   | `CHAVE_CIFRA` | 32 bytes em base64 que cifram os segredos do 2FA: `node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"`. Trocar a chave desliga o 2FA de todos |
+   | `EMAIL_PROVEDOR`, `EMAIL_CHAVE`, `EMAIL_REMETENTE` | opcional: `resend` e a chave do Resend. Sem eles, convites mostram o link para copiar, e a troca de e-mail fica indisponível |
+   | `STRIPE_CHAVE`, `STRIPE_WEBHOOK_SEGREDO`, `STRIPE_PRECO_ESSENCIAL`, `STRIPE_PRECO_ESCRITORIO`, `STRIPE_PRECO_TRIBUTARIO_PRO` | opcional: cobrança por pessoa (seção 6). Sem eles, não há limite de assentos |
 
 3. *Deploy*. Testar: `/cadastro`, criar conta, `/app/pesquisa`.
 4. **[Eduardo]** Domínio: em *Settings → Domains*, adicionar `app.advfin.com.br` (ou outro) e criar o CNAME indicado no seu provedor de DNS.
@@ -64,7 +68,24 @@ Os artigos entram como `rascunho`. O curador revisa rótulo, texto e vigência, 
 
 Atenção na EC 132/2023: os artigos do ADCT aparecem dentro do art. 2º da emenda. O script os separa pelo número, mas o rótulo precisa de ajuste do curador (ex.: `art. 125` → `ADCT, art. 125, caput`).
 
-## 5. Depois do primeiro deploy
+## 5. Equipe da plataforma e expurgo
+
+1. O laboratório do chat (`/app/dev`) e a área `/admin` abrem pelo papel na tabela `equipe_plataforma`, não mais por `DEV_EMAILS`. Depois de criar a sua conta no app, entre como admin da plataforma (uma vez, no SQL Editor):
+   ```sql
+   insert into equipe_plataforma (usuario_id, papel)
+   select id, 'admin' from usuarios where email = 'SEU-EMAIL';
+   ```
+   Os próximos (curador, suporte) entram pela aba Equipe em `/admin`.
+2. Agendar o expurgo diário (LGPD), que precisa do dono das tabelas: `ADMIN_DATABASE_URL="$ADMIN_URL" node scripts/expurgo.mjs`. No Supabase, dá para usar o `pg_cron` com `select app.expurgar();` uma vez por dia.
+
+## 6. Cobrança no Stripe (quando a conta existir)
+
+1. **[Eduardo]** Criar a conta no Stripe e, em *Products*, um produto por plano com preço recorrente mensal **por unidade** (cada unidade é uma pessoa). Os IDs `price_...` vão para `STRIPE_PRECO_*`.
+2. Em *Developers → Webhooks*, endpoint `https://SEU-APP/api/stripe/webhook` com os eventos `customer.subscription.created`, `customer.subscription.updated` e `customer.subscription.deleted`. O segredo `whsec_...` vai para `STRIPE_WEBHOOK_SEGREDO`.
+3. Em *Settings → Billing → Customer portal*, ligar troca de plano, de cartão e cancelamento.
+4. A NFS-e não sai pelo Stripe: falta escolher um emissor brasileiro.
+
+## 7. Depois do primeiro deploy
 
 - Link "Entrar" na landing apontando para o domínio do app.
 - Monitorar `consultas.custo_microreais` (com `LLM_PRECO_*` configurados) contra a meta de inferência abaixo de 25% da receita por usuário.

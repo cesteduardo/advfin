@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Fragment, useRef, useState, useTransition } from "react";
+import { Fragment, useRef, useState, useTransition, type ReactNode } from "react";
 import type { DesfechoPesquisa } from "@/lib/pesquisa/tipos";
 import type { Trecho } from "@/lib/pesquisa/tipos";
 import { normalizar, normalizarComMapa } from "@/lib/pesquisa/verificador";
@@ -112,14 +112,26 @@ export function PesquisaMesa({
   executar,
   aoConcluir,
   falhaRede = "Não foi possível falar com o servidor.",
+  dataInicial,
+  casos,
+  casoInicial = "",
+  exportar,
 }: {
-  executar: (pergunta: string, data: string) => Promise<Desfecho>;
+  executar: (pergunta: string, data: string, caso?: string | null) => Promise<Desfecho>;
   aoConcluir?: () => void;
   falhaRede?: string;
+  /** Data de vigência ao abrir (preferência do perfil); sem ela, hoje. */
+  dataInicial?: string;
+  /** Casos em que a consulta pode entrar (só no app). */
+  casos?: { id: string; titulo: string }[];
+  casoInicial?: string;
+  /** No app, a resposta vira parecer em página própria; na demonstração, imprime direto. */
+  exportar?: (id: string) => ReactNode;
 }) {
   const [pergunta, setPergunta] = useState("");
   const [enviada, setEnviada] = useState<{ texto: string; data: string; hora: string } | null>(null);
-  const [data, setData] = useState(hoje);
+  const [data, setData] = useState(dataInicial ?? hoje);
+  const [caso, setCaso] = useState(casoInicial);
   const [desfecho, setDesfecho] = useState<Desfecho | null>(null);
   const [ativa, setAtiva] = useState<string | null>(null);
   const [pendente, iniciar] = useTransition();
@@ -132,7 +144,7 @@ export function PesquisaMesa({
     setAtiva(null);
     iniciar(async () => {
       try {
-        setDesfecho(await executar(q, data));
+        setDesfecho(await executar(q, data, caso || null));
         aoConcluir?.();
       } catch {
         setDesfecho({ status: "erro", id: "", mensagem: falhaRede, fontes: [] });
@@ -214,9 +226,13 @@ export function PesquisaMesa({
                 </p>
               ))}
               <div className="mesa-acoes">
-                <button type="button" className="primaria" onClick={() => window.print()}>
-                  Imprimir ou salvar PDF
-                </button>
+                {exportar ? (
+                  exportar(desfecho.id)
+                ) : (
+                  <button type="button" className="primaria" onClick={() => window.print()}>
+                    Imprimir ou salvar PDF
+                  </button>
+                )}
                 <Link href="/app/calculo">Simular a transição</Link>
                 <button type="button" onClick={() => campo.current?.focus()}>
                   Nova pergunta
@@ -311,10 +327,25 @@ export function PesquisaMesa({
             maxLength={2000}
           />
           <div className="mesa-campo-pe">
-            <label className="app-data">
-              Vigência em
-              <input type="date" value={data} min="2023-12-21" onChange={(e) => setData(e.target.value)} required />
-            </label>
+            <span className="mesa-campo-opcoes">
+              <label className="app-data">
+                Vigência em
+                <input type="date" value={data} min="2023-12-21" onChange={(e) => setData(e.target.value)} required />
+              </label>
+              {casos && casos.length > 0 && (
+                <label className="app-data">
+                  Caso
+                  <select value={caso} onChange={(e) => setCaso(e.target.value)}>
+                    <option value="">Nenhum</option>
+                    {casos.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.titulo}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              )}
+            </span>
             <button className="app-enviar" disabled={pendente || pergunta.trim().length < 8} aria-label="Pesquisar">
               <Icone nome="enviar" />
             </button>

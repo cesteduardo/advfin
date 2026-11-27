@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 import { Dica } from "@/components/ui/Dica";
+import { Dock, ativoEm } from "./Dock";
 import { Icone, type NomeIcone } from "./Icone";
 import { Marca } from "./Marca";
 
@@ -68,7 +69,7 @@ export function NavegacaoMesa({
   hrefConsulta?: (id: string) => string;
 }) {
   const caminho = usePathname();
-  const ativo = (href: string) => (href === "/app" ? caminho === "/app" : caminho.startsWith(href));
+  const ativo = (href: string) => ativoEm(caminho, href);
   const hoje = new Date().toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" });
   const link = (l: { href: string; nome: string; icone: NomeIcone; conta?: number }) => (
     <Link key={l.href} href={l.href} className={ativo(l.href) ? "ativo" : undefined} aria-current={ativo(l.href) ? "page" : undefined}>
@@ -133,14 +134,7 @@ export function NavegacaoMesa({
           <span className="app-data">Vigência {hoje}</span>
         )}
       </header>
-      <nav className="app-abas mesa-abas" aria-label="Ferramentas">
-        {LINKS.map((l) => (
-          <Link key={l.href} href={l.href} className={ativo(l.href) ? "ativo" : undefined} aria-current={ativo(l.href) ? "page" : undefined}>
-            <Icone nome={l.icone} />
-            {l.curto}
-          </Link>
-        ))}
-      </nav>
+      <Dock links={LINKS} />
     </>
   );
 }

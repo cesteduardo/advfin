@@ -1,7 +1,7 @@
 # Uso interno: gera out/ estático no próprio repositório. Tira do caminho tudo o que exige servidor
 # (API, área logada, proxy) e devolve ao fim, mesmo se o build falhar. No lugar da área logada entra
 # a demonstração estática de src/estatico/app (servida em /app), removida ao fim.
-SO_SERVIDOR=("src/app/api" "src/app/(app)" "src/proxy.ts")
+SO_SERVIDOR=("src/app/api" "src/app/(app)" "src/proxy.ts" "src/instrumentation.ts")
 
 construir_estatico() {
   local raiz; raiz=$(git rev-parse --show-toplevel)

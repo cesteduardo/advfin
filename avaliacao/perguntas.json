@@ -1,0 +1,1766 @@
+{
+ "versao": "2026-11-27",
+ "descricao": "Banco de avaliação da pesquisa fundamentada. Gabaritos em rascunho: o curador confere e marca gabarito_conferido = true.",
+ "perguntas": [
+  {
+   "id": "Q001",
+   "categoria": "transicao",
+   "pergunta": "Qual a alíquota da CBS em 2026?",
+   "data": "2026-06-01",
+   "esperado": "responder",
+   "gabarito": {
+    "normas": [
+     "EC 132/2023"
+    ],
+    "rotulos": [
+     "ADCT, art. 125"
+    ],
+    "termos": []
+   },
+   "gabarito_conferido": false,
+   "conferir_numeracao": false
+  },
+  {
+   "id": "Q002",
+   "categoria": "transicao",
+   "pergunta": "Qual a alíquota do IBS em 2026?",
+   "data": "2026-06-01",
+   "esperado": "responder",
+   "gabarito": {
+    "normas": [
+     "EC 132/2023"
+    ],
+    "rotulos": [
+     "ADCT, art. 125"
+    ],
+    "termos": []
+   },
+   "gabarito_conferido": false,
+   "conferir_numeracao": false
+  },
+  {
+   "id": "Q003",
+   "categoria": "transicao",
+   "pergunta": "Quanto será cobrado de IBS e CBS no ano de teste de 2026?",
+   "data": "2026-06-01",
+   "esperado": "responder",
+   "gabarito": {
+    "normas": [
+     "EC 132/2023"
+    ],
+    "rotulos": [
+     "ADCT, art. 125"
+    ],
+    "termos": []
+   },
+   "gabarito_conferido": false,
+   "conferir_numeracao": false
+  },
+  {
+   "id": "Q004",
+   "categoria": "transicao",
+   "pergunta": "Em 2026 a CBS é cobrada a 0,9%?",
+   "data": "2026-06-01",
+   "esperado": "responder",
+   "gabarito": {
+    "normas": [
+     "EC 132/2023"
+    ],
+    "rotulos": [
+     "ADCT, art. 125"
+    ],
+    "termos": []
+   },
+   "gabarito_conferido": false,
+   "conferir_numeracao": false
+  },
+  {
+   "id": "Q005",
+   "categoria": "transicao",
+   "pergunta": "Qual é a alíquota estadual do imposto sobre bens e serviços em 2026?",
+   "data": "2026-06-01",
+   "esperado": "responder",
+   "gabarito": {
+    "normas": [
+     "EC 132/2023"
+    ],
+    "rotulos": [
+     "ADCT, art. 125"
+    ],
+    "termos": []
+   },
+   "gabarito_conferido": false,
+   "conferir_numeracao": false
+  },
+  {
+   "id": "Q006",
+   "categoria": "transicao",
+   "pergunta": "Como fica a cobrança da contribuição sobre bens e serviços durante 2026?",
+   "data": "2026-06-01",
+   "esperado": "responder",
+   "gabarito": {
+    "normas": [
+     "EC 132/2023"
+    ],
+    "rotulos": [
+     "ADCT, art. 125"
+    ],
+    "termos": []
+   },
+   "gabarito_conferido": false,
+   "conferir_numeracao": false
+  },
+  {
+   "id": "Q007",
+   "categoria": "transicao",
+   "pergunta": "O valor recolhido de CBS e IBS em 2026 pode ser compensado com PIS e Cofins?",
+   "data": "2026-06-01",
+   "esperado": "responder",
+   "gabarito": {
+    "normas": [
+     "EC 132/2023"
+    ],
+    "rotulos": [
+     "ADCT, art. 125"
+    ],
+    "termos": []
+   },
+   "gabarito_conferido": false,
+   "conferir_numeracao": false
+  },
+  {
+   "id": "Q008",
+   "categoria": "transicao",
+   "pergunta": "Com quais contribuições se compensa o montante recolhido em 2026?",
+   "data": "2026-06-01",
+   "esperado": "responder",
+   "gabarito": {
+    "normas": [
+     "EC 132/2023"
+    ],
+    "rotulos": [
+     "ADCT, art. 125"
+    ],
+    "termos": []
+   },
+   "gabarito_conferido": false,
+   "conferir_numeracao": false
+  },
+  {
+   "id": "Q009",
+   "categoria": "transicao",
+   "pergunta": "O recolhimento de teste de 2026 é compensável?",
+   "data": "2026-06-01",
+   "esperado": "responder",
+   "gabarito": {
+    "normas": [
+     "EC 132/2023"
+    ],
+    "rotulos": [
+     "ADCT, art. 125"
+    ],
+    "termos": []
+   },
+   "gabarito_conferido": false,
+   "conferir_numeracao": false
+  },
+  {
+   "id": "Q010",
+   "categoria": "transicao",
+   "pergunta": "O que acontece com o PIS e a Cofins a partir de 2027?",
+   "data": "2027-03-01",
+   "esperado": "responder",
+   "gabarito": {
+    "normas": [
+     "EC 132/2023"
+    ],
+    "rotulos": [
+     "ADCT, art. 126"
+    ],
+    "termos": []
+   },
+   "gabarito_conferido": false,
+   "conferir_numeracao": false
+  },
+  {
+   "id": "Q011",
+   "categoria": "transicao",
+   "pergunta": "A partir de quando a CBS passa a ser cobrada efetivamente?",
+   "data": "2027-03-01",
+   "esperado": "responder",
+   "gabarito": {
+    "normas": [
+     "EC 132/2023"
+    ],
+    "rotulos": [
+     "ADCT, art. 126"
+    ],
+    "termos": []
+   },
+   "gabarito_conferido": false,
+   "conferir_numeracao": false
+  },
+  {
+   "id": "Q012",
+   "categoria": "transicao",
+   "pergunta": "Quando o Imposto Seletivo começa a ser cobrado?",
+   "data": "2027-03-01",
+   "esperado": "responder",
+   "gabarito": {
+    "normas": [
+     "EC 132/2023"
+    ],
+    "rotulos": [
+     "ADCT, art. 126"
+    ],
+    "termos": []
+   },
+   "gabarito_conferido": false,
+   "conferir_numeracao": false
+  },
+  {
+   "id": "Q013",
+   "categoria": "transicao",
+   "pergunta": "Quando são extintas as contribuições do art. 195, I, b, e IV?",
+   "data": "2027-03-01",
+   "esperado": "responder",
+   "gabarito": {
+    "normas": [
+     "EC 132/2023"
+    ],
+    "rotulos": [
+     "ADCT, art. 126"
+    ],
+    "termos": []
+   },
+   "gabarito_conferido": false,
+   "conferir_numeracao": false
+  },
+  {
+   "id": "Q014",
+   "categoria": "transicao",
+   "pergunta": "Em 2027 a contribuição para o PIS continua existindo?",
+   "data": "2027-03-01",
+   "esperado": "responder",
+   "gabarito": {
+    "normas": [
+     "EC 132/2023"
+    ],
+    "rotulos": [
+     "ADCT, art. 126"
+    ],
+    "termos": []
+   },
+   "gabarito_conferido": false,
+   "conferir_numeracao": false
+  },
+  {
+   "id": "Q015",
+   "categoria": "transicao",
+   "pergunta": "Qual a alíquota do IBS em 2027 e 2028?",
+   "data": "2027-06-01",
+   "esperado": "responder",
+   "gabarito": {
+    "normas": [
+     "EC 132/2023"
+    ],
+    "rotulos": [
+     "ADCT, art. 127"
+    ],
+    "termos": []
+   },
+   "gabarito_conferido": false,
+   "conferir_numeracao": false
+  },
+  {
+   "id": "Q016",
+   "categoria": "transicao",
+   "pergunta": "Em 2028, qual a alíquota municipal do IBS?",
+   "data": "2027-06-01",
+   "esperado": "responder",
+   "gabarito": {
+    "normas": [
+     "EC 132/2023"
+    ],
+    "rotulos": [
+     "ADCT, art. 127"
+    ],
+    "termos": []
+   },
+   "gabarito_conferido": false,
+   "conferir_numeracao": false
+  },
+  {
+   "id": "Q017",
+   "categoria": "transicao",
+   "pergunta": "A alíquota da CBS é reduzida em 2027 e 2028?",
+   "data": "2027-06-01",
+   "esperado": "responder",
+   "gabarito": {
+    "normas": [
+     "EC 132/2023"
+    ],
+    "rotulos": [
+     "ADCT, art. 127"
+    ],
+    "termos": []
+   },
+   "gabarito_conferido": false,
+   "conferir_numeracao": false
+  },
+  {
+   "id": "Q018",
+   "categoria": "transicao",
+   "pergunta": "Quanto de IBS estadual será cobrado em 2027?",
+   "data": "2027-06-01",
+   "esperado": "responder",
+   "gabarito": {
+    "normas": [
+     "EC 132/2023"
+    ],
+    "rotulos": [
+     "ADCT, art. 127"
+    ],
+    "termos": []
+   },
+   "gabarito_conferido": false,
+   "conferir_numeracao": false
+  },
+  {
+   "id": "Q019",
+   "categoria": "transicao",
+   "pergunta": "Como as alíquotas de ICMS e ISS diminuem de 2029 a 2032?",
+   "data": "2029-06-01",
+   "esperado": "responder",
+   "gabarito": {
+    "normas": [
+     "EC 132/2023"
+    ],
+    "rotulos": [
+     "ADCT, art. 128"
+    ],
+    "termos": []
+   },
+   "gabarito_conferido": false,
+   "conferir_numeracao": false
+  },
+  {
+   "id": "Q020",
+   "categoria": "transicao",
+   "pergunta": "Qual a proporção da alíquota do ICMS em 2030?",
+   "data": "2030-06-01",
+   "esperado": "responder",
+   "gabarito": {
+    "normas": [
+     "EC 132/2023"
+    ],
+    "rotulos": [
+     "ADCT, art. 128"
+    ],
+    "termos": []
+   },
+   "gabarito_conferido": false,
+   "conferir_numeracao": false
+  },
+  {
+   "id": "Q021",
+   "categoria": "transicao",
+   "pergunta": "Em 2031, o ISS será cobrado em que proporção da alíquota atual?",
+   "data": "2031-06-01",
+   "esperado": "responder",
+   "gabarito": {
+    "normas": [
+     "EC 132/2023"
+    ],
+    "rotulos": [
+     "ADCT, art. 128"
+    ],
+    "termos": []
+   },
+   "gabarito_conferido": false,
+   "conferir_numeracao": false
+  },
+  {
+   "id": "Q022",
+   "categoria": "transicao",
+   "pergunta": "Em 2032, quanto resta das alíquotas de ICMS e ISS?",
+   "data": "2032-06-01",
+   "esperado": "responder",
+   "gabarito": {
+    "normas": [
+     "EC 132/2023"
+    ],
+    "rotulos": [
+     "ADCT, art. 128"
+    ],
+    "termos": []
+   },
+   "gabarito_conferido": false,
+   "conferir_numeracao": false
+  },
+  {
+   "id": "Q023",
+   "categoria": "transicao",
+   "pergunta": "Em 2029 o ICMS já começa a ser reduzido?",
+   "data": "2029-06-01",
+   "esperado": "responder",
+   "gabarito": {
+    "normas": [
+     "EC 132/2023"
+    ],
+    "rotulos": [
+     "ADCT, art. 128"
+    ],
+    "termos": []
+   },
+   "gabarito_conferido": false,
+   "conferir_numeracao": false
+  },
+  {
+   "id": "Q024",
+   "categoria": "transicao",
+   "pergunta": "Qual o cronograma de redução do ICMS durante a transição?",
+   "data": "2029-06-01",
+   "esperado": "responder",
+   "gabarito": {
+    "normas": [
+     "EC 132/2023"
+    ],
+    "rotulos": [
+     "ADCT, art. 128"
+    ],
+    "termos": []
+   },
+   "gabarito_conferido": false,
+   "conferir_numeracao": false
+  },
+  {
+   "id": "Q025",
+   "categoria": "transicao",
+   "pergunta": "Quando o ICMS e o ISS deixam de existir?",
+   "data": "2033-01-15",
+   "esperado": "responder",
+   "gabarito": {
+    "normas": [
+     "EC 132/2023"
+    ],
+    "rotulos": [
+     "ADCT, art. 129"
+    ],
+    "termos": []
+   },
+   "gabarito_conferido": false,
+   "conferir_numeracao": false
+  },
+  {
+   "id": "Q026",
+   "categoria": "transicao",
+   "pergunta": "Em que ano são extintos o ICMS e o ISS?",
+   "data": "2033-01-15",
+   "esperado": "responder",
+   "gabarito": {
+    "normas": [
+     "EC 132/2023"
+    ],
+    "rotulos": [
+     "ADCT, art. 129"
+    ],
+    "termos": []
+   },
+   "gabarito_conferido": false,
+   "conferir_numeracao": false
+  },
+  {
+   "id": "Q027",
+   "categoria": "transicao",
+   "pergunta": "O ISS continua sendo cobrado em 2033?",
+   "data": "2033-01-15",
+   "esperado": "responder",
+   "gabarito": {
+    "normas": [
+     "EC 132/2023"
+    ],
+    "rotulos": [
+     "ADCT, art. 129"
+    ],
+    "termos": []
+   },
+   "gabarito_conferido": false,
+   "conferir_numeracao": false
+  },
+  {
+   "id": "Q028",
+   "categoria": "transicao",
+   "pergunta": "A partir de quando ficam extintos os impostos dos arts. 155, II, e 156, III?",
+   "data": "2033-01-15",
+   "esperado": "responder",
+   "gabarito": {
+    "normas": [
+     "EC 132/2023"
+    ],
+    "rotulos": [
+     "ADCT, art. 129"
+    ],
+    "termos": []
+   },
+   "gabarito_conferido": false,
+   "conferir_numeracao": false
+  },
+  {
+   "id": "Q029",
+   "categoria": "transicao",
+   "pergunta": "Quem fixa as alíquotas de referência do IBS e da CBS durante a transição?",
+   "data": "2027-06-01",
+   "esperado": "responder",
+   "gabarito": {
+    "normas": [
+     "EC 132/2023"
+    ],
+    "rotulos": [
+     "ADCT, art. 130"
+    ],
+    "termos": [
+     "alíquotas de referência"
+    ]
+   },
+   "gabarito_conferido": false,
+   "conferir_numeracao": true,
+   "nota": "Senado Federal por resolução; conferir o número do artigo no ADCT."
+  },
+  {
+   "id": "Q030",
+   "categoria": "transicao",
+   "pergunta": "Como será distribuído entre os entes o produto da arrecadação do IBS de 2029 a 2077?",
+   "data": "2029-06-01",
+   "esperado": "responder",
+   "gabarito": {
+    "normas": [
+     "EC 132/2023"
+    ],
+    "rotulos": [
+     "ADCT, art. 131"
+    ],
+    "termos": [
+     "2077"
+    ]
+   },
+   "gabarito_conferido": false,
+   "conferir_numeracao": true
+  },
+  {
+   "id": "Q031",
+   "categoria": "transicao",
+   "pergunta": "O IPI continua existindo depois de 2027?",
+   "data": "2027-06-01",
+   "esperado": "responder",
+   "gabarito": {
+    "normas": [
+     "EC 132/2023"
+    ],
+    "rotulos": [
+     "ADCT, art. 126"
+    ],
+    "termos": [
+     "Zona Franca de Manaus"
+    ]
+   },
+   "gabarito_conferido": false,
+   "conferir_numeracao": true,
+   "nota": "Alíquota zero do IPI, salvo produtos com industrialização incentivada na ZFM; conferir inciso."
+  },
+  {
+   "id": "Q032",
+   "categoria": "instituicao",
+   "pergunta": "Quais tributos a LC 214/2025 institui?",
+   "data": "2025-06-01",
+   "esperado": "responder",
+   "gabarito": {
+    "normas": [
+     "LC 214/2025",
+     "EC 132/2023"
+    ],
+    "rotulos": [
+     "art. 1º",
+     "CF, art. 156-A",
+     "CF, art. 195",
+     "CF, art. 153"
+    ],
+    "termos": []
+   },
+   "gabarito_conferido": false,
+   "conferir_numeracao": false
+  },
+  {
+   "id": "Q033",
+   "categoria": "instituicao",
+   "pergunta": "Qual lei complementar institui o IBS, a CBS e o Imposto Seletivo?",
+   "data": "2025-06-01",
+   "esperado": "responder",
+   "gabarito": {
+    "normas": [
+     "LC 214/2025",
+     "EC 132/2023"
+    ],
+    "rotulos": [
+     "art. 1º",
+     "CF, art. 156-A",
+     "CF, art. 195",
+     "CF, art. 153"
+    ],
+    "termos": []
+   },
+   "gabarito_conferido": false,
+   "conferir_numeracao": false
+  },
+  {
+   "id": "Q034",
+   "categoria": "instituicao",
+   "pergunta": "De quem é a competência para instituir a CBS?",
+   "data": "2025-06-01",
+   "esperado": "responder",
+   "gabarito": {
+    "normas": [
+     "LC 214/2025",
+     "EC 132/2023"
+    ],
+    "rotulos": [
+     "art. 1º",
+     "CF, art. 156-A",
+     "CF, art. 195",
+     "CF, art. 153"
+    ],
+    "termos": []
+   },
+   "gabarito_conferido": false,
+   "conferir_numeracao": false
+  },
+  {
+   "id": "Q035",
+   "categoria": "instituicao",
+   "pergunta": "O IBS é de competência de qual ente?",
+   "data": "2025-06-01",
+   "esperado": "responder",
+   "gabarito": {
+    "normas": [
+     "LC 214/2025",
+     "EC 132/2023"
+    ],
+    "rotulos": [
+     "art. 1º",
+     "CF, art. 156-A",
+     "CF, art. 195",
+     "CF, art. 153"
+    ],
+    "termos": []
+   },
+   "gabarito_conferido": false,
+   "conferir_numeracao": false
+  },
+  {
+   "id": "Q036",
+   "categoria": "instituicao",
+   "pergunta": "O Imposto Seletivo é de competência da União?",
+   "data": "2025-06-01",
+   "esperado": "responder",
+   "gabarito": {
+    "normas": [
+     "LC 214/2025",
+     "EC 132/2023"
+    ],
+    "rotulos": [
+     "art. 1º",
+     "CF, art. 156-A",
+     "CF, art. 195",
+     "CF, art. 153"
+    ],
+    "termos": []
+   },
+   "gabarito_conferido": false,
+   "conferir_numeracao": false
+  },
+  {
+   "id": "Q037",
+   "categoria": "instituicao",
+   "pergunta": "O IBS tem competência compartilhada entre Estados e Municípios?",
+   "data": "2025-06-01",
+   "esperado": "responder",
+   "gabarito": {
+    "normas": [
+     "LC 214/2025",
+     "EC 132/2023"
+    ],
+    "rotulos": [
+     "art. 1º",
+     "CF, art. 156-A",
+     "CF, art. 195",
+     "CF, art. 153"
+    ],
+    "termos": []
+   },
+   "gabarito_conferido": false,
+   "conferir_numeracao": false
+  },
+  {
+   "id": "Q038",
+   "categoria": "instituicao",
+   "pergunta": "Qual dispositivo da Constituição prevê o IBS depois da EC 132?",
+   "data": "2025-06-01",
+   "esperado": "responder",
+   "gabarito": {
+    "normas": [
+     "EC 132/2023",
+     "LC 214/2025"
+    ],
+    "rotulos": [
+     "CF, art. 156-A",
+     "art. 1º"
+    ],
+    "termos": []
+   },
+   "gabarito_conferido": false,
+   "conferir_numeracao": false
+  },
+  {
+   "id": "Q039",
+   "categoria": "instituicao",
+   "pergunta": "Qual dispositivo constitucional prevê a CBS?",
+   "data": "2025-06-01",
+   "esperado": "responder",
+   "gabarito": {
+    "normas": [
+     "EC 132/2023",
+     "LC 214/2025"
+    ],
+    "rotulos": [
+     "CF, art. 195",
+     "art. 1º"
+    ],
+    "termos": []
+   },
+   "gabarito_conferido": false,
+   "conferir_numeracao": false
+  },
+  {
+   "id": "Q040",
+   "categoria": "instituicao",
+   "pergunta": "O Imposto Seletivo já existia em 2024, antes da LC 214?",
+   "data": "2024-06-01",
+   "esperado": "responder",
+   "gabarito": {
+    "normas": [
+     "EC 132/2023"
+    ],
+    "rotulos": [
+     "CF, art. 153"
+    ],
+    "termos": [
+     "Imposto Seletivo",
+     "153"
+    ]
+   },
+   "gabarito_conferido": false,
+   "conferir_numeracao": true,
+   "nota": "Em 2024 a LC 214 ainda não vigorava; a resposta correta cita só a EC 132 (CF, art. 153, VIII) ou é sem base."
+  },
+  {
+   "id": "Q041",
+   "categoria": "regimes",
+   "pergunta": "Há redução de 60% das alíquotas de IBS e CBS para serviços de educação?",
+   "data": "2026-06-01",
+   "esperado": "responder",
+   "gabarito": {
+    "normas": [
+     "EC 132/2023",
+     "LC 214/2025"
+    ],
+    "rotulos": [
+     "art. 9º"
+    ],
+    "termos": [
+     "60%"
+    ]
+   },
+   "gabarito_conferido": false,
+   "conferir_numeracao": false
+  },
+  {
+   "id": "Q042",
+   "categoria": "regimes",
+   "pergunta": "Há redução de 60% das alíquotas de IBS e CBS para serviços de saúde?",
+   "data": "2026-06-01",
+   "esperado": "responder",
+   "gabarito": {
+    "normas": [
+     "EC 132/2023",
+     "LC 214/2025"
+    ],
+    "rotulos": [
+     "art. 9º"
+    ],
+    "termos": [
+     "60%"
+    ]
+   },
+   "gabarito_conferido": false,
+   "conferir_numeracao": false
+  },
+  {
+   "id": "Q043",
+   "categoria": "regimes",
+   "pergunta": "Há redução de 60% das alíquotas de IBS e CBS para dispositivos médicos?",
+   "data": "2026-06-01",
+   "esperado": "responder",
+   "gabarito": {
+    "normas": [
+     "EC 132/2023",
+     "LC 214/2025"
+    ],
+    "rotulos": [
+     "art. 9º"
+    ],
+    "termos": [
+     "60%"
+    ]
+   },
+   "gabarito_conferido": false,
+   "conferir_numeracao": false
+  },
+  {
+   "id": "Q044",
+   "categoria": "regimes",
+   "pergunta": "Há redução de 60% das alíquotas de IBS e CBS para dispositivos de acessibilidade para pessoas com deficiência?",
+   "data": "2026-06-01",
+   "esperado": "responder",
+   "gabarito": {
+    "normas": [
+     "EC 132/2023",
+     "LC 214/2025"
+    ],
+    "rotulos": [
+     "art. 9º"
+    ],
+    "termos": [
+     "60%"
+    ]
+   },
+   "gabarito_conferido": false,
+   "conferir_numeracao": false
+  },
+  {
+   "id": "Q045",
+   "categoria": "regimes",
+   "pergunta": "Há redução de 60% das alíquotas de IBS e CBS para medicamentos?",
+   "data": "2026-06-01",
+   "esperado": "responder",
+   "gabarito": {
+    "normas": [
+     "EC 132/2023",
+     "LC 214/2025"
+    ],
+    "rotulos": [
+     "art. 9º"
+    ],
+    "termos": [
+     "60%"
+    ]
+   },
+   "gabarito_conferido": false,
+   "conferir_numeracao": false
+  },
+  {
+   "id": "Q046",
+   "categoria": "regimes",
+   "pergunta": "Há redução de 60% das alíquotas de IBS e CBS para produtos de cuidados básicos à saúde menstrual?",
+   "data": "2026-06-01",
+   "esperado": "responder",
+   "gabarito": {
+    "normas": [
+     "EC 132/2023",
+     "LC 214/2025"
+    ],
+    "rotulos": [
+     "art. 9º"
+    ],
+    "termos": [
+     "60%"
+    ]
+   },
+   "gabarito_conferido": false,
+   "conferir_numeracao": false
+  },
+  {
+   "id": "Q047",
+   "categoria": "regimes",
+   "pergunta": "Há redução de 60% das alíquotas de IBS e CBS para transporte público coletivo de passageiros?",
+   "data": "2026-06-01",
+   "esperado": "responder",
+   "gabarito": {
+    "normas": [
+     "EC 132/2023",
+     "LC 214/2025"
+    ],
+    "rotulos": [
+     "art. 9º"
+    ],
+    "termos": [
+     "60%"
+    ]
+   },
+   "gabarito_conferido": false,
+   "conferir_numeracao": false
+  },
+  {
+   "id": "Q048",
+   "categoria": "regimes",
+   "pergunta": "Há redução de 60% das alíquotas de IBS e CBS para alimentos destinados ao consumo humano?",
+   "data": "2026-06-01",
+   "esperado": "responder",
+   "gabarito": {
+    "normas": [
+     "EC 132/2023",
+     "LC 214/2025"
+    ],
+    "rotulos": [
+     "art. 9º"
+    ],
+    "termos": [
+     "60%"
+    ]
+   },
+   "gabarito_conferido": false,
+   "conferir_numeracao": false
+  },
+  {
+   "id": "Q049",
+   "categoria": "regimes",
+   "pergunta": "Há redução de 60% das alíquotas de IBS e CBS para produtos de higiene pessoal e limpeza consumidos por famílias de baixa renda?",
+   "data": "2026-06-01",
+   "esperado": "responder",
+   "gabarito": {
+    "normas": [
+     "EC 132/2023",
+     "LC 214/2025"
+    ],
+    "rotulos": [
+     "art. 9º"
+    ],
+    "termos": [
+     "60%"
+    ]
+   },
+   "gabarito_conferido": false,
+   "conferir_numeracao": false
+  },
+  {
+   "id": "Q050",
+   "categoria": "regimes",
+   "pergunta": "Há redução de 60% das alíquotas de IBS e CBS para produtos agropecuários in natura?",
+   "data": "2026-06-01",
+   "esperado": "responder",
+   "gabarito": {
+    "normas": [
+     "EC 132/2023",
+     "LC 214/2025"
+    ],
+    "rotulos": [
+     "art. 9º"
+    ],
+    "termos": [
+     "60%"
+    ]
+   },
+   "gabarito_conferido": false,
+   "conferir_numeracao": false
+  },
+  {
+   "id": "Q051",
+   "categoria": "regimes",
+   "pergunta": "Há redução de 60% das alíquotas de IBS e CBS para insumos agropecuários?",
+   "data": "2026-06-01",
+   "esperado": "responder",
+   "gabarito": {
+    "normas": [
+     "EC 132/2023",
+     "LC 214/2025"
+    ],
+    "rotulos": [
+     "art. 9º"
+    ],
+    "termos": [
+     "60%"
+    ]
+   },
+   "gabarito_conferido": false,
+   "conferir_numeracao": false
+  },
+  {
+   "id": "Q052",
+   "categoria": "regimes",
+   "pergunta": "Há redução de 60% das alíquotas de IBS e CBS para produções artísticas e culturais nacionais?",
+   "data": "2026-06-01",
+   "esperado": "responder",
+   "gabarito": {
+    "normas": [
+     "EC 132/2023",
+     "LC 214/2025"
+    ],
+    "rotulos": [
+     "art. 9º"
+    ],
+    "termos": [
+     "60%"
+    ]
+   },
+   "gabarito_conferido": false,
+   "conferir_numeracao": false
+  },
+  {
+   "id": "Q053",
+   "categoria": "regimes",
+   "pergunta": "Há redução de 60% das alíquotas de IBS e CBS para bens relacionados a segurança da informação e segurança cibernética?",
+   "data": "2026-06-01",
+   "esperado": "responder",
+   "gabarito": {
+    "normas": [
+     "EC 132/2023",
+     "LC 214/2025"
+    ],
+    "rotulos": [
+     "art. 9º"
+    ],
+    "termos": [
+     "60%"
+    ]
+   },
+   "gabarito_conferido": false,
+   "conferir_numeracao": false
+  },
+  {
+   "id": "Q054",
+   "categoria": "regimes",
+   "pergunta": "Quais bens e serviços têm redução de 60% nas alíquotas?",
+   "data": "2026-06-01",
+   "esperado": "responder",
+   "gabarito": {
+    "normas": [
+     "EC 132/2023",
+     "LC 214/2025"
+    ],
+    "rotulos": [
+     "art. 9º"
+    ],
+    "termos": []
+   },
+   "gabarito_conferido": false,
+   "conferir_numeracao": false
+  },
+  {
+   "id": "Q055",
+   "categoria": "regimes",
+   "pergunta": "A lei complementar pode prever regimes diferenciados de tributação para o IBS e a CBS?",
+   "data": "2026-06-01",
+   "esperado": "responder",
+   "gabarito": {
+    "normas": [
+     "EC 132/2023"
+    ],
+    "rotulos": [
+     "art. 9º"
+    ],
+    "termos": []
+   },
+   "gabarito_conferido": false,
+   "conferir_numeracao": false
+  },
+  {
+   "id": "Q056",
+   "categoria": "regimes",
+   "pergunta": "Os regimes diferenciados precisam ser uniformes em todo o território nacional?",
+   "data": "2026-06-01",
+   "esperado": "responder",
+   "gabarito": {
+    "normas": [
+     "EC 132/2023"
+    ],
+    "rotulos": [
+     "art. 9º"
+    ],
+    "termos": []
+   },
+   "gabarito_conferido": false,
+   "conferir_numeracao": false
+  },
+  {
+   "id": "Q057",
+   "categoria": "regimes",
+   "pergunta": "A criação de regimes diferenciados exige ajuste nas alíquotas de referência?",
+   "data": "2026-06-01",
+   "esperado": "responder",
+   "gabarito": {
+    "normas": [
+     "EC 132/2023"
+    ],
+    "rotulos": [
+     "art. 9º"
+    ],
+    "termos": []
+   },
+   "gabarito_conferido": false,
+   "conferir_numeracao": false
+  },
+  {
+   "id": "Q058",
+   "categoria": "regimes",
+   "pergunta": "Quais operações têm alíquota zero de IBS e CBS?",
+   "data": "2026-06-01",
+   "esperado": "responder",
+   "gabarito": {
+    "normas": [
+     "EC 132/2023",
+     "LC 214/2025"
+    ],
+    "rotulos": [
+     "art. 9º"
+    ],
+    "termos": [
+     "reduzidas a zero",
+     "alíquota zero"
+    ]
+   },
+   "gabarito_conferido": false,
+   "conferir_numeracao": true,
+   "nota": "EC 132, art. 9º, § 3º, e LC 214 (cesta básica); conferir parágrafo e artigos."
+  },
+  {
+   "id": "Q059",
+   "categoria": "regimes",
+   "pergunta": "Profissões intelectuais regulamentadas têm redução de 30%?",
+   "data": "2026-06-01",
+   "esperado": "responder",
+   "gabarito": {
+    "normas": [
+     "EC 132/2023",
+     "LC 214/2025"
+    ],
+    "rotulos": [
+     "art. 9º"
+    ],
+    "termos": [
+     "30%"
+    ]
+   },
+   "gabarito_conferido": false,
+   "conferir_numeracao": true,
+   "nota": "EC 132, art. 9º, § 12 (ou similar) e LC 214; conferir numeração."
+  },
+  {
+   "id": "Q060",
+   "categoria": "lc214",
+   "pergunta": "Como funciona a devolução de IBS e CBS a famílias de baixa renda (cashback)?",
+   "data": "2027-06-01",
+   "esperado": "responder",
+   "gabarito": {
+    "normas": [
+     "LC 214/2025"
+    ],
+    "rotulos": [],
+    "termos": [
+     "devolução"
+    ]
+   },
+   "gabarito_conferido": false,
+   "conferir_numeracao": true,
+   "nota": "Gabarito por termo: o curador fixa os artigos depois da carga oficial."
+  },
+  {
+   "id": "Q061",
+   "categoria": "lc214",
+   "pergunta": "O que é a Cesta Básica Nacional de Alimentos na LC 214?",
+   "data": "2027-06-01",
+   "esperado": "responder",
+   "gabarito": {
+    "normas": [
+     "LC 214/2025"
+    ],
+    "rotulos": [],
+    "termos": [
+     "Cesta Básica Nacional de Alimentos"
+    ]
+   },
+   "gabarito_conferido": false,
+   "conferir_numeracao": true,
+   "nota": "Gabarito por termo: o curador fixa os artigos depois da carga oficial."
+  },
+  {
+   "id": "Q062",
+   "categoria": "lc214",
+   "pergunta": "Como funciona o split payment do IBS e da CBS?",
+   "data": "2027-06-01",
+   "esperado": "responder",
+   "gabarito": {
+    "normas": [
+     "LC 214/2025"
+    ],
+    "rotulos": [],
+    "termos": [
+     "pagamento"
+    ]
+   },
+   "gabarito_conferido": false,
+   "conferir_numeracao": true,
+   "nota": "Gabarito por termo: o curador fixa os artigos depois da carga oficial."
+  },
+  {
+   "id": "Q063",
+   "categoria": "lc214",
+   "pergunta": "Quem é contribuinte do IBS e da CBS?",
+   "data": "2027-06-01",
+   "esperado": "responder",
+   "gabarito": {
+    "normas": [
+     "LC 214/2025"
+    ],
+    "rotulos": [],
+    "termos": [
+     "contribuinte"
+    ]
+   },
+   "gabarito_conferido": false,
+   "conferir_numeracao": true,
+   "nota": "Gabarito por termo: o curador fixa os artigos depois da carga oficial."
+  },
+  {
+   "id": "Q064",
+   "categoria": "lc214",
+   "pergunta": "Qual o fato gerador do IBS e da CBS?",
+   "data": "2027-06-01",
+   "esperado": "responder",
+   "gabarito": {
+    "normas": [
+     "LC 214/2025"
+    ],
+    "rotulos": [],
+    "termos": [
+     "fato gerador"
+    ]
+   },
+   "gabarito_conferido": false,
+   "conferir_numeracao": true,
+   "nota": "Gabarito por termo: o curador fixa os artigos depois da carga oficial."
+  },
+  {
+   "id": "Q065",
+   "categoria": "lc214",
+   "pergunta": "Como se apropriam créditos de IBS e CBS na não cumulatividade?",
+   "data": "2027-06-01",
+   "esperado": "responder",
+   "gabarito": {
+    "normas": [
+     "LC 214/2025"
+    ],
+    "rotulos": [],
+    "termos": [
+     "crédito"
+    ]
+   },
+   "gabarito_conferido": false,
+   "conferir_numeracao": true,
+   "nota": "Gabarito por termo: o curador fixa os artigos depois da carga oficial."
+  },
+  {
+   "id": "Q066",
+   "categoria": "lc214",
+   "pergunta": "Como fica o Simples Nacional com o IBS e a CBS?",
+   "data": "2027-06-01",
+   "esperado": "responder",
+   "gabarito": {
+    "normas": [
+     "LC 214/2025"
+    ],
+    "rotulos": [],
+    "termos": [
+     "Simples Nacional"
+    ]
+   },
+   "gabarito_conferido": false,
+   "conferir_numeracao": true,
+   "nota": "Gabarito por termo: o curador fixa os artigos depois da carga oficial."
+  },
+  {
+   "id": "Q067",
+   "categoria": "lc214",
+   "pergunta": "Quais bens estão sujeitos ao Imposto Seletivo?",
+   "data": "2027-06-01",
+   "esperado": "responder",
+   "gabarito": {
+    "normas": [
+     "LC 214/2025"
+    ],
+    "rotulos": [],
+    "termos": [
+     "Imposto Seletivo"
+    ]
+   },
+   "gabarito_conferido": false,
+   "conferir_numeracao": true,
+   "nota": "Gabarito por termo: o curador fixa os artigos depois da carga oficial."
+  },
+  {
+   "id": "Q068",
+   "categoria": "lc214",
+   "pergunta": "Como a Zona Franca de Manaus é tratada no IBS e na CBS?",
+   "data": "2027-06-01",
+   "esperado": "responder",
+   "gabarito": {
+    "normas": [
+     "LC 214/2025"
+    ],
+    "rotulos": [],
+    "termos": [
+     "Zona Franca de Manaus"
+    ]
+   },
+   "gabarito_conferido": false,
+   "conferir_numeracao": true,
+   "nota": "Gabarito por termo: o curador fixa os artigos depois da carga oficial."
+  },
+  {
+   "id": "Q069",
+   "categoria": "lc214",
+   "pergunta": "O que é o nanoempreendedor na LC 214?",
+   "data": "2027-06-01",
+   "esperado": "responder",
+   "gabarito": {
+    "normas": [
+     "LC 214/2025"
+    ],
+    "rotulos": [],
+    "termos": [
+     "nanoempreendedor"
+    ]
+   },
+   "gabarito_conferido": false,
+   "conferir_numeracao": true,
+   "nota": "Gabarito por termo: o curador fixa os artigos depois da carga oficial."
+  },
+  {
+   "id": "Q070",
+   "categoria": "lc214",
+   "pergunta": "Qual o local da operação para fins de IBS e CBS?",
+   "data": "2027-06-01",
+   "esperado": "responder",
+   "gabarito": {
+    "normas": [
+     "LC 214/2025"
+    ],
+    "rotulos": [],
+    "termos": [
+     "local da operação"
+    ]
+   },
+   "gabarito_conferido": false,
+   "conferir_numeracao": true,
+   "nota": "Gabarito por termo: o curador fixa os artigos depois da carga oficial."
+  },
+  {
+   "id": "Q071",
+   "categoria": "lc214",
+   "pergunta": "Qual a base de cálculo do IBS e da CBS?",
+   "data": "2027-06-01",
+   "esperado": "responder",
+   "gabarito": {
+    "normas": [
+     "LC 214/2025"
+    ],
+    "rotulos": [],
+    "termos": [
+     "base de cálculo"
+    ]
+   },
+   "gabarito_conferido": false,
+   "conferir_numeracao": true,
+   "nota": "Gabarito por termo: o curador fixa os artigos depois da carga oficial."
+  },
+  {
+   "id": "Q072",
+   "categoria": "lc214",
+   "pergunta": "As exportações de bens são imunes ao IBS e à CBS?",
+   "data": "2027-06-01",
+   "esperado": "responder",
+   "gabarito": {
+    "normas": [
+     "LC 214/2025"
+    ],
+    "rotulos": [],
+    "termos": [
+     "exportação"
+    ]
+   },
+   "gabarito_conferido": false,
+   "conferir_numeracao": true,
+   "nota": "Gabarito por termo: o curador fixa os artigos depois da carga oficial."
+  },
+  {
+   "id": "Q073",
+   "categoria": "lc214",
+   "pergunta": "Como se dá a incidência sobre importação de bens materiais?",
+   "data": "2027-06-01",
+   "esperado": "responder",
+   "gabarito": {
+    "normas": [
+     "LC 214/2025"
+    ],
+    "rotulos": [],
+    "termos": [
+     "importação"
+    ]
+   },
+   "gabarito_conferido": false,
+   "conferir_numeracao": true,
+   "nota": "Gabarito por termo: o curador fixa os artigos depois da carga oficial."
+  },
+  {
+   "id": "Q074",
+   "categoria": "lc214",
+   "pergunta": "Quem integra o Comitê Gestor do IBS?",
+   "data": "2027-06-01",
+   "esperado": "responder",
+   "gabarito": {
+    "normas": [
+     "LC 214/2025"
+    ],
+    "rotulos": [],
+    "termos": [
+     "Comitê Gestor"
+    ]
+   },
+   "gabarito_conferido": false,
+   "conferir_numeracao": true,
+   "nota": "Gabarito por termo: o curador fixa os artigos depois da carga oficial."
+  },
+  {
+   "id": "Q075",
+   "categoria": "lc214",
+   "pergunta": "Há regime específico para combustíveis?",
+   "data": "2027-06-01",
+   "esperado": "responder",
+   "gabarito": {
+    "normas": [
+     "LC 214/2025"
+    ],
+    "rotulos": [],
+    "termos": [
+     "combustíveis"
+    ]
+   },
+   "gabarito_conferido": false,
+   "conferir_numeracao": true,
+   "nota": "Gabarito por termo: o curador fixa os artigos depois da carga oficial."
+  },
+  {
+   "id": "Q076",
+   "categoria": "lc214",
+   "pergunta": "Como são tributados os serviços financeiros no novo sistema?",
+   "data": "2027-06-01",
+   "esperado": "responder",
+   "gabarito": {
+    "normas": [
+     "LC 214/2025"
+    ],
+    "rotulos": [],
+    "termos": [
+     "serviços financeiros"
+    ]
+   },
+   "gabarito_conferido": false,
+   "conferir_numeracao": true,
+   "nota": "Gabarito por termo: o curador fixa os artigos depois da carga oficial."
+  },
+  {
+   "id": "Q077",
+   "categoria": "lc214",
+   "pergunta": "Como funcionam as operações com bens imóveis no IBS e na CBS?",
+   "data": "2027-06-01",
+   "esperado": "responder",
+   "gabarito": {
+    "normas": [
+     "LC 214/2025"
+    ],
+    "rotulos": [],
+    "termos": [
+     "bens imóveis"
+    ]
+   },
+   "gabarito_conferido": false,
+   "conferir_numeracao": true,
+   "nota": "Gabarito por termo: o curador fixa os artigos depois da carga oficial."
+  },
+  {
+   "id": "Q078",
+   "categoria": "lc214",
+   "pergunta": "Existe responsabilidade solidária do adquirente pelo IBS e CBS?",
+   "data": "2027-06-01",
+   "esperado": "responder",
+   "gabarito": {
+    "normas": [
+     "LC 214/2025"
+    ],
+    "rotulos": [],
+    "termos": [
+     "solidariamente"
+    ]
+   },
+   "gabarito_conferido": false,
+   "conferir_numeracao": true,
+   "nota": "Gabarito por termo: o curador fixa os artigos depois da carga oficial."
+  },
+  {
+   "id": "Q079",
+   "categoria": "lc214",
+   "pergunta": "Quando entra em vigor a LC 214/2025?",
+   "data": "2027-06-01",
+   "esperado": "responder",
+   "gabarito": {
+    "normas": [
+     "LC 214/2025"
+    ],
+    "rotulos": [],
+    "termos": [
+     "entra em vigor"
+    ]
+   },
+   "gabarito_conferido": false,
+   "conferir_numeracao": true,
+   "nota": "Gabarito por termo: o curador fixa os artigos depois da carga oficial."
+  },
+  {
+   "id": "Q080",
+   "categoria": "vigencia",
+   "pergunta": "Qual a alíquota da CBS?",
+   "data": "2023-06-01",
+   "esperado": "sem_base",
+   "gabarito": null,
+   "gabarito_conferido": false,
+   "conferir_numeracao": false,
+   "nota": "Antes da EC 132 (21/12/2023), não há dispositivo vigente."
+  },
+  {
+   "id": "Q081",
+   "categoria": "vigencia",
+   "pergunta": "O que diz a LC 214 sobre o Imposto Seletivo?",
+   "data": "2024-06-01",
+   "esperado": "sem_base",
+   "gabarito": null,
+   "gabarito_conferido": false,
+   "conferir_numeracao": false,
+   "nota": "Antes da publicação da LC 214 (16/01/2025)."
+  },
+  {
+   "id": "Q082",
+   "categoria": "vigencia",
+   "pergunta": "Quais tributos ficam instituídos pela lei complementar do IBS?",
+   "data": "2024-12-31",
+   "esperado": "sem_base",
+   "gabarito": null,
+   "gabarito_conferido": false,
+   "conferir_numeracao": false,
+   "nota": "Um dia antes da vigência adotada para a LC 214."
+  },
+  {
+   "id": "Q083",
+   "categoria": "transicao",
+   "pergunta": "Qual a alíquota da CBS no ano de 2026?",
+   "data": "2026-01-02",
+   "esperado": "responder",
+   "gabarito": {
+    "normas": [
+     "EC 132/2023"
+    ],
+    "rotulos": [
+     "ADCT, art. 125"
+    ],
+    "termos": []
+   },
+   "gabarito_conferido": false,
+   "conferir_numeracao": false
+  },
+  {
+   "id": "Q084",
+   "categoria": "transicao",
+   "pergunta": "Os impostos estaduais sobre circulação ainda existem em 2032?",
+   "data": "2032-06-01",
+   "esperado": "responder",
+   "gabarito": {
+    "normas": [
+     "EC 132/2023"
+    ],
+    "rotulos": [
+     "ADCT, art. 128"
+    ],
+    "termos": []
+   },
+   "gabarito_conferido": false,
+   "conferir_numeracao": false
+  },
+  {
+   "id": "Q085",
+   "categoria": "fora_do_escopo",
+   "pergunta": "Qual a alíquota do IRPJ no lucro presumido?",
+   "data": "2026-06-01",
+   "esperado": "sem_base",
+   "gabarito": null,
+   "gabarito_conferido": false,
+   "conferir_numeracao": false
+  },
+  {
+   "id": "Q086",
+   "categoria": "fora_do_escopo",
+   "pergunta": "Como calcular o ITCMD em São Paulo?",
+   "data": "2026-06-01",
+   "esperado": "sem_base",
+   "gabarito": null,
+   "gabarito_conferido": false,
+   "conferir_numeracao": false
+  },
+  {
+   "id": "Q087",
+   "categoria": "fora_do_escopo",
+   "pergunta": "Qual o prazo para impugnar um auto de infração federal?",
+   "data": "2026-06-01",
+   "esperado": "sem_base",
+   "gabarito": null,
+   "gabarito_conferido": false,
+   "conferir_numeracao": false
+  },
+  {
+   "id": "Q088",
+   "categoria": "fora_do_escopo",
+   "pergunta": "O STF já julgou a tese do século sobre ICMS na base do PIS e da Cofins?",
+   "data": "2026-06-01",
+   "esperado": "sem_base",
+   "gabarito": null,
+   "gabarito_conferido": false,
+   "conferir_numeracao": false
+  },
+  {
+   "id": "Q089",
+   "categoria": "fora_do_escopo",
+   "pergunta": "Qual a alíquota do IPTU em São José do Rio Preto?",
+   "data": "2026-06-01",
+   "esperado": "sem_base",
+   "gabarito": null,
+   "gabarito_conferido": false,
+   "conferir_numeracao": false
+  },
+  {
+   "id": "Q090",
+   "categoria": "fora_do_escopo",
+   "pergunta": "Como funciona a substituição tributária do ICMS em São Paulo?",
+   "data": "2026-06-01",
+   "esperado": "sem_base",
+   "gabarito": null,
+   "gabarito_conferido": false,
+   "conferir_numeracao": false
+  },
+  {
+   "id": "Q091",
+   "categoria": "fora_do_escopo",
+   "pergunta": "Qual a multa por atraso na entrega da DCTF?",
+   "data": "2026-06-01",
+   "esperado": "sem_base",
+   "gabarito": null,
+   "gabarito_conferido": false,
+   "conferir_numeracao": false
+  },
+  {
+   "id": "Q092",
+   "categoria": "fora_do_escopo",
+   "pergunta": "Quais são os requisitos do mandado de segurança?",
+   "data": "2026-06-01",
+   "esperado": "sem_base",
+   "gabarito": null,
+   "gabarito_conferido": false,
+   "conferir_numeracao": false
+  },
+  {
+   "id": "Q093",
+   "categoria": "fora_do_escopo",
+   "pergunta": "Qual a alíquota da contribuição previdenciária patronal?",
+   "data": "2026-06-01",
+   "esperado": "sem_base",
+   "gabarito": null,
+   "gabarito_conferido": false,
+   "conferir_numeracao": false
+  },
+  {
+   "id": "Q094",
+   "categoria": "fora_do_escopo",
+   "pergunta": "Como funciona a CPRB, a desoneração da folha?",
+   "data": "2026-06-01",
+   "esperado": "sem_base",
+   "gabarito": null,
+   "gabarito_conferido": false,
+   "conferir_numeracao": false
+  },
+  {
+   "id": "Q095",
+   "categoria": "fora_do_escopo",
+   "pergunta": "Qual o prazo prescricional para repetição de indébito tributário?",
+   "data": "2026-06-01",
+   "esperado": "sem_base",
+   "gabarito": null,
+   "gabarito_conferido": false,
+   "conferir_numeracao": false
+  },
+  {
+   "id": "Q096",
+   "categoria": "fora_do_escopo",
+   "pergunta": "Qual o entendimento do CARF sobre ágio interno?",
+   "data": "2026-06-01",
+   "esperado": "sem_base",
+   "gabarito": null,
+   "gabarito_conferido": false,
+   "conferir_numeracao": false
+  },
+  {
+   "id": "Q097",
+   "categoria": "fora_do_escopo",
+   "pergunta": "Como se calcula o IOF sobre operações de câmbio?",
+   "data": "2026-06-01",
+   "esperado": "sem_base",
+   "gabarito": null,
+   "gabarito_conferido": false,
+   "conferir_numeracao": false
+  },
+  {
+   "id": "Q098",
+   "categoria": "fora_do_escopo",
+   "pergunta": "Quais são as regras do Refis mais recente?",
+   "data": "2026-06-01",
+   "esperado": "sem_base",
+   "gabarito": null,
+   "gabarito_conferido": false,
+   "conferir_numeracao": false
+  },
+  {
+   "id": "Q099",
+   "categoria": "fora_do_escopo",
+   "pergunta": "Qual a alíquota do IPVA para carros elétricos?",
+   "data": "2026-06-01",
+   "esperado": "sem_base",
+   "gabarito": null,
+   "gabarito_conferido": false,
+   "conferir_numeracao": false
+  },
+  {
+   "id": "Q100",
+   "categoria": "fora_do_escopo",
+   "pergunta": "Como funciona a transação tributária com a PGFN?",
+   "data": "2026-06-01",
+   "esperado": "sem_base",
+   "gabarito": null,
+   "gabarito_conferido": false,
+   "conferir_numeracao": false
+  }
+ ]
+}

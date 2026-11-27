@@ -800,3 +800,46 @@ body:has(.dock-sec) .mesa-principal { padding-bottom: 112px; }
 /* Com o topo e o campo fixos, o que entra em foco ou é rolado para a vista não fica escondido atrás deles. */
 :root:has(.pesquisa-chat) { scroll-padding: 80px 0 210px; }
 .mesa-campo > * { min-width: 0; }
+/* ───────── Teste público: relato de citação, aviso de IA, rodapé legal ───────── */
+.mesa .relato-abrir { justify-self: start; padding: 0; border: 0; background: none; color: var(--ink-3, #6b7380); font-size: 12.5px; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.mesa .relato-abrir:hover { color: var(--bordo); }
+.mesa .relato { display: grid; gap: 12px; padding: 14px; border-radius: 14px; background: #f7f6f1; box-shadow: inset 0 0 0 1px var(--anel); font-size: 13.5px; }
+.mesa .relato fieldset { display: grid; gap: 6px; margin: 0; padding: 0; border: 0; }
+.mesa .relato legend { margin-bottom: 4px; font-weight: 650; color: var(--ink); }
+.mesa .relato fieldset label { display: flex; gap: 8px; align-items: flex-start; line-height: 1.35; cursor: pointer; }
+.mesa .relato input[type="radio"] { margin-top: 2px; accent-color: var(--marinho); }
+.mesa .relato-comentario { display: grid; gap: 6px; }
+.mesa .relato-comentario span { color: var(--ink-2); font-size: 12.5px; }
+.mesa .relato textarea { width: 100%; padding: 8px 10px; border: 0; border-radius: 10px; background: #fff; box-shadow: inset 0 0 0 1px var(--anel); font: inherit; resize: vertical; }
+.mesa .relato textarea:focus-visible { outline: 2px solid var(--marinho); outline-offset: 0; }
+.mesa .relato .alerta { margin: 0; }
+.mesa .relato-acoes { display: flex; flex-wrap: wrap; gap: 8px; }
+.mesa .relato-acoes .mesa-botao { min-height: 36px; padding: 6px 16px; font-size: 13.5px; }
+.mesa .relato-feito { margin: 0; font-size: 12.5px; color: var(--verde); font-weight: 600; }
+.mesa-aviso-ia { margin: 4px 0 0; padding-top: 12px; border-top: 1px solid var(--anel); color: var(--ink-2); font-size: 13px; line-height: 1.5; }
+.mesa .mesa-rodape-legal { position: static; display: flex; flex-wrap: wrap; gap: 6px 16px; margin-top: 48px; padding: 16px 0 0; border-radius: 0; background: none; box-shadow: none; border-top: 1px solid var(--anel); color: var(--ink-2); font-size: 12.5px; line-height: 1.5; }
+.mesa-rodape-legal p { flex: 1 1 420px; margin: 0; }
+.mesa-rodape-legal nav { display: flex; gap: 14px; }
+.mesa-rodape-legal a { color: inherit; font-weight: 600; }
+
+/* Documentos legais em página própria: sumário na lateral, texto em medida de leitura */
+.legal-pagina { min-height: 100dvh; background: #f6f5f1; }
+.legal-pagina-topo { position: sticky; top: 0; z-index: 5; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px clamp(16px, 4vw, 48px); background: rgb(246 245 241 / .92); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); border-bottom: 1px solid var(--anel); }
+.legal-pagina-abas { display: flex; gap: 4px; padding: 4px; border-radius: 999px; background: #fff; box-shadow: 0 0 0 1px var(--anel); }
+.legal-pagina-abas a { padding: 8px 16px; border-radius: 999px; color: var(--ink-2); font-size: 14px; font-weight: 600; text-decoration: none; white-space: nowrap; }
+.legal-pagina-abas a[aria-current="page"] { background: var(--marinho); color: #fff; }
+.legal-pagina-grade { display: grid; grid-template-columns: minmax(220px, 300px) minmax(0, 860px); justify-content: center; gap: clamp(24px, 4vw, 64px); max-width: 1320px; margin: 0 auto; padding: clamp(24px, 4vw, 56px) clamp(16px, 4vw, 48px) 80px; }
+.legal-sumario { position: sticky; top: 96px; align-self: start; padding: 18px 20px; border-radius: 18px; background: #fff; box-shadow: 0 0 0 1px var(--anel); font-size: 14px; }
+.legal-sumario summary { color: var(--marinho); font-weight: 700; cursor: pointer; list-style: none; }
+.legal-sumario summary::-webkit-details-marker { display: none; }
+.legal-sumario summary::before, .legal-sumario summary::after { content: none !important; }
+.legal-sumario ol { display: grid; gap: 6px; margin: 12px 0 0; padding-left: 20px; color: var(--ink-2); }
+.legal-sumario a { color: inherit; text-decoration: none; }
+.legal-sumario a:hover { color: var(--marinho); text-decoration: underline; }
+.legal-pagina-texto { padding: clamp(24px, 4vw, 52px); border-radius: 22px; background: #fff; box-shadow: 0 0 0 1px var(--anel); overflow: visible; }
+.legal-pagina-texto h3 { scroll-margin-top: 96px; }
+@media (max-width: 860px) {
+  .legal-pagina-grade { grid-template-columns: 1fr; }
+  .legal-sumario { position: static; }
+  .legal-pagina-topo .marca span { display: none; }
+}

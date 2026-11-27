@@ -1,21 +1,20 @@
 #!/usr/bin/env node
 /**
- * Ingestão de uma norma do Planalto na base versionada.
+ * Ingestão de UMA norma do Planalto na base versionada. Para a Reforma inteira
+ * (EC 132/2023 e LC 214/2025 de uma vez), use scripts/carregar-reforma.mjs.
  *
  *   node scripts/ingerir-planalto.mjs --tipo LC --numero 214 --ano 2025 \
  *     --publicada 2025-01-16 --ementa "Institui o IBS, a CBS e o IS" \
- *     --url https://www.planalto.gov.br/ccivil_03/leis/lcp/lcp214.htm [--arquivo lcp214.htm]
+ *     --url https://www.planalto.gov.br/ccivil_03/leis/lcp/lcp214.htm [--arquivo lcp214.htm] [--simular]
  *
- * Sem --arquivo, baixa a URL. Cada artigo entra como status 'rascunho',
- * origem 'ingestao', vigência a partir da publicação. Nada chega ao advogado
- * em produção antes de o curador revisar e publicar.
- *
+ * Sem --arquivo, baixa a URL. Regras de gravação em scripts/ingestao.mjs.
  * Variável: ADMIN_DATABASE_URL (dono das tabelas; app_user não grava na base normativa).
  */
 import { readFile } from "node:fs/promises";
 import { parseArgs } from "node:util";
 import pg from "pg";
-import { artigos, decodificar, textoLimpo } from "./planalto.mjs";
+import { ingerirNorma, lerNorma } from "./ingestao.mjs";
+import { baixar, decodificar } from "./planalto.mjs";
 
 const { values: a } = parseArgs({
   options: {
@@ -28,48 +27,20 @@ for (const k of ["tipo", "numero", "ano", "publicada", "ementa", "url"]) {
   if (!a[k]) { console.error(`faltou --${k}`); process.exit(2); }
 }
 
-let html;
-if (a.arquivo) {
-  html = decodificar(new Uint8Array(await readFile(a.arquivo)));
-} else {
-  const r = await fetch(a.url, { headers: { "user-agent": "advfin-ingestao/1.0" } });
-  if (!r.ok) { console.error(`download falhou: ${r.status}`); process.exit(1); }
-  html = decodificar(new Uint8Array(await r.arrayBuffer()), r.headers.get("content-type") ?? "");
-}
+const html = a.arquivo ? decodificar(new Uint8Array(await readFile(a.arquivo))) : await baixar(a.url);
 
-const lista = artigos(textoLimpo(html));
-console.log(`${lista.length} artigos lidos de ${a.tipo} ${a.numero}/${a.ano}`);
 if (a.simular) {
-  for (const x of lista.slice(0, 5)) console.log(`- ${x.rotulo}: ${x.texto.slice(0, 120)}…`);
+  const { lista, vigencia } = lerNorma(html);
+  console.log(`${lista.length} artigos lidos de ${a.tipo} ${a.numero}/${a.ano}; vigência em ${vigencia?.rotulo ?? "?"}`);
+  for (const x of lista.slice(0, 8)) console.log(`- ${x.rotulo}: ${x.texto.slice(0, 110)}…`);
   process.exit(0);
 }
 
 const db = new pg.Client({ connectionString: process.env.ADMIN_DATABASE_URL });
 await db.connect();
 try {
-  await db.query("begin");
-  const { rows: [n] } = await db.query(
-    `insert into normas (tipo, numero, ano, ementa, url_oficial, publicada_em) values ($1,$2,$3,$4,$5,$6)
-     on conflict (tipo, numero, ano) do update set ementa = excluded.ementa, url_oficial = excluded.url_oficial
-     returning id`,
-    [a.tipo, a.numero, Number(a.ano), a.ementa, a.url, a.publicada],
-  );
-  let novos = 0;
-  for (const x of lista) {
-    // Mesma redação já carregada? Não duplica. Redação diferente entra como nova versão em rascunho.
-    const { rowCount } = await db.query(
-      `insert into dispositivos (norma_id, rotulo, texto, vigencia_inicio, status_curadoria, origem)
-       select $1, $2, $3, $4, 'rascunho', 'ingestao'
-       where not exists (select 1 from dispositivos where norma_id = $1 and rotulo = $2 and texto = $3)`,
-      [n.id, x.rotulo, x.texto, a.publicada],
-    );
-    novos += rowCount;
-  }
-  await db.query("commit");
-  console.log(`${novos} dispositivos novos em rascunho, aguardando o curador.`);
-} catch (e) {
-  await db.query("rollback");
-  throw e;
+  const r = await ingerirNorma(db, { ...a }, html);
+  console.log(`${r.norma}: ${r.lidos} artigos lidos, ${r.novos} novos, ${r.versoesNovas} com redação nova, ${r.iguais} já iguais; ${r.sementesAposentadas} linhas da semente aposentadas.`);
 } finally {
   await db.end();
 }

@@ -40,6 +40,16 @@ export default async function LayoutLogado({ children }: { children: React.React
           </p>
         )}
         {children}
+        <footer className="mesa-rodape-legal">
+          <p>
+            Ferramenta de apoio para advogados e profissionais de tributação, em teste público. As respostas não são parecer e
+            não substituem a análise do profissional, que confere as fontes no texto oficial e responde pelo que assina.
+          </p>
+          <nav aria-label="Documentos legais">
+            <Link href="/termos">Termos de Uso</Link>
+            <Link href="/privacidade">Privacidade</Link>
+          </nav>
+        </footer>
       </main>
     </div>
   );

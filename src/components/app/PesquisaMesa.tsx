@@ -8,6 +8,7 @@ import { normalizar, normalizarComMapa } from "@/lib/pesquisa/verificador";
 import { createPortal, flushSync } from "react-dom";
 import { Icone } from "./Icone";
 import { Simbolo } from "./Marca";
+import { RelatarCitacao, type EnviarRelato } from "./RelatarCitacao";
 import { Seletor } from "@/components/ui/Seletor";
 import { CampoData } from "@/components/ui/CampoData";
 
@@ -51,7 +52,23 @@ function vigente(t: Trecho, data: string) {
 }
 
 /** Cartão de fonte, igual ao da demonstração: número e dispositivo, selo de vigência, norma e trecho. */
-function CartaoFonte({ t, data, citados, ativa, aoClicar, ordem: i = 0 }: { t: Trecho; data: string; citados: string[]; ativa: boolean; aoClicar: () => void; ordem?: number }) {
+function CartaoFonte({
+  t,
+  data,
+  citados,
+  ativa,
+  aoClicar,
+  ordem: i = 0,
+  relatar,
+}: {
+  t: Trecho;
+  data: string;
+  citados: string[];
+  ativa: boolean;
+  aoClicar: () => void;
+  ordem?: number;
+  relatar?: EnviarRelato;
+}) {
   return (
     <section id={`fonte-${t.ref}`} className="cartao-fonte mesa-entra" style={{ "--i": i + 1 } as CSSProperties} data-ativa={ativa ? "" : undefined} onClick={aoClicar}>
       <div className="cartao-fonte-topo">
@@ -76,6 +93,7 @@ function CartaoFonte({ t, data, citados, ativa, aoClicar, ordem: i = 0 }: { t: T
       ) : (
         <span className="selo em_revisao">Aguardando o curador</span>
       )}
+      {relatar && citados.length > 0 && <RelatarCitacao dispositivo={t.id} trecho={citados.join(" … ")} enviar={relatar} />}
     </section>
   );
 }
@@ -124,6 +142,7 @@ export function PesquisaMesa({
   casos,
   casoInicial = "",
   exportar,
+  relatar,
   nome,
   opcoesCampo,
   abaixoDoCampo,
@@ -138,6 +157,8 @@ export function PesquisaMesa({
   casoInicial?: string;
   /** No app, a resposta vira parecer em página própria; na demonstração, imprime direto. */
   exportar?: (id: string) => ReactNode;
+  /** No app: envia o relato de citação errada, ligado à consulta. */
+  relatar?: (consulta: string, r: Parameters<EnviarRelato>[0]) => ReturnType<EnviarRelato>;
   /** Primeiro nome para a saudação da tela inicial. */
   nome?: string;
   /** Controles extras no pé do campo (ex.: quem redige a resposta, na demonstração). */
@@ -369,7 +390,9 @@ export function PesquisaMesa({
               <div className="fontes-pop-corpo">
                 {exibidas.length === 0 && <p className="mesa-vazio-cartao">Nenhum dispositivo para mostrar.</p>}
                 {exibidas.map((f, i) => (
-                  <CartaoFonte key={`${turnoFoco?.id}-${f.id}`} ordem={i} t={f} data={dataRef} citados={citados.get(f.ref) ?? []} ativa={foco?.ref === f.ref && exibidas.length > 1} aoClicar={() => turnoFoco && setAtiva({ turno: turnoFoco.id, ref: f.ref })} />
+                  <CartaoFonte key={`${turnoFoco?.id}-${f.id}`} ordem={i} t={f} data={dataRef} citados={citados.get(f.ref) ?? []} ativa={foco?.ref === f.ref && exibidas.length > 1} aoClicar={() => turnoFoco && setAtiva({ turno: turnoFoco.id, ref: f.ref })}
+                    relatar={relatar && desfechoFoco?.status === "respondida" ? (r) => relatar(desfechoFoco.id, r) : undefined}
+                  />
                 ))}
                 {foco && <Regua t={foco} data={dataRef} />}
               </div>
@@ -504,6 +527,12 @@ function TurnoChat({
             </p>
             {provisorio && <p className="alerta aviso pesquisa-surge">Fontes ainda não conferidas pelo tributarista curador. Use como ponto de partida, não em peça.</p>}
             {corpo}
+            {terminou && (
+              <p className="mesa-aviso-ia pesquisa-surge">
+                Ferramenta de apoio para advogados. Não é parecer e não substitui a análise do profissional, que confere as fontes e
+                responde pelo que assina.
+              </p>
+            )}
             {terminou && (
               <div className="mesa-acoes pesquisa-surge">
                 {exportar ? (

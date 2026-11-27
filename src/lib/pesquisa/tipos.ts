@@ -12,6 +12,8 @@ export interface Trecho {
   vigenciaFim: string | null;
   curadoria: "rascunho" | "em_revisao" | "publicado" | "rejeitado";
   origem: "ingestao" | "semente";
+  /** Fração das palavras da pergunta presentes no dispositivo (termos.ts). */
+  aderencia?: number;
 }
 
 /** O que o modelo devolve: texto com marcas [Dn] e as citações literais que as sustentam. */

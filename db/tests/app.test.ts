@@ -6,6 +6,8 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { Client } from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { expandirPergunta, selecionarFontes } from "../../src/lib/pesquisa/termos";
+import { paraTrecho } from "../../src/lib/pesquisa/trecho";
 
 const ADMIN = process.env.TEST_DATABASE_ADMIN_URL ?? "postgres://postgres@localhost:5433/postgres";
 const DB = `advfin_app_${process.pid}`;
@@ -47,7 +49,7 @@ beforeAll(async () => {
   db = new Client({ connectionString: url.toString() });
   await db.connect();
   await db.query("set client_min_messages = warning");
-  for (const f of ["001_init.sql", "002_app.sql", "003_perfis.sql"]) await db.query(readFileSync(join(__dirname, "../migrations", f), "utf8"));
+  for (const f of ["001_init.sql", "002_app.sql", "003_perfis.sql", "004_teste_publico.sql", "005_base_ampliada.sql"]) await db.query(readFileSync(join(__dirname, "../migrations", f), "utf8"));
   await db.query(readFileSync(join(__dirname, "../seeds/semente_reforma.sql"), "utf8"));
 });
 
@@ -128,8 +130,11 @@ describe("cadastro, login e sessão", () => {
 
 describe("pesquisa na base normativa", () => {
   it("acha a regra de 2026 e respeita a vigência", async () => {
-    const r = await comoApp(async () => (await db.query(`select rotulo from pesquisar_dispositivos('alíquota da CBS em 2026', '2026-06-01', 5, true)`)).rows);
-    expect(r[0].rotulo).toBe("ADCT, art. 125, caput");
+    // Como a aplicação faz (src/lib/pesquisa): pergunta expandida (CBS vira "195"), busca e
+    // seleção pela aderência à pergunta.
+    const pergunta = "alíquota da CBS em 2026";
+    const linhas = await comoApp(async () => (await db.query(`select * from pesquisar_dispositivos($1, '2026-06-01', 5, true)`, [expandirPergunta(pergunta)])).rows);
+    expect(selecionarFontes(pergunta, linhas.map(paraTrecho))[0].rotulo).toBe("ADCT, art. 125, caput");
     const antes = await comoApp(async () => (await db.query(`select rotulo from pesquisar_dispositivos('Imposto Seletivo', '2024-06-01', 5, true)`)).rows);
     expect(antes.map((x) => x.rotulo)).not.toContain("art. 1º"); // LC 214 só vale a partir de 2025
   });

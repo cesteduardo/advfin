@@ -10,7 +10,9 @@
     "test:db": "vitest run db/tests --no-file-parallelism",
     "typecheck": "tsc --noEmit",
     "pages": "bash scripts/publicar-pages.sh",
-    "site": "bash scripts/gerar-site.sh"
+    "site": "bash scripts/gerar-site.sh",
+    "avaliar": "vitest run --config avaliacao/vitest.config.mts",
+    "carregar-reforma": "node scripts/carregar-reforma.mjs"
   },
   "author": "",
   "license": "ISC",

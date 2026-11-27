@@ -72,11 +72,14 @@ export function trechoInicial(texto: string): string {
 }
 
 /**
- * Sem modelo de linguagem: devolve os dispositivos mais relevantes, cada um com
- * seu trecho inicial literal. Passa pelo mesmo verificador que a resposta redigida.
+ * Sem modelo de linguagem: devolve os dispositivos mais aderentes à pergunta, cada um
+ * com seu trecho inicial literal. Só entra quem chega perto do melhor (80% da aderência
+ * dele): citar o quarto colocado como "resposta" é citar norma que não responde.
+ * Passa pelo mesmo verificador que a resposta redigida.
  */
-export function respostaExtrativa(trechos: Trecho[], max = 4): RespostaModelo {
-  const usados = trechos.slice(0, max);
+export function respostaExtrativa(trechos: Trecho[], max = 3): RespostaModelo {
+  const melhor = trechos[0]?.aderencia;
+  const usados = (melhor === undefined ? trechos.slice(0, 1) : trechos.filter((t) => (t.aderencia ?? 0) >= melhor * 0.8)).slice(0, max);
   return {
     paragrafos: usados.map((t) => `${t.norma}, ${t.rotulo}: “${trechoInicial(t.texto)}” [${t.ref}]`),
     citacoes: usados.map((t) => ({ ref: t.ref, trecho: trechoInicial(t.texto) })),

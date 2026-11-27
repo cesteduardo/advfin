@@ -7,6 +7,7 @@ import type { Trecho } from "@/lib/pesquisa/tipos";
 import { normalizar, normalizarComMapa } from "@/lib/pesquisa/verificador";
 import { Icone } from "./Icone";
 import { Simbolo } from "./Marca";
+import { RelatarCitacao, type EnviarRelato } from "./RelatarCitacao";
 
 const SUGESTOES = [
   "Qual a alíquota da CBS e do IBS em 2026?",
@@ -48,7 +49,21 @@ function vigente(t: Trecho, data: string) {
 }
 
 /** Cartão de fonte, igual ao da demonstração: número e dispositivo, selo de vigência, norma e trecho. */
-function CartaoFonte({ t, data, citados, ativa, aoClicar }: { t: Trecho; data: string; citados: string[]; ativa: boolean; aoClicar: () => void }) {
+function CartaoFonte({
+  t,
+  data,
+  citados,
+  ativa,
+  aoClicar,
+  relatar,
+}: {
+  t: Trecho;
+  data: string;
+  citados: string[];
+  ativa: boolean;
+  aoClicar: () => void;
+  relatar?: EnviarRelato;
+}) {
   return (
     <section id={`fonte-${t.ref}`} className="cartao-fonte" data-ativa={ativa ? "" : undefined} onClick={aoClicar}>
       <div className="cartao-fonte-topo">
@@ -73,6 +88,7 @@ function CartaoFonte({ t, data, citados, ativa, aoClicar }: { t: Trecho; data: s
       ) : (
         <span className="selo em_revisao">Aguardando o curador</span>
       )}
+      {relatar && citados.length > 0 && <RelatarCitacao dispositivo={t.id} trecho={citados.join(" … ")} enviar={relatar} />}
     </section>
   );
 }
@@ -116,6 +132,7 @@ export function PesquisaMesa({
   casos,
   casoInicial = "",
   exportar,
+  relatar,
 }: {
   executar: (pergunta: string, data: string, caso?: string | null) => Promise<Desfecho>;
   aoConcluir?: () => void;
@@ -127,6 +144,8 @@ export function PesquisaMesa({
   casoInicial?: string;
   /** No app, a resposta vira parecer em página própria; na demonstração, imprime direto. */
   exportar?: (id: string) => ReactNode;
+  /** No app: envia o relato de citação errada, ligado à consulta. */
+  relatar?: (consulta: string, r: Parameters<EnviarRelato>[0]) => ReturnType<EnviarRelato>;
 }) {
   const [pergunta, setPergunta] = useState("");
   const [enviada, setEnviada] = useState<{ texto: string; data: string; hora: string } | null>(null);
@@ -225,6 +244,10 @@ export function PesquisaMesa({
                   })}
                 </p>
               ))}
+              <p className="mesa-aviso-ia">
+                Ferramenta de apoio para advogados. Não é parecer e não substitui a análise do profissional, que confere as fontes e
+                responde pelo que assina.
+              </p>
               <div className="mesa-acoes">
                 {exportar ? (
                   exportar(desfecho.id)
@@ -357,7 +380,15 @@ export function PesquisaMesa({
         <p className="mesa-rotulo">{desfecho?.status === "respondida" ? "Fontes conferidas" : "Dispositivos encontrados"}</p>
         {exibidas.length === 0 && <p className="mesa-vazio-cartao">As fontes aparecem aqui, com o trecho original e a vigência.</p>}
         {exibidas.map((f) => (
-          <CartaoFonte key={f.id} t={f} data={dataRef} citados={citados.get(f.ref) ?? []} ativa={foco?.ref === f.ref && exibidas.length > 1} aoClicar={() => setAtiva(f.ref)} />
+          <CartaoFonte
+            key={f.id}
+            t={f}
+            data={dataRef}
+            citados={citados.get(f.ref) ?? []}
+            ativa={foco?.ref === f.ref && exibidas.length > 1}
+            aoClicar={() => setAtiva(f.ref)}
+            relatar={relatar && desfecho?.status === "respondida" ? (r) => relatar(desfecho.id, r) : undefined}
+          />
         ))}
         {foco && <Regua t={foco} data={dataRef} />}
       </aside>

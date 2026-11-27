@@ -145,8 +145,16 @@ function Aceite() {
     <label className="caixa-aceite">
       <input type="checkbox" name="aceite" required />
       <span>
-        Li e aceito os <a href="#termos">Termos de Uso</a> e a <a href="#privacidade">Política de Privacidade</a>. Os dados dos meus
-        clientes não treinam modelos de IA.
+        Li e aceito os{" "}
+        <a href="/termos" target="_blank" rel="noopener">
+          Termos de Uso
+        </a>{" "}
+        e a{" "}
+        <a href="/privacidade" target="_blank" rel="noopener">
+          Política de Privacidade
+        </a>
+        . Declaro que uso o AdvFin como profissional, que ele não substitui a minha análise e que os dados dos meus clientes não
+        treinam modelos de IA.
       </span>
     </label>
   );

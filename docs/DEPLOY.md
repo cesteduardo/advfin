@@ -4,6 +4,8 @@ Decisão de 26/11/2026: aplicação na Vercel (região `gru1`, São Paulo), banc
 
 O que só o Eduardo pode fazer está marcado com **[Eduardo]**. O resto é comando.
 
+> Para o teste público, siga o roteiro mais completo em [TESTE-PUBLICO.md](TESTE-PUBLICO.md), que inclui a migração 004, a carga do texto oficial, a avaliação, os termos e os limites.
+
 ## 1. Banco no Supabase
 
 1. **[Eduardo]** Criar o projeto em supabase.com, região **South America (São Paulo)**. Guardar a senha do banco.
@@ -17,6 +19,7 @@ O que só o Eduardo pode fazer está marcado com **[Eduardo]**. O resto é coman
    psql "$ADMIN_URL" -f db/migrations/001_init.sql
    psql "$ADMIN_URL" -f db/migrations/002_app.sql
    psql "$ADMIN_URL" -f db/migrations/003_perfis.sql   # níveis, convites, 2FA, cobrança, plataforma
+   psql "$ADMIN_URL" -f db/migrations/004_teste_publico.sql   # aceite, limites, erros, relatos de citação
    psql "$ADMIN_URL" -f db/seeds/semente_reforma.sql   # textos provisórios, marcados como não conferidos
    ```
 4. Criar o login da aplicação, que herda `app_user` e por isso fica preso ao RLS:
@@ -55,18 +58,13 @@ Sem a chave, o app já funciona: a pesquisa responde no modo extrativo, só com 
 
 ## 4. Carregar o texto oficial
 
-Do seu computador (o servidor de testes não alcança o Planalto):
+Do seu computador (o servidor de testes não alcança o Planalto), as duas normas da Reforma de uma vez:
 
 ```bash
-ADMIN_DATABASE_URL="$ADMIN_URL" node scripts/ingerir-planalto.mjs \
-  --tipo LC --numero 214 --ano 2025 --publicada 2025-01-16 \
-  --ementa "Institui o IBS, a CBS e o Imposto Seletivo" \
-  --url https://www.planalto.gov.br/ccivil_03/leis/lcp/lcp214.htm
+ADMIN_DATABASE_URL="$ADMIN_URL" node scripts/carregar-reforma.mjs            # --simular só lê; --pasta usa páginas salvas
 ```
 
-Os artigos entram como `rascunho`. O curador revisa rótulo, texto e vigência, e muda para `publicado`. Quando o texto oficial de um dispositivo for publicado, remova a linha correspondente da semente (`origem = 'semente'`).
-
-Atenção na EC 132/2023: os artigos do ADCT aparecem dentro do art. 2º da emenda. O script os separa pelo número, mas o rótulo precisa de ajuste do curador (ex.: `art. 125` → `ADCT, art. 125, caput`).
+Os artigos entram como `em_revisao`, com nota para o curador, e a semente coberta sai da pesquisa sozinha. Os artigos que a EC 132 insere na Constituição e no ADCT já chegam rotulados (`CF, art. 156-A`, `ADCT, art. 125`). Para outra norma, `scripts/ingerir-planalto.mjs` com `--tipo --numero --ano --publicada --ementa --url`.
 
 ## 5. Equipe da plataforma e expurgo
 

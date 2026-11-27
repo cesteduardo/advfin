@@ -4,6 +4,8 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { comoUsuario, consultar } from "@/lib/db";
+import { VERSAO_TERMOS } from "@/lib/legal/versao";
+import { registrarErro } from "@/lib/registro-erros";
 import { mensagemDeErro } from "./erros";
 import { abrirDesafio, abrirSessao, encerrarSessao, exigirSessao, hashDesafio } from "./sessao";
 import { conferirSenha, gerarHashSenha, hashToken, senhaFraca } from "./senha";
@@ -124,6 +126,15 @@ export async function verificarSegundoFator(_: EstadoForm, form: FormData): Prom
   return concluirEntrada(ids!.usuario_id, ids!.escritorio_id, destino(form.get("volta")));
 }
 
+/** Guarda a versão dos Termos e da Política que a pessoa aceitou no cadastro. Falha não impede a conta. */
+async function registrarAceite(usuarioId: string): Promise<void> {
+  try {
+    await comoUsuario(usuarioId, (c) => c.query(`select app.registrar_aceite($1)`, [VERSAO_TERMOS]));
+  } catch (e) {
+    await registrarErro("aceite", e, { rota: "/cadastro", usuarioId });
+  }
+}
+
 const Cadastro = z.object({
   nome: z.string().trim().min(2).max(120),
   email: z.string().trim().toLowerCase().email().max(200),
@@ -156,7 +167,8 @@ export async function cadastrar(_: EstadoForm, form: FormData): Promise<EstadoFo
   const hash = await gerarHashSenha(r.data.senha);
   if (typeof pedirEntrada === "string" && pedirEntrada) {
     try {
-      await consultar(`select app.cadastrar_pedindo_entrada($1, $2, $3, $4)`, [r.data.email, r.data.nome, hash, pedirEntrada]);
+      const [{ u }] = await consultar(`select app.cadastrar_pedindo_entrada($1, $2, $3, $4) u`, [r.data.email, r.data.nome, hash, pedirEntrada]);
+      await registrarAceite(u);
     } catch (e) {
       return { erro: mensagemDeErro(e, "Não foi possível criar a conta agora."), email };
     }
@@ -170,6 +182,7 @@ export async function cadastrar(_: EstadoForm, form: FormData): Promise<EstadoFo
   } catch (e) {
     return { erro: mensagemDeErro(e, "Não foi possível criar a conta agora."), email };
   }
+  await registrarAceite(ids.usuario_id);
   await abrirSessao(ids.usuario_id, ids.escritorio_id);
   redirect("/app");
 }
@@ -191,6 +204,7 @@ export async function cadastrarPorConvite(_: EstadoForm, form: FormData): Promis
   } catch (e) {
     return { erro: mensagemDeErro(e) };
   }
+  await registrarAceite(ids.usuario_id);
   await abrirSessao(ids.usuario_id, ids.escritorio_id);
   redirect("/app");
 }

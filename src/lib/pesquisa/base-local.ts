@@ -7,7 +7,7 @@
  * radical curto e filtro de vigência na data escolhida.
  */
 import type { Trecho } from "./tipos";
-import { normalizar } from "./verificador";
+import { SINONIMOS, palavrasDoTrecho, radical, selecionarFontes, termosDaPergunta } from "./termos";
 
 type Semente = Omit<Trecho, "ref" | "curadoria" | "origem">;
 
@@ -91,42 +91,18 @@ export const BASE_LOCAL: Semente[] = [
   },
 ];
 
-/** Siglas que o texto constitucional não usa: a busca as traduz para o dispositivo que as institui. */
-const SINONIMOS: Record<string, string[]> = {
-  cbs: ["195", "contribuicao"],
-  ibs: ["156-a", "imposto"],
-  icms: ["155"],
-  iss: ["156"],
-  pis: ["239", "195"],
-  cofins: ["195"],
-  seletivo: ["153"],
-};
-
-const VAZIAS = new Set(
-  "a o as os de da do das dos e em no na nos nas um uma para por com que qual quais quando como se sao ser sera ao aos ou the".split(" "),
-);
-
-const radical = (t: string) => (t.length > 5 ? t.slice(0, 5) : t);
-
-function termos(pergunta: string): string[] {
-  const brutos = normalizar(pergunta)
-    .split(/[^a-z0-9-]+/)
-    .filter((t) => t.length >= 3 && !VAZIAS.has(t));
-  const todos = brutos.flatMap((t) => [t, ...(SINONIMOS[t] ?? [])]);
-  return [...new Set(todos.map(radical))];
-}
-
 /** Os dispositivos vigentes na data com mais termos da pergunta, numerados D1, D2… */
 export function recuperarLocal(pergunta: string, data: string, limite = 6): Trecho[] {
-  const ts = termos(pergunta);
+  const ts = termosDaPergunta(pergunta).flatMap((t) => [t, ...(SINONIMOS[t] ?? [])]).map(radical);
   if (ts.length === 0) return [];
-  return BASE_LOCAL.filter((d) => d.vigenciaInicio <= data && (!d.vigenciaFim || d.vigenciaFim >= data))
+  const achados = BASE_LOCAL.filter((d) => d.vigenciaInicio <= data && (!d.vigenciaFim || d.vigenciaFim >= data))
     .map((d) => {
-      const palavras = new Set(normalizar(`${d.rotulo} ${d.texto}`).split(/[^a-z0-9-]+/).map(radical));
+      const palavras = palavrasDoTrecho(d);
       return { d, nota: ts.filter((t) => palavras.has(t)).length };
     })
     .filter((x) => x.nota > 0)
     .sort((a, b) => b.nota - a.nota)
     .slice(0, limite)
-    .map(({ d }, i) => ({ ...d, ref: `D${i + 1}`, curadoria: "em_revisao", origem: "semente" }));
+    .map(({ d }, i): Trecho => ({ ...d, ref: `D${i + 1}`, curadoria: "em_revisao", origem: "semente" }));
+  return selecionarFontes(pergunta, achados);
 }

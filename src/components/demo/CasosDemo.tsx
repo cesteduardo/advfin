@@ -44,7 +44,7 @@ export function CasosDemo() {
           </div>
         </Cabeca>
         {aviso && <p className="alerta info mesa-entra" role="status">{aviso}</p>}
-        <div className="mesa-grade-2" style={{ gridTemplateColumns: "minmax(0, 2fr) minmax(300px, 1fr)" }}>
+        <div className="mesa-grade-2 lado-largo">
           <section className="bloco mesa-entra">
             <p className="mesa-rotulo">Consultas do caso</p>
             {consultas.length === 0 ? (
@@ -113,10 +113,10 @@ export function CasosDemo() {
     <>
       <Cabeca trilha={`${e.escritorio.nome} / Casos`} titulo="Casos" descricao="Cada caso aparece para quem o criou, para quem tem nível igual ou acima, e para quem for incluído nele." />
       {aviso && <p className="alerta info mesa-entra" role="status">{aviso}</p>}
-      <div className="mesa-grade-2" style={{ gridTemplateColumns: "minmax(0, 2fr) minmax(300px, 1fr)" }}>
+      <div className="mesa-grade-2 lado-largo">
         <section className="bloco" aria-label="Casos">
           {e.casos.length === 0 ? (
-            <p className="mesa-vazio-cartao mesa-entra">Nenhum caso ainda. Crie o primeiro ao lado.</p>
+            <p className="mesa-vazio-cartao mesa-entra">Nenhum caso ainda. Crie o primeiro no formulário de novo caso.</p>
           ) : (
             <div className="mesa-casos">
               {e.casos.map((c, i) => (

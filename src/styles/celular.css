@@ -1,0 +1,112 @@
+/* ══ Disposição do app no celular (até 900px; ajustes finos até 640px e 400px) ══
+   Carregado depois de mesa.css. Tudo aqui vale só em telas estreitas, exceto a grade
+   "lado largo" dos casos, que antes vinha em estilo inline e não cedia no celular.
+   Regras de ouro: largura toda, respiro igual nas duas laterais, alvos de toque de 44px,
+   vizinhos do mesmo tamanho, nada escondido atrás da dock. */
+
+/* Casos: lista larga e formulário ao lado no desktop; uma coluna no celular. */
+.mesa-grade-2.lado-largo { grid-template-columns: minmax(0, 2fr) minmax(300px, 1fr); }
+
+/* Faixa da demonstração: versão curta só no celular. */
+.demo-faixa-curta { display: none; }
+
+@media (max-width: 900px) {
+  /* Topo sempre do tamanho dele: em telas curtas a grade esticava as linhas e o topo crescia. */
+  .mesa { align-content: start; }
+  .mesa-principal { gap: 16px; padding: 14px 16px 28px; }
+  .mesa-topo-movel { padding: 6px 8px; }
+
+  /* Faixa da demonstração numa linha só, sem tomar a tela inteira. */
+  .demo-faixa { display: block; margin: 0; padding: 9px 14px; border-radius: 14px; font-size: 12.5px; line-height: 1.4; }
+  .demo-faixa-longa { display: none; }
+  .demo-faixa-curta { display: inline; }
+  .demo-faixa a { display: inline-block; padding-block: 8px; margin-block: -8px; white-space: nowrap; }
+
+  /* Títulos das telas */
+  .mesa-topo h1, .mesa-cabeca h1, .inicio-cabeca h1 { font-size: 28px; line-height: 1.12; letter-spacing: -.04em; }
+  .mesa-trilha { font-size: 12.5px; }
+  .mesa-descricao { font-size: 15px; line-height: 1.5; }
+
+  /* Cartões: respiro igual dos dois lados e menos camadas. */
+  .mesa .mesa-cartao, .mesa section.mesa-cartao, .mesa .mesa-resposta { padding: 18px; border-radius: 20px; }
+  .mesa-cartao .mesa-vazio-cartao { padding: 16px; background: #f8f7f3; box-shadow: none; }
+  .mesa-grade-2.lado-largo { grid-template-columns: minmax(0, 1fr); }
+
+  /* Alvos de toque */
+  .inicio-ver { display: inline-flex; align-items: center; min-height: 44px; margin-block: -12px; padding-inline: 4px; margin-right: -4px; }
+  .mesa-pessoa-gerir { min-height: 40px; padding-inline: 16px; }
+  .mesa-campo-opcoes .seletor-compacto { min-height: 32px; padding: 5px 10px 5px 12px; font-size: 13px; }
+  .mesa-acoes > a, .mesa-acoes > button, .mesa-botao { min-height: 44px; }
+  .mesa .segmentado-trilha button, .mesa .segmentado-trilha a { min-height: 44px; }
+
+  /* Campos: 16px evita o zoom automático do iPhone ao focar. */
+  .mesa input:not([type="checkbox"]):not([type="radio"]), .mesa select, .mesa textarea, .mesa .seletor:not(.seletor-compacto) { font-size: 16px; }
+  .mesa input:not([type="checkbox"]):not([type="radio"]):not(.mesa-input-linha), .mesa select, .mesa .seletor:not(.seletor-compacto) { min-height: 48px; }
+
+  /* Dock de seções: o vidro passa para a moldura e a trilha rola por dentro, esmaecendo
+     só no lado que ainda tem abas escondidas; a aba aberta rola sozinha para a vista. */
+  .dock-sec { padding: 5px; border-radius: 999px; background: rgb(255 255 255 / .78); -webkit-backdrop-filter: blur(20px) saturate(1.5); backdrop-filter: blur(20px) saturate(1.5); box-shadow: 0 0 0 1px rgb(15 39 66 / .08), inset 0 1px 0 rgb(255 255 255 / .9), 0 18px 40px -18px rgb(15 39 66 / .45), 0 2px 6px -2px rgb(15 39 66 / .12); }
+  .dock-sec-trilha { padding: 0; background: none; -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: none; }
+  .dock-sec-mira { top: 0; bottom: 0; }
+  .dock-sec-trilha[data-esmaece-fim] { -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 36px), transparent); mask-image: linear-gradient(90deg, #000 calc(100% - 36px), transparent); }
+  .dock-sec-trilha[data-esmaece-inicio] { -webkit-mask-image: linear-gradient(90deg, transparent, #000 36px); mask-image: linear-gradient(90deg, transparent, #000 36px); }
+  .dock-sec-trilha[data-esmaece-inicio][data-esmaece-fim] { -webkit-mask-image: linear-gradient(90deg, transparent, #000 36px, #000 calc(100% - 36px), transparent); mask-image: linear-gradient(90deg, transparent, #000 36px, #000 calc(100% - 36px), transparent); }
+  .dock-sec-item { min-height: 44px; }
+  body:has(.dock-sec) .mesa { padding-bottom: 92px; }
+
+  /* Início: os três números lado a lado, do mesmo tamanho. */
+  .inicio-cabeca { gap: 14px; }
+  .inicio-numeros { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .inicio-numero { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; min-width: 0; padding: 12px 12px 13px; border-radius: 18px; }
+  .inicio-numero-topo { gap: 6px; font-size: 12.5px; }
+  .inicio-numero-topo .ico { width: 14px; height: 14px; }
+  .inicio-numero strong { order: 2; font-size: 28px; line-height: 1.05; margin-top: 4px; }
+  .inicio-numero-nota { order: 3; width: 100%; font-size: 11.5px; line-height: 1.3; white-space: normal; color: var(--muted); }
+  .inicio-marcos li { padding: 8px 0 10px; }
+
+  /* Ações da resposta no chat: grade de duas colunas, botões do mesmo tamanho. */
+  .pesquisa-chat .mesa-acoes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .pesquisa-chat .mesa-acoes { grid-auto-rows: 1fr; }
+  .pesquisa-chat .mesa-acoes > * { display: inline-flex; align-items: center; justify-content: center; width: 100%; min-height: 44px; margin: 0; padding-inline: 8px; font-size: 13.5px; line-height: 1.25; text-align: center; white-space: nowrap; }
+
+  /* Escritório: pessoa com ações abaixo do nome, sem espremer o e-mail. */
+  .mesa-pessoa { padding: 14px 16px; }
+  .mesa-pessoa-quem { min-width: 0; overflow-wrap: anywhere; }
+}
+
+/* ── Calculadora no celular ── */
+@media (max-width: 640px) {
+  /* Tabelas de anos viram linhas em cartão: ano e total no alto, tributos numa grade de 4. */
+  .tabela-envolve:has(.tabela-cartoes) { overflow: visible; }
+  .tabela-cartoes thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .tabela-cartoes, .tabela-cartoes tbody { display: block; }
+  .tabela-cartoes tr { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px 6px; padding: 14px 16px; border-top: 1px solid var(--anel); }
+  .tabela-cartoes tbody tr:first-child { border-top: 0; }
+  .tabela-cartoes .em-foco { background: rgb(15 39 66 / .045); }
+  .tabela-cartoes .em-foco td { background: none; }
+  .tabela .tabela-cartoes td, .tabela-cartoes td, .tabela-cartoes td:first-child, .tabela-cartoes td:last-child { padding: 0; border: 0; text-align: left; white-space: nowrap; font-size: 13px; min-width: 0; }
+  .tabela-cartoes td::before { content: attr(data-rotulo); display: block; margin-bottom: 1px; color: var(--muted); font-size: 10px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tabela-cartoes td.linha-ano { grid-row: 1; grid-column: 1; align-self: end; color: var(--ink); font-size: 17px; font-weight: 700; letter-spacing: -.02em; }
+  .tabela-cartoes td.linha-ano::before { display: none; }
+  .tabela-cartoes td.linha-nota { grid-row: 1; grid-column: 2; align-self: end; font-size: 12.5px; }
+  .tabela-cartoes td.linha-total { grid-row: 1; grid-column: 3 / 5; align-self: end; text-align: right; font-size: 17px; letter-spacing: -.02em; }
+  .tabela-cartoes td.linha-total::before { text-align: right; }
+
+  /* Fontes do cálculo: selos numa linha, o texto ganha a largura toda embaixo. */
+  .fontes-calc { gap: 0; padding: 4px 16px; }
+  .fontes-calc li, .fontes-calc li:has(> .selo.em_revisao) { grid-template-columns: minmax(0, 1fr) auto; gap: 6px 10px; padding: 12px 0; border-top: 1px solid var(--anel); }
+  .fontes-calc li:first-child { border-top: 0; }
+  .fontes-calc li > .selo:first-child { grid-row: 1; grid-column: 1; }
+  .fontes-calc li > .selo.em_revisao { grid-row: 1; grid-column: 2; }
+  .fontes-calc li > span:not(.selo) { grid-row: 2; grid-column: 1 / -1; line-height: 1.45; }
+  .premissas { padding: 14px 16px 14px 32px; }
+
+  /* Comparador: valores grandes não estouram o cartão. */
+  .regime-cartao .valor { font-size: 24px; overflow-wrap: anywhere; }
+}
+
+@media (max-width: 400px) {
+  .inicio-numero { padding: 11px 10px 12px; }
+  .inicio-numero strong { font-size: 25px; }
+  .dock-sec-item { padding-inline: 12px 14px; }
+}

@@ -54,7 +54,7 @@ export default async function Caso({ params }: { params: Promise<{ id: string }>
 
       <Revisoes linhas={d.revisoes} decide={acimaOuIgual(s.nivel, "membro")} euId={s.usuarioId} />
 
-      <div className="mesa-grade-2" style={{ gridTemplateColumns: "minmax(0, 2fr) minmax(300px, 1fr)" }}>
+      <div className="mesa-grade-2 lado-largo">
         <section className="bloco" aria-labelledby="consultas-caso">
           <p className="mesa-rotulo" id="consultas-caso">Consultas do caso</p>
           {d.consultas.length === 0 ? (

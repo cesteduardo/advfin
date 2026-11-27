@@ -3,6 +3,7 @@ import Link from "next/link";
 import { NavegacaoDemo } from "@/components/demo/NavegacaoDemo";
 import { Portao } from "@/components/demo/Portao";
 import "@/styles/mesa.css";
+import "@/styles/celular.css";
 
 /*
  * Demonstração estática do app, publicada no GitHub Pages em /app/.
@@ -22,8 +23,13 @@ export default function LayoutDemo({ children }: { children: React.ReactNode }) 
         <NavegacaoDemo />
         <main className="mesa-principal" id="conteudo">
           <p className="alerta aviso demo-faixa">
-            <strong>Demonstração.</strong> Você entra como Titular, com acesso de administrador. Tudo fica salvo só neste navegador,
-            e a base tem 9 dispositivos ainda não conferidos: nada aqui serve para parecer. <Link href="/lab">Laboratório do chat</Link>
+            <strong>Demonstração.</strong>{" "}
+            <span className="demo-faixa-longa">
+              Você entra como Titular, com acesso de administrador. Tudo fica salvo só neste navegador, e a base tem 9 dispositivos
+              ainda não conferidos: nada aqui serve para parecer.
+            </span>
+            <span className="demo-faixa-curta">Salva só neste navegador; não serve para parecer.</span>{" "}
+            <Link href="/lab">Laboratório do chat</Link>
           </p>
           <Portao>{children}</Portao>
         </main>

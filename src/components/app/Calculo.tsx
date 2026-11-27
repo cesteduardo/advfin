@@ -236,7 +236,7 @@ export function Calculo({ trilha }: { trilha: string }) {
           <div className="mesa-coluna">
             <GraficoTransicao tempo={tempo} foco={anoFoco} muda={setAnoFoco} />
             <div className="tabela-envolve">
-              <table className="tabela">
+              <table className="tabela tabela-cartoes">
                 <caption className="so-leitor">Carga por ano na transição</caption>
                 <thead>
                   <tr>
@@ -248,13 +248,13 @@ export function Calculo({ trilha }: { trilha: string }) {
                     const v = (t: string) => r.ano_.linhas.filter((l) => t.split("|").includes(l.tributo)).reduce((s, l) => s + l.valor, 0);
                     return (
                       <tr key={r.ano} className={r.ano === anoFoco ? "em-foco" : undefined} onClick={() => setAnoFoco(r.ano)}>
-                        <td>{r.ano}</td>
-                        <td>{emReais(v("PIS/Cofins"))}</td>
-                        <td>{emReais(v("ICMS|ISS"))}</td>
-                        <td>{emReais(v("CBS"))}</td>
-                        <td>{emReais(v("IBS"))}{r.destacadoCompensado ? " *" : ""}</td>
-                        <td><strong>{emReais(r.ano_.total)}</strong></td>
-                        <td className={r.diferenca < 0 ? "menor" : r.diferenca > 0 ? "maior" : ""}>
+                        <td className="linha-ano">{r.ano}</td>
+                        <td data-rotulo="PIS/Cofins">{emReais(v("PIS/Cofins"))}</td>
+                        <td data-rotulo="ICMS/ISS">{emReais(v("ICMS|ISS"))}</td>
+                        <td data-rotulo="CBS">{emReais(v("CBS"))}</td>
+                        <td data-rotulo="IBS">{emReais(v("IBS"))}{r.destacadoCompensado ? " *" : ""}</td>
+                        <td className="linha-total" data-rotulo="Total no ano"><strong>{emReais(r.ano_.total)}</strong></td>
+                        <td data-rotulo="vs. hoje" className={`linha-nota ${r.diferenca < 0 ? "menor" : r.diferenca > 0 ? "maior" : ""}`}>
                           {r.diferenca > 0 ? "+" : ""}{emReais(r.diferenca)}
                         </td>
                       </tr>
@@ -323,7 +323,7 @@ export function Calculo({ trilha }: { trilha: string }) {
           </form>
           <div className="mesa-coluna">
             <div className="tabela-envolve">
-              <table className="tabela">
+              <table className="tabela tabela-cartoes">
                 <caption className="so-leitor">Apuração de CBS e IBS por ano</caption>
                 <thead>
                   <tr>
@@ -333,13 +333,13 @@ export function Calculo({ trilha }: { trilha: string }) {
                 <tbody>
                   {apuracao.map((a) => (
                     <tr key={a.ano}>
-                      <td>{a.ano}{a.compensavelComPisCofins ? " *" : ""}</td>
-                      <td>{emReais(a.debito.cbs)}</td>
-                      <td>{emReais(a.credito.cbs)}</td>
-                      <td>{emReais(a.debito.ibs)}</td>
-                      <td>{emReais(a.credito.ibs)}</td>
-                      <td><strong>{emReais(a.devido.total)}</strong></td>
-                      <td>{emReais(a.saldoCredor)}</td>
+                      <td className="linha-ano">{a.ano}{a.compensavelComPisCofins ? " *" : ""}</td>
+                      <td data-rotulo="Débito CBS">{emReais(a.debito.cbs)}</td>
+                      <td data-rotulo="Crédito CBS">{emReais(a.credito.cbs)}</td>
+                      <td data-rotulo="Débito IBS">{emReais(a.debito.ibs)}</td>
+                      <td data-rotulo="Crédito IBS">{emReais(a.credito.ibs)}</td>
+                      <td className="linha-total" data-rotulo="A recolher"><strong>{emReais(a.devido.total)}</strong></td>
+                      <td className="linha-nota" data-rotulo="Saldo credor">{emReais(a.saldoCredor)}</td>
                     </tr>
                   ))}
                 </tbody>

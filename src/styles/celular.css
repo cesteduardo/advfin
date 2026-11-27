@@ -127,7 +127,18 @@
    aparece ou some); sem o repique que puxa a página além do fim. */
 @media (max-width: 900px) {
   html:has(.app-corpo), html:has(.app-corpo) body { overscroll-behavior-y: none; }
-  .mesa-topo-movel, .dock-sec { transform: translateZ(0); backface-visibility: hidden; }
+  /* Topo fixo de verdade: com position: sticky (e o transform de antes) o Safari do iPhone
+     deslocava o topo durante a rolagem por inércia. Fixo no alto, o conteúdo desce a altura dele. */
+  .mesa-topo-movel { position: fixed; z-index: 40; top: 0; left: 0; right: 0; height: calc(56px + env(safe-area-inset-top)); padding: env(safe-area-inset-top) 8px 0; }
+  .mesa-principal { padding-top: calc(56px + 14px + env(safe-area-inset-top)); }
   .dock-sec, :root[data-dock-recolhida] .dock-sec { transition: none; }
   .pesquisa-rodape, :root[data-dock-recolhida] .pesquisa-rodape { transition: none; }
 }
+
+/* ── Calculadora: no desktop, o quadro de entrada acompanha a rolagem ao lado do resultado ──
+   No celular ele fica no fluxo: preso no topo, cobriria a tela inteira. */
+@media (min-width: 1001px) {
+  .ferramenta > form.mesa-cartao { position: sticky; top: 24px; max-height: calc(100svh - 24px - 96px); overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; }
+}
+details summary { gap: 12px; }
+details summary::after { flex: none; }

@@ -141,7 +141,6 @@
 .mesa .app-data { display: inline-flex; align-items: center; gap: 8px; padding: 5px 6px 5px 12px; border-radius: 999px; background: #fff; color: var(--muted); font-size: 12.5px; font-weight: 600; box-shadow: 0 0 0 1px var(--anel); }
 .mesa .app-data input[type="date"] { padding: 3px 8px; border: 0; border-radius: 999px; background: #f6f5f1; color: var(--ink); font-size: 12.5px; font-weight: 600; }
 .mesa .app-enviar { display: grid; place-items: center; width: 40px; height: 40px; flex: none; border: 0; border-radius: 50%; background: var(--marinho); color: #fff; cursor: pointer; transition: transform var(--t) var(--saida), opacity var(--t) var(--ease); }
-.mesa .app-enviar:hover { transform: scale(1.05); }
 .mesa .app-enviar:disabled { opacity: .35; cursor: default; transform: none; }
 .mesa .app-enviar .ico { width: 18px; height: 18px; }
 .mesa-boas-vindas .mesa-acoes > button { background: var(--azul-50); color: var(--azul-forte); }
@@ -423,3 +422,56 @@
 .mesa-cartao .campo .seletor:focus-visible, .mesa-pessoa-acoes .seletor:focus-visible, .mesa-filtros .seletor:focus-visible { background: #fff; box-shadow: inset 0 0 0 1.5px var(--marinho); }
 .mesa-recente { display: block; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .mesa-lateral li .mesa-recente a { display: inline; }
+
+/* ── Movimento da mesa ──
+   Entradas curtas (até 420 ms) com a curva de saída do site, só opacidade e deslocamento;
+   cascata de 60 ms entre partes; com movimento reduzido, tudo só esmaece. */
+@keyframes mesa-sobe { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@keyframes mesa-aparece { from { opacity: 0; } to { opacity: 1; } }
+.mesa-entra { animation: mesa-sobe .42s var(--saida) both; animation-delay: calc(var(--i, 0) * 60ms); }
+.mesa-pagina { display: flex; flex-direction: column; gap: inherit; min-width: 0; animation: mesa-sobe .3s var(--saida) both; }
+.mesa-pessoa-acoes { animation: mesa-sobe .26s var(--saida) both; }
+.mesa-cartao .alerta, .mesa-sub .alerta, .mesa-form-linha .alerta { animation: mesa-sobe .26s var(--saida) both; }
+
+/* Pesquisa: barra por etapas, com um brilho correndo enquanto trabalha */
+.mesa-progresso { gap: 16px; }
+.progresso-barra { position: relative; height: 6px; overflow: hidden; border-radius: 999px; background: #efede6; }
+.progresso-barra i { position: absolute; inset: 0; overflow: hidden; border-radius: inherit; background: var(--marinho); transform-origin: left center; transition: transform .7s var(--saida); }
+.progresso-barra i::after { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, transparent 0%, rgb(255 255 255 / .38) 50%, transparent 100%); transform: translateX(-100%); animation: progresso-brilho 1.15s linear infinite; }
+.progresso-barra[data-fim] i { transition-duration: .38s; }
+.progresso-barra[data-fim] i::after { animation: none; opacity: 0; }
+@keyframes progresso-brilho { to { transform: translateX(100%); } }
+.progresso-etapas { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; font-size: 14.5px; line-height: 1.4; }
+.progresso-etapas li { display: flex; align-items: center; gap: 10px; color: var(--ink-2); transition: opacity .3s var(--ease), color .3s var(--ease); }
+.progresso-etapas li[data-estado="espera"] { opacity: .42; }
+.progresso-etapas li[data-estado="agora"] { color: var(--ink); font-weight: 550; }
+.progresso-marca { position: relative; display: grid; place-items: center; flex: none; width: 18px; height: 18px; border-radius: 50%; box-shadow: inset 0 0 0 1.5px rgb(15 39 66 / .2); transition: background-color .3s var(--ease), box-shadow .3s var(--ease); }
+.progresso-marca svg { width: 12px; height: 12px; fill: none; stroke: #fff; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 16; stroke-dashoffset: 16; transition: stroke-dashoffset .35s var(--saida) .08s; }
+[data-estado="feita"] > .progresso-marca { background: var(--marinho); box-shadow: none; }
+[data-estado="feita"] > .progresso-marca svg { stroke-dashoffset: 0; }
+[data-estado="agora"] > .progresso-marca::before { content: ''; position: absolute; inset: 0; border-radius: 50%; border: 1.5px solid transparent; border-top-color: var(--marinho); animation: etapa-gira .8s linear infinite; }
+@keyframes etapa-gira { to { transform: rotate(360deg); } }
+
+/* Aperto: botões cedem um pouco no clique (100–160 ms) */
+.mesa-botao, .mesa-acoes > a, .mesa-acoes > button, .mesa-pessoa-gerir, .mesa-usuario button, .mesa-usuario-acao, .cal-pe button, .mesa-link button { transition-property: background-color, color, box-shadow, opacity, transform; transition-duration: .2s; transition-timing-function: var(--ease); }
+.mesa-botao:active, .mesa-acoes > a:active, .mesa-acoes > button:active, .mesa-pessoa-gerir:active, .mesa-usuario button:active, .mesa-usuario-acao:active, .mesa-link button:active, .mesa .app-enviar:active:not(:disabled) { transform: scale(.97); transition-duration: .1s; }
+/* Levantar no mouse só onde há mouse: no toque, o hover fica preso depois do toque. */
+.atalho:hover, .mesa-caso:hover { transform: none; }
+@media (hover: hover) and (pointer: fine) {
+  .atalho:hover, .mesa-caso:hover { transform: translateY(-2px); }
+  .mesa .app-enviar:hover:not(:disabled) { transform: scale(1.05); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mesa-entra, .mesa-pagina, .mesa-pessoa-acoes, .mesa-cartao .alerta, .mesa-sub .alerta, .mesa-form-linha .alerta { animation-name: mesa-aparece; animation-duration: .2s; animation-delay: 0s; }
+  .progresso-barra i::after, [data-estado="agora"] > .progresso-marca::before { animation: none; }
+  .progresso-barra i { transition-duration: .2s; }
+  .mesa-botao:active, .mesa-acoes > a:active, .mesa-acoes > button:active, .atalho:hover, .mesa-caso:hover { transform: none; }
+}
+
+/* Demonstração: o primeiro cadastro e o espaço enquanto o navegador lê os dados */
+.demo-carregando { min-height: 50vh; }
+.demo-cadastro { display: grid; justify-items: center; padding-top: 8px; }
+.demo-cadastro > form { width: min(640px, 100%); }
+.demo-cadastro h2 { font-size: clamp(22px, 2vw, 28px); letter-spacing: -.03em; }
+.demo-cadastro .mesa-rotulo { margin-top: 6px; }

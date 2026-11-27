@@ -1,10 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Segmentado } from "@/components/Segmentado";
 import { CamposChave, useChaveAnthropic } from "@/components/app/ChaveAnthropic";
 import { PesquisaMesa } from "@/components/app/PesquisaMesa";
 import { rodarLab } from "@/lib/pesquisa/laboratorio";
+import { agora, alterar, novoId, useDemo } from "./estado";
+
+const STATUS: Record<string, string> = { respondida: "Respondida", bloqueada_citacao: "Bloqueada pelo verificador", sem_resultado: "Sem dispositivos", erro: "Erro" };
 
 type Modo = "extrativo" | "anthropic";
 const MODOS: { id: Modo; nome: string }[] = [
@@ -17,12 +20,26 @@ export function PesquisaDemo() {
   const [modo, setModo] = useState<Modo>("extrativo");
   const c = useChaveAnthropic();
 
-  const executar = async (pergunta: string, data: string) => {
+  const e = useDemo();
+  // O caso vem pelo endereço (?caso=...) quando a pessoa clica em "Pesquisar neste caso".
+  const [casoInicial, setCasoInicial] = useState<string | undefined>(undefined);
+  useEffect(() => setCasoInicial(new URLSearchParams(location.search).get("caso") ?? undefined), []);
+
+  const executar = async (pergunta: string, data: string, caso?: string | null) => {
     if (modo === "anthropic" && !c.chave.trim()) {
       return { status: "invalida" as const, mensagem: "Cole sua chave da Anthropic no quadro acima, ou volte ao modo sem IA." };
     }
-    return (await rodarLab({ pergunta, data, modo, chave: c.chave.trim(), modelo: c.modelo })).desfecho;
+    const desfecho = (await rodarLab({ pergunta, data, modo, chave: c.chave.trim(), modelo: c.modelo })).desfecho;
+    {
+      alterar(
+        (x) => ({ ...x, consultas: [{ id: novoId(), pergunta, data, caso: caso ?? null, status: STATUS[desfecho.status] ?? desfecho.status, criadoEm: agora() }, ...x.consultas].slice(0, 200) }),
+        "consulta",
+        pergunta.slice(0, 120),
+      );
+    }
+    return desfecho;
   };
+  const vigencia = e && e.perfil.vigencia !== "hoje" ? e.perfil.vigencia : undefined;
 
   return (
     <>
@@ -38,7 +55,14 @@ export function PesquisaDemo() {
         </p>
         {modo === "anthropic" && <CamposChave c={c} />}
       </div>
-      <PesquisaMesa executar={executar} falhaRede="Não foi possível montar a resposta neste navegador." />
+      <PesquisaMesa
+        key={casoInicial ?? "sem-caso"}
+        executar={executar}
+        falhaRede="Não foi possível montar a resposta neste navegador."
+        dataInicial={vigencia}
+        casos={e?.casos.map((x) => ({ id: x.id, titulo: x.titulo }))}
+        casoInicial={casoInicial && e?.casos.some((x) => x.id === casoInicial) ? casoInicial : ""}
+      />
     </>
   );
 }

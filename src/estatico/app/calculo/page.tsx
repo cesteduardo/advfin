@@ -1,7 +1,7 @@
-import { Calculo } from "@/components/app/Calculo";
+import { CalculoDemo } from "@/components/demo/ComEscritorio";
 
 export const metadata = { title: "Cálculo — demonstração AdvFin" };
 
-export default function CalculoDemo() {
-  return <Calculo trilha="Escritório de demonstração / Calculadora" />;
+export default function Pagina() {
+  return <CalculoDemo />;
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Fragment, useRef, useState, useTransition, type ReactNode } from "react";
+import { Fragment, useEffect, useRef, useState, useTransition, type CSSProperties, type ReactNode } from "react";
 import type { DesfechoPesquisa } from "@/lib/pesquisa/tipos";
 import type { Trecho } from "@/lib/pesquisa/tipos";
 import { normalizar, normalizarComMapa } from "@/lib/pesquisa/verificador";
@@ -50,9 +50,9 @@ function vigente(t: Trecho, data: string) {
 }
 
 /** Cartão de fonte, igual ao da demonstração: número e dispositivo, selo de vigência, norma e trecho. */
-function CartaoFonte({ t, data, citados, ativa, aoClicar }: { t: Trecho; data: string; citados: string[]; ativa: boolean; aoClicar: () => void }) {
+function CartaoFonte({ t, data, citados, ativa, aoClicar, ordem: i = 0 }: { t: Trecho; data: string; citados: string[]; ativa: boolean; aoClicar: () => void; ordem?: number }) {
   return (
-    <section id={`fonte-${t.ref}`} className="cartao-fonte" data-ativa={ativa ? "" : undefined} onClick={aoClicar}>
+    <section id={`fonte-${t.ref}`} className="cartao-fonte mesa-entra" style={{ "--i": i + 1 } as CSSProperties} data-ativa={ativa ? "" : undefined} onClick={aoClicar}>
       <div className="cartao-fonte-topo">
         <strong>
           {t.ref.slice(1)} · {t.rotulo}
@@ -106,6 +106,45 @@ function Regua({ t, data }: { t: Trecho; data: string }) {
   );
 }
 
+const espera = (ms: number) => new Promise((ok) => setTimeout(ok, ms));
+const movimentoReduzido = () => typeof matchMedia !== "undefined" && matchMedia("(prefers-reduced-motion: reduce)").matches;
+/** Ordem de entrada em cascata: cada parte entra 60 ms depois da anterior. */
+const ordem = (i: number) => ({ "--i": i }) as CSSProperties;
+
+/**
+ * Progresso da pesquisa: a barra avança por etapas e as etapas vão sendo confirmadas.
+ * Mesmo quando a resposta chega rápido, a pessoa vê o que foi feito antes de ler.
+ */
+function Progresso({ data, concluindo }: { data: string; concluindo: boolean }) {
+  const [etapa, setEtapa] = useState(0);
+  useEffect(() => {
+    const t = [setTimeout(() => setEtapa(1), 750), setTimeout(() => setEtapa(2), 1500)];
+    return () => t.forEach(clearTimeout);
+  }, []);
+  const feitas = concluindo ? 3 : etapa;
+  const etapas = [`Buscando dispositivos vigentes em ${dataBR(data)}`, "Conferindo cada citação na base versionada", "Confirmando a vigência das fontes"];
+  return (
+    <div className="mesa-resposta mesa-progresso mesa-entra" role="status" aria-label="Pesquisa em andamento">
+      <p className="mesa-autor">
+        <Simbolo /> AdvFin · {concluindo ? "pronto" : "pesquisando"}
+      </p>
+      <div className="progresso-barra" data-fim={concluindo ? "" : undefined}>
+        <i style={{ transform: `scaleX(${[0.3, 0.62, 0.86, 1][feitas]})` }} />
+      </div>
+      <ol className="progresso-etapas">
+        {etapas.map((t, i) => (
+          <li key={t} data-estado={i < feitas ? "feita" : i === feitas ? "agora" : "espera"}>
+            <span className="progresso-marca" aria-hidden="true">
+              <svg viewBox="0 0 16 16"><path d="m3.5 8.5 3 3 6-7" /></svg>
+            </span>
+            {t}
+          </li>
+        ))}
+      </ol>
+    </div>
+  );
+}
+
 /**
  * A mesa da pesquisa, sem saber de onde vem a resposta: no app, de uma ação do servidor;
  * na demonstração estática, do laboratório que roda no navegador.
@@ -137,20 +176,44 @@ export function PesquisaMesa({
   const [desfecho, setDesfecho] = useState<Desfecho | null>(null);
   const [ativa, setAtiva] = useState<string | null>(null);
   const [pendente, iniciar] = useTransition();
+  const [concluindo, setConcluindo] = useState(false);
+  const [rodada, setRodada] = useState(0);
   const campo = useRef<HTMLTextAreaElement>(null);
+  const bolha = useRef<HTMLParagraphElement>(null);
+  // A pergunta entra deslizando a cada envio. Sem trocar a key do elemento: trocar no meio da
+  // pesquisa deixava cópias da bolha na tela quando outro estado mudava junto.
+  useEffect(() => {
+    if (!rodada || !bolha.current) return;
+    const calmo = movimentoReduzido();
+    bolha.current.animate(
+      calmo ? [{ opacity: 0 }, { opacity: 1 }] : [{ opacity: 0, transform: "translateY(8px)" }, { opacity: 1, transform: "none" }],
+      { duration: calmo ? 200 : 420, easing: "cubic-bezier(.16, 1, .3, 1)" },
+    );
+  }, [rodada]);
 
   const enviar = (q = pergunta) => {
-    if (q.trim().length < 8) return;
+    if (q.trim().length < 8 || pendente) return;
     setEnviada({ texto: q.trim(), data, hora: hora() });
     setPergunta("");
     setAtiva(null);
+    setDesfecho(null);
+    setRodada((r) => r + 1);
     iniciar(async () => {
+      const inicio = performance.now();
+      let r: Desfecho;
       try {
-        setDesfecho(await executar(q, data, caso || null));
-        aoConcluir?.();
+        r = await executar(q, data, caso || null);
       } catch {
-        setDesfecho({ status: "erro", id: "", mensagem: falhaRede, fontes: [] });
+        r = { status: "erro", id: "", mensagem: falhaRede, fontes: [] };
       }
+      // Resposta nunca cai de uma vez: as etapas da barra aparecem, e ela completa antes da leitura.
+      const calmo = movimentoReduzido();
+      await espera(Math.max(0, (calmo ? 500 : 2100) - (performance.now() - inicio)));
+      setConcluindo(true);
+      await espera(calmo ? 0 : 420);
+      setConcluindo(false);
+      setDesfecho(r);
+      aoConcluir?.();
     });
   };
 
@@ -191,28 +254,25 @@ export function PesquisaMesa({
           </div>
         )}
 
-        {enviada && <p className="mesa-pergunta">{enviada.texto}</p>}
-
-        {pendente && (
-          <div className="mesa-resposta">
-            <p className="mesa-autor">
-              <Simbolo /> AdvFin · conferindo citações
-            </p>
-            <p className="mesa-carregando">Buscando dispositivos vigentes em {dataBR(dataRef)}…</p>
-          </div>
+        {enviada && (
+          <p ref={bolha} className="mesa-pergunta">
+            {enviada.texto}
+          </p>
         )}
+
+        {pendente && <Progresso key={rodada} data={dataRef} concluindo={concluindo} />}
 
         {!pendente && desfecho?.status === "respondida" && (
           <>
             <article className="mesa-resposta">
-              <p className="mesa-autor">
+              <p className="mesa-autor mesa-entra" style={ordem(0)}>
                 <Simbolo /> AdvFin · {desfecho.redigida ? "revisão pendente" : "trechos literais, sem redação"}
               </p>
               {provisorio && (
-                <p className="alerta aviso">Fontes ainda não conferidas pelo tributarista curador. Use como ponto de partida, não em peça.</p>
+                <p className="alerta aviso mesa-entra" style={ordem(1)}>Fontes ainda não conferidas pelo tributarista curador. Use como ponto de partida, não em peça.</p>
               )}
               {desfecho.paragrafos.map((p, i) => (
-                <p key={i}>
+                <p key={i} className="mesa-entra" style={ordem(i + 2)}>
                   {p.split(/(\[D\d{1,2}\])/).map((parte, j) => {
                     const m = /^\[(D\d{1,2})\]$/.exec(parte);
                     return m ? (
@@ -227,7 +287,7 @@ export function PesquisaMesa({
                   })}
                 </p>
               ))}
-              <div className="mesa-acoes">
+              <div className="mesa-acoes mesa-entra" style={ordem(desfecho.paragrafos.length + 2)}>
                 {exportar ? (
                   exportar(desfecho.id)
                 ) : (
@@ -241,7 +301,7 @@ export function PesquisaMesa({
                 </button>
               </div>
             </article>
-            <div className="mesa-auditoria">
+            <div className="mesa-auditoria mesa-entra" style={ordem(desfecho.paragrafos.length + 3)}>
               <p className="mesa-rotulo">Trilha de auditoria</p>
               <ul>
                 <li>
@@ -265,13 +325,13 @@ export function PesquisaMesa({
 
         {!pendente && desfecho?.status === "bloqueada_citacao" && (
           <>
-            <article className="mesa-resposta">
+            <article className="mesa-resposta mesa-entra">
               <p className="mesa-autor">
                 <Simbolo /> AdvFin · resposta bloqueada
               </p>
               <p>A resposta não foi exibida porque não se sustenta inteiramente na base. Reformule a pergunta ou leia os dispositivos ao lado.</p>
             </article>
-            <div className="mesa-auditoria">
+            <div className="mesa-auditoria mesa-entra" style={ordem(2)}>
               <p className="mesa-rotulo">Trilha de auditoria</p>
               <ul>
                 {desfecho.motivos.map((m, i) => (
@@ -286,7 +346,7 @@ export function PesquisaMesa({
         )}
 
         {!pendente && desfecho?.status === "sem_resultado" && (
-          <div className="mesa-resposta">
+          <div className="mesa-resposta mesa-entra">
             <p className="mesa-autor">
               <Simbolo /> AdvFin · sem dispositivos
             </p>
@@ -298,7 +358,7 @@ export function PesquisaMesa({
         )}
 
         {!pendente && (desfecho?.status === "erro" || desfecho?.status === "invalida") && (
-          <p className="alerta erro" role="alert">
+          <p className="alerta erro mesa-entra" role="alert">
             {desfecho.mensagem}
           </p>
         )}
@@ -357,8 +417,8 @@ export function PesquisaMesa({
       <aside className="mesa-fontes" aria-label="Fontes">
         <p className="mesa-rotulo">{desfecho?.status === "respondida" ? "Fontes conferidas" : "Dispositivos encontrados"}</p>
         {exibidas.length === 0 && <p className="mesa-vazio-cartao">As fontes aparecem aqui, com o trecho original e a vigência.</p>}
-        {exibidas.map((f) => (
-          <CartaoFonte key={f.id} t={f} data={dataRef} citados={citados.get(f.ref) ?? []} ativa={foco?.ref === f.ref && exibidas.length > 1} aoClicar={() => setAtiva(f.ref)} />
+        {exibidas.map((f, i) => (
+          <CartaoFonte key={`${rodada}-${f.id}`} ordem={i} t={f} data={dataRef} citados={citados.get(f.ref) ?? []} ativa={foco?.ref === f.ref && exibidas.length > 1} aoClicar={() => setAtiva(f.ref)} />
         ))}
         {foco && <Regua t={foco} data={dataRef} />}
       </aside>

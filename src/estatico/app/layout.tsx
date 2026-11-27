@@ -1,12 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { NavegacaoDemo } from "@/components/demo/NavegacaoDemo";
+import { Portao } from "@/components/demo/Portao";
 import "@/styles/mesa.css";
 
 /*
  * Demonstração estática do app, publicada no GitHub Pages em /app/.
  * Só entra no build estático: scripts/_estatico.sh copia esta pasta para src/app/app
- * depois de tirar a área logada de verdade. Nada aqui fala com servidor.
+ * depois de tirar a área logada de verdade. Nada aqui fala com servidor: o escritório
+ * inteiro fica no localStorage do navegador (components/demo/estado.ts).
  */
 export const metadata: Metadata = {
   title: "Demonstração — AdvFin",
@@ -20,10 +22,10 @@ export default function LayoutDemo({ children }: { children: React.ReactNode }) 
         <NavegacaoDemo />
         <main className="mesa-principal" id="conteudo">
           <p className="alerta aviso demo-faixa">
-            <strong>Demonstração.</strong> Dados de exemplo e uma base de 9 dispositivos ainda não conferidos. Nada é salvo, e
-            nada aqui serve para parecer. <Link href="/lab">Abrir o laboratório do chat</Link>
+            <strong>Demonstração.</strong> Você entra como Titular, com acesso de administrador. Tudo fica salvo só neste navegador,
+            e a base tem 9 dispositivos ainda não conferidos: nada aqui serve para parecer. <Link href="/lab">Laboratório do chat</Link>
           </p>
-          {children}
+          <Portao>{children}</Portao>
         </main>
       </div>
     </div>

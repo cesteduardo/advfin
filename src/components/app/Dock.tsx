@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { usePilula } from "@/components/Segmentado";
 import { Icone, type NomeIcone } from "./Icone";
 
@@ -21,61 +21,24 @@ export const ativoEm = (caminho: string, href: string) => {
 /**
  * Dock de vidro do celular.
  * A pílula marinho desliza até a aba tocada no instante do toque, antes de a página chegar;
- * o ícone escolhido dá um pequeno salto. Ao rolar para baixo a dock se recolhe e encolhe,
- * para dar a tela ao texto; ao rolar para cima, ou ao chegar ao fim da página, ela volta.
+ * o ícone escolhido dá um pequeno salto. A dock fica fixa: não se recolhe ao rolar, para a
+ * tela não mudar de tamanho nem piscar.
  */
 export function Dock({ links }: { links: ItemDock[] }) {
   const trilha = useRef<HTMLElement>(null);
   const caminho = usePathname();
   const [toque, setToque] = useState<{ href: string; em: string } | null>(null);
-  const [recolhida, setRecolhida] = useState(false);
 
   // O toque vale até a rota mudar; depois, quem manda é o endereço.
   const tocado = toque && toque.em === caminho ? toque.href : null;
   const atual = tocado ?? links.find((l) => ativoEm(caminho, l.href))?.href ?? null;
   usePilula(trilha, atual);
 
-  useEffect(() => {
-    let antes = window.scrollY;
-    let quadro = 0;
-    let acumulado = 0;
-    const ler = () => {
-      quadro = 0;
-      const y = window.scrollY;
-      const dy = y - antes;
-      antes = y;
-      // Soma a rolagem na mesma direção, para um tremor do dedo não esconder a dock.
-      acumulado = Math.sign(dy) === Math.sign(acumulado) ? acumulado + dy : dy;
-      const fim = y + window.innerHeight >= document.documentElement.scrollHeight - 24;
-      if (y < 80 || fim || acumulado < -24) setRecolhida(false);
-      else if (acumulado > 36) setRecolhida(true);
-    };
-    const rolar = () => {
-      if (!quadro) quadro = requestAnimationFrame(ler);
-    };
-    window.addEventListener("scroll", rolar, { passive: true });
-    return () => {
-      window.removeEventListener("scroll", rolar);
-      cancelAnimationFrame(quadro);
-    };
-  }, []);
-
-  // Trocar de página traz a dock de volta.
-  useEffect(() => setRecolhida(false), [caminho]);
-
-  // A dock de seções (DockSecoes) acompanha: recolhe e volta junto com esta.
-  useEffect(() => {
-    document.documentElement.toggleAttribute("data-dock-recolhida", recolhida);
-    return () => document.documentElement.removeAttribute("data-dock-recolhida");
-  }, [recolhida]);
-
   return (
     <nav
       ref={trilha}
       className="app-abas mesa-abas dock"
       aria-label="Ferramentas"
-      data-recolhida={recolhida ? "" : undefined}
-      onFocus={() => setRecolhida(false)}
     >
       <span className="segmentado-pilula dock-pilula" aria-hidden="true" />
       {links.map((l) => {

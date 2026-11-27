@@ -463,7 +463,7 @@ blockquote { margin: 0; padding: 2px 0 2px 14px; border-left: 2px solid rgb(15 3
 .calc { display: grid; grid-template-columns: clamp(360px, 28vw, 480px) minmax(0, 1fr); gap: 14px; align-items: start; }
 @media (max-width: 960px) { .calc { grid-template-columns: minmax(0, 1fr); } }
 .painel, .resultado { padding: clamp(20px, 2.4vw, 28px); border-radius: var(--r-lg); background: linear-gradient(180deg, #fff, #fdfcf9); box-shadow: var(--sombra), inset 0 0 0 1px var(--anel); }
-.campo { display: grid; gap: 7px; margin-bottom: 16px; min-width: 0; }
+.campo { display: grid; grid-template-columns: minmax(0, 1fr); gap: 7px; margin-bottom: 16px; min-width: 0; }
 .campo label, .campo legend { color: var(--ink-2); font-size: 14px; font-weight: 500; }
 .campo .ajuda { color: var(--muted); font-size: 13px; }
 input[type="text"], input[type="email"], select { width: 100%; min-height: 50px; padding: 12px 18px; border: 1px solid transparent; border-radius: var(--r-md); background: var(--superficie); font-size: 16px; transition: border-color .2s, box-shadow .2s, background .2s; }
@@ -579,7 +579,7 @@ tfoot td { border-bottom: 0; font-weight: 700; }
 .painel .botao { width: 100%; }
 .sucesso { padding: 20px; border-radius: var(--r-md); background: var(--verde-fundo); color: var(--verde); font-weight: 500; }
 
-footer { position: relative; margin-top: clamp(48px, 6vw, 96px); padding-block: clamp(48px, 6vw, 80px) 72px; border-radius: var(--r-secao) var(--r-secao) 0 0; background: var(--grao) 0 0 / 180px, var(--trama), radial-gradient(800px 360px at 50% 0%, rgb(217 191 134 / .14), transparent 70%), #0b1f36; background-blend-mode: soft-light, normal, normal, normal; box-shadow: inset 0 1px 0 rgb(255 255 255 / .06), 0 -20px 50px -30px rgb(11 31 54 / .4); color: rgb(255 255 255 / .7); font-size: 14px; }
+footer { position: relative; margin-top: clamp(48px, 6vw, 96px); padding-block: clamp(48px, 6vw, 80px) calc(72px + env(safe-area-inset-bottom)); border-radius: var(--r-secao) var(--r-secao) 0 0; background: var(--grao) 0 0 / 180px, var(--trama), radial-gradient(800px 360px at 50% 0%, rgb(217 191 134 / .14), transparent 70%), #0b1f36; background-blend-mode: soft-light, normal, normal, normal; box-shadow: inset 0 1px 0 rgb(255 255 255 / .06), 0 -20px 50px -30px rgb(11 31 54 / .4); color: rgb(255 255 255 / .7); font-size: 14px; }
 footer strong { color: var(--ouro-claro); font-weight: 600; }
 footer .envoltorio { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 32px 64px; align-items: end; }
 @media (max-width: 860px) { footer .envoltorio { grid-template-columns: minmax(0, 1fr); } }
@@ -734,7 +734,9 @@ html:has(.legal[open]) { overflow: hidden; }
    Nada de janela padrão do navegador: tudo o que um botão abre sai de baixo dele, num balão
    branco com anel fino, e o escolhido fica em marinho, como o resto do site. */
 .seletor { display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%; min-height: 50px; padding: 12px 16px 12px 18px; border: 1px solid transparent; border-radius: var(--r-md); background: var(--superficie); color: var(--ink); font: inherit; font-size: 16px; text-align: left; cursor: pointer; transition: border-color .2s, box-shadow .2s, background-color .2s; }
-.seletor > span { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.seletor { min-width: 0; max-width: 100%; }
+.seletor > span { flex: 1 1 auto; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; text-align: left; }
+@media (max-width: 640px) { .seletor:not(.seletor-compacto) > span { white-space: normal; line-height: 1.35; } }
 .seletor > svg { flex: none; width: 16px; height: 16px; fill: none; stroke: var(--ink-2); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; transition: transform .35s var(--mola); }
 .seletor[aria-expanded="true"] > svg { transform: rotate(180deg); }
 .seletor:hover { border-color: var(--line); }

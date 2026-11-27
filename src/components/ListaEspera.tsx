@@ -2,6 +2,7 @@
 
 import { useId, useState } from "react";
 import { EMAIL_INSCRICOES, ROTULO_PERFIL } from "@/config/site";
+import { Seletor } from "@/components/ui/Seletor";
 
 /**
  * Destino das inscrições:
@@ -84,12 +85,17 @@ export function ListaEspera() {
       </div>
       <div className="campo">
         <label htmlFor={`${id}-perfil`}>Você atua como</label>
-        <select id={`${id}-perfil`} name="perfil" defaultValue="tributarista_pequeno">
-          <option value="tributarista_pequeno">Autônomo ou escritório de até 5 advogados</option>
-          <option value="escritorio_medio">Escritório de 6 a 50 advogados</option>
-          <option value="juridico_interno">Jurídico ou fiscal de empresa</option>
-          <option value="contador">Contador ou consultor tributário</option>
-        </select>
+        <Seletor
+          id={`${id}-perfil`}
+          name="perfil"
+          defaultValue="tributarista_pequeno"
+          opcoes={[
+            { valor: "tributarista_pequeno", rotulo: "Autônomo ou escritório de até 5 advogados" },
+            { valor: "escritorio_medio", rotulo: "Escritório de 6 a 50 advogados" },
+            { valor: "juridico_interno", rotulo: "Jurídico ou fiscal de empresa" },
+            { valor: "contador", rotulo: "Contador ou consultor tributário" },
+          ]}
+        />
       </div>
       <input className="armadilha" name="site" tabIndex={-1} autoComplete="off" aria-hidden="true" />
       <label className="check campo">

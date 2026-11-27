@@ -478,7 +478,7 @@ fieldset { min-width: 0; margin: 0 0 16px; padding: 0; border: 0; }
 .segmentado { display: inline-flex; position: relative; min-width: 0; max-width: 100%; }
 .segmentado-trilha { display: flex; position: relative; gap: 2px; min-width: 0; max-width: 100%; padding: 4px; overflow-x: auto; border-radius: 999px; background: var(--superficie); scrollbar-width: none; overscroll-behavior-x: contain; }
 .segmentado-trilha::-webkit-scrollbar { display: none; }
-.segmentado-pilula { position: absolute; top: 0; left: 0; z-index: 0; width: var(--pw, 0); height: var(--ph, 0); border-radius: 999px; background: var(--marinho); box-shadow: 0 1px 2px rgb(15 39 66 / .2), 0 6px 14px -6px rgb(15 39 66 / .45), inset 0 -2px 0 var(--ouro-claro); transform: translate(var(--px, 0), var(--py, 0)); pointer-events: none; }
+.segmentado-pilula { position: absolute; top: 0; left: 0; z-index: 0; width: var(--pw, 0); height: var(--ph, 0); border-radius: 999px; background: var(--marinho); box-shadow: 0 1px 2px rgb(15 39 66 / .2), 0 6px 14px -6px rgb(15 39 66 / .45); transform: translate(var(--px, 0), var(--py, 0)); pointer-events: none; }
 .segmentado-trilha[data-pronta] .segmentado-pilula { transition: transform .5s var(--mola), width .5s var(--mola), height .5s var(--mola); }
 .segmentado-trilha[data-sem-pilula] .segmentado-pilula { opacity: 0; }
 .segmentado-trilha > button, .segmentado-trilha > a { display: inline-flex; position: relative; z-index: 1; flex: none; align-items: center; justify-content: center; gap: 8px; min-height: 42px; padding: 8px 16px; border: 0; border-radius: 999px; background: transparent; color: var(--ink-2); font-size: 14px; font-weight: 600; letter-spacing: -.01em; white-space: nowrap; text-decoration: none; cursor: pointer; transition: color .3s var(--ease), transform .2s var(--ease); }
@@ -620,7 +620,7 @@ footer p { max-width: 72ch; }
 .legal-abas { display: flex; gap: 4px; padding: 4px; border-radius: 999px; background: rgb(255 255 255 / .08); overflow-x: auto; scrollbar-width: none; }
 .legal-abas button { min-height: 40px; padding: 8px 16px; border: 0; border-radius: 999px; background: transparent; color: rgb(255 255 255 / .78); font-size: 14px; font-weight: 600; white-space: nowrap; cursor: pointer; transition: background .3s var(--ease), color .3s var(--ease); }
 .legal-abas button.ativa { background: var(--ouro-claro); color: var(--marinho); }
-.legal-abas button:focus-visible, .legal-fechar:focus-visible { outline: 2px solid var(--ouro-claro); outline-offset: 2px; }
+.legal-abas button:focus-visible, .legal-fechar:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 .legal-fechar { display: grid; place-items: center; flex: none; width: 44px; height: 44px; border: 0; border-radius: 50%; background: rgb(255 255 255 / .1); color: #fff; cursor: pointer; transition: background .25s; }
 .legal-fechar:hover { background: rgb(255 255 255 / .2); }
 .legal-fechar svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
@@ -729,3 +729,61 @@ html:has(.legal[open]) { overflow: hidden; }
 /* Entrada dos blocos ao rolar */
 .a-revelar { opacity: 0; transform: translateY(22px); transition: opacity .8s var(--ease), transform 1s var(--saida); transition-delay: var(--atraso, 0ms); }
 .a-revelar.visivel { opacity: 1; transform: none; }
+
+/* ── Seletor, calendário e dica próprios (src/components/ui) ──
+   Nada de janela padrão do navegador: tudo o que um botão abre sai de baixo dele, num balão
+   branco com anel fino, e o escolhido fica em marinho, como o resto do site. */
+.seletor { display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%; min-height: 50px; padding: 12px 16px 12px 18px; border: 1px solid transparent; border-radius: var(--r-md); background: var(--superficie); color: var(--ink); font: inherit; font-size: 16px; text-align: left; cursor: pointer; transition: border-color .2s, box-shadow .2s, background-color .2s; }
+.seletor > span { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.seletor > svg { flex: none; width: 16px; height: 16px; fill: none; stroke: var(--ink-2); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; transition: transform .35s var(--mola); }
+.seletor[aria-expanded="true"] > svg { transform: rotate(180deg); }
+.seletor:hover { border-color: var(--line); }
+.seletor:focus-visible, .seletor[aria-expanded="true"] { outline: none; border-color: var(--azul); background-color: var(--branco); box-shadow: 0 0 0 4px rgb(29 67 112 / .14); }
+.seletor:disabled { opacity: .6; cursor: default; }
+.seletor-vazio { color: var(--muted); }
+.seletor-compacto { width: auto; min-height: 0; gap: 6px; padding: 3px 8px 3px 10px; border: 0; border-radius: 999px; background: #f6f5f1; font-size: 12.5px; font-weight: 600; }
+.seletor-compacto > svg { width: 12px; height: 12px; }
+.seletor-compacto:focus-visible, .seletor-compacto[aria-expanded="true"] { box-shadow: 0 0 0 2px var(--marinho); background: #fff; }
+.campo-data { justify-content: flex-start; }
+.campo-data > span { flex: 1; font-variant-numeric: tabular-nums; }
+.campo-data > .campo-data-ico { order: -1; stroke: var(--muted); stroke-width: 1.6; }
+.campo-data[aria-expanded="true"] > .campo-data-ico { transform: none; stroke: var(--azul); }
+
+.balao { position: fixed; z-index: 200; max-width: min(360px, calc(100vw - 16px)); max-height: min(340px, 60vh); overflow: auto; overscroll-behavior: contain; padding: 6px; border-radius: 18px; background: #fff; color: var(--ink); font-family: var(--sans); font-size: 15px; letter-spacing: -.01em; box-shadow: 0 0 0 1px rgb(15 39 66 / .08), 0 2px 6px -2px rgb(15 39 66 / .12), 0 24px 48px -22px rgb(15 39 66 / .5); opacity: 0; }
+.balao[data-pronto] { animation: balao-sai .34s var(--saida) both; }
+.balao[data-pronto][data-lado="cima"] { animation-name: balao-sai-cima; }
+@keyframes balao-sai { from { opacity: 0; clip-path: inset(0 0 100% 0 round 18px); transform: translateY(-6px); } to { opacity: 1; clip-path: inset(-24px -24px -56px -24px round 18px); transform: none; } }
+@keyframes balao-sai-cima { from { opacity: 0; clip-path: inset(100% 0 0 0 round 18px); transform: translateY(6px); } to { opacity: 1; clip-path: inset(-24px -24px -56px -24px round 18px); transform: none; } }
+@keyframes balao-aparece { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .balao[data-pronto], .balao[data-pronto][data-lado="cima"] { animation: balao-aparece .15s linear both; } }
+.balao-opcao { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 12px; border-radius: 12px; cursor: pointer; transition: background-color .15s var(--ease), color .15s var(--ease); }
+.balao-opcao > span { display: grid; gap: 2px; min-width: 0; }
+.balao-opcao small { color: var(--muted); font-size: 12.5px; font-weight: 400; }
+.balao-opcao[data-ativa] { background: var(--superficie); }
+.balao-opcao[aria-selected="true"] { color: var(--marinho); font-weight: 600; }
+.balao-opcao > svg { flex: none; width: 16px; height: 16px; fill: none; stroke: var(--marinho); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.balao-opcao[aria-disabled] { opacity: .45; cursor: default; }
+
+.balao-calendario { max-height: none; padding: 12px; }
+.cal-topo { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+.cal-topo strong { font-size: 15px; font-weight: 600; }
+.cal-topo strong::first-letter { text-transform: uppercase; }
+.cal-seta { display: grid; place-items: center; width: 34px; height: 34px; border: 0; border-radius: 50%; background: transparent; color: var(--ink-2); cursor: pointer; transition: background-color .2s var(--ease), color .2s var(--ease); }
+.cal-seta:hover { background: var(--superficie); color: var(--ink); }
+.cal-seta svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.cal-grade { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+.cal-semana { padding: 4px 0 6px; color: var(--muted); font-size: 11.5px; font-weight: 700; text-align: center; }
+.cal-dia { aspect-ratio: 1; border: 0; border-radius: 50%; background: transparent; color: var(--ink); font-size: 14px; font-variant-numeric: tabular-nums; cursor: pointer; transition: background-color .15s var(--ease), color .15s var(--ease), transform .15s var(--ease); }
+.cal-dia:hover { background: var(--superficie); }
+.cal-dia:active { transform: scale(.92); }
+.cal-dia[aria-current="date"] { color: var(--azul); font-weight: 700; }
+.cal-dia[aria-pressed="true"], .cal-dia[aria-pressed="true"]:hover { background: var(--marinho); color: #fff; font-weight: 600; }
+.cal-dia:disabled { opacity: .28; cursor: default; background: transparent; }
+.cal-dia:focus-visible { outline: 2px solid var(--azul); outline-offset: 1px; }
+.cal-pe { display: flex; align-items: center; gap: 6px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--anel); }
+.cal-pe button { padding: 6px 12px; border: 0; border-radius: 999px; background: var(--superficie); color: var(--ink-2); font-size: 13px; font-weight: 600; cursor: pointer; transition: background-color .2s var(--ease), color .2s var(--ease); }
+.cal-pe button:hover { background: var(--superficie-2); color: var(--ink); }
+.cal-pe button:disabled { opacity: .45; cursor: default; }
+.cal-dica { margin-left: auto; color: var(--muted); font-size: 11.5px; }
+
+.balao-dica { max-width: 320px; padding: 8px 12px; border-radius: 12px; background: var(--marinho); color: #fff; font-size: 13.5px; line-height: 1.4; box-shadow: 0 14px 30px -14px rgb(15 39 66 / .6); }

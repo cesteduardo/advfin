@@ -412,3 +412,14 @@
 .acesso-convite { display: grid; gap: 6px; margin-bottom: 20px; padding: 16px 18px; border-radius: var(--r-md); background: var(--azul-50); color: var(--azul-forte); font-size: 14.5px; }
 .acesso-convite strong { color: var(--ink); }
 .mesa-input-linha { min-height: 36px; padding: 6px 12px; border: 0; border-radius: 10px; background: #f6f5f1; box-shadow: inset 0 0 0 1px var(--anel); font-size: 13.5px; }
+
+/* Seletor e calendário próprios dentro da mesa: o mesmo desenho dos campos dos cartões. */
+.mesa-cartao .campo .seletor { min-height: 46px; padding: 10px 14px; border: 0; border-radius: 12px; background: #f6f5f1; box-shadow: inset 0 0 0 1px var(--anel); font-size: 15px; }
+.mesa-cartao .mesa-sub .campo .seletor, .mesa-pessoa-acoes .seletor { background: #fff; }
+.mesa-pessoa-acoes .seletor, .mesa-filtros .seletor { min-height: 40px; padding: 8px 12px; border: 0; border-radius: 12px; box-shadow: inset 0 0 0 1px var(--anel); font-size: 14px; }
+.mesa-filtros .seletor { min-width: 150px; background: #fff; }
+.mesa-cartao .campo .seletor:hover, .mesa-pessoa-acoes .seletor:hover, .mesa-filtros .seletor:hover { box-shadow: inset 0 0 0 1px rgb(15 39 66 / .18); }
+.mesa-cartao .campo .seletor[aria-expanded="true"], .mesa-pessoa-acoes .seletor[aria-expanded="true"], .mesa-filtros .seletor[aria-expanded="true"],
+.mesa-cartao .campo .seletor:focus-visible, .mesa-pessoa-acoes .seletor:focus-visible, .mesa-filtros .seletor:focus-visible { background: #fff; box-shadow: inset 0 0 0 1.5px var(--marinho); }
+.mesa-recente { display: block; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.mesa-lateral li .mesa-recente a { display: inline; }

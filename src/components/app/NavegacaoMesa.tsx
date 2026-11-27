@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
+import { Dica } from "@/components/ui/Dica";
 import { Icone, type NomeIcone } from "./Icone";
 import { Marca } from "./Marca";
 
@@ -100,8 +101,10 @@ export function NavegacaoMesa({
         {recentes.length ? (
           <ul>
             {recentes.map((r) => (
-              <li key={r.id} title={r.pergunta}>
-                {hrefConsulta ? <Link href={hrefConsulta(r.id)}>{r.pergunta}</Link> : r.pergunta}
+              <li key={r.id}>
+                <Dica texto={r.pergunta} classe="mesa-recente">
+                  {hrefConsulta ? <Link href={hrefConsulta(r.id)}>{r.pergunta}</Link> : r.pergunta}
+                </Dica>
               </li>
             ))}
           </ul>

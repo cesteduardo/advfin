@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { MODELOS_LAB } from "@/lib/pesquisa/laboratorio";
+import { Seletor } from "@/components/ui/Seletor";
 
 const GUARDA = "advfin-lab-chave";
 
@@ -69,13 +70,16 @@ export function CamposChave({ c }: { c: EstadoChave }) {
       </div>
       <div className="campo">
         <label htmlFor="lab-modelo">Modelo</label>
-        <select id="lab-modelo" value={c.modelo} onChange={(e) => c.setModelo(e.target.value)}>
-          {MODELOS_LAB.map((m) => (
-            <option key={m.id} value={m.id}>
-              {m.nome} (US$ {m.entrada.toLocaleString("pt-BR")} / {m.saida.toLocaleString("pt-BR")} por milhão de tokens)
-            </option>
-          ))}
-        </select>
+        <Seletor
+          id="lab-modelo"
+          value={c.modelo}
+          onChange={c.setModelo}
+          opcoes={MODELOS_LAB.map((m) => ({
+            valor: m.id,
+            rotulo: m.nome,
+            descricao: `US$ ${m.entrada.toLocaleString("pt-BR")} / ${m.saida.toLocaleString("pt-BR")} por milhão de tokens`,
+          }))}
+        />
       </div>
       <label className="caixa-aceite">
         <input type="checkbox" checked={c.lembrar} onChange={(e) => c.setLembrar(e.target.checked)} />

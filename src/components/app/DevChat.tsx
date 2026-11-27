@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { acaoPesquisarDev } from "@/lib/pesquisa/acao";
 import { Icone } from "./Icone";
 import { RodadaView, hoje, type Rodada } from "./RodadaDev";
+import { CampoData } from "@/components/ui/CampoData";
 
 export function DevChat({ provedor, redige }: { provedor: string; redige: boolean }) {
   const [pergunta, setPergunta] = useState("");
@@ -67,10 +68,10 @@ export function DevChat({ provedor, redige }: { provedor: string; redige: boolea
         />
         <div className="mesa-campo-pe">
           <div className="dev-opcoes">
-            <label className="app-data">
+            <span className="app-data">
               Vigência em
-              <input type="date" value={data} onChange={(e) => setData(e.target.value)} />
-            </label>
+              <CampoData value={data} onChange={setData} min="2023-12-21" rotulo="Vigência em" compacto />
+            </span>
             <label className="app-data dev-chave">
               <input type="checkbox" checked={extrativo} disabled={!redige} onChange={(e) => setExtrativo(e.target.checked)} />
               Forçar modo extrativo

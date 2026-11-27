@@ -7,6 +7,8 @@ import type { Trecho } from "@/lib/pesquisa/tipos";
 import { normalizar, normalizarComMapa } from "@/lib/pesquisa/verificador";
 import { Icone } from "./Icone";
 import { Simbolo } from "./Marca";
+import { Seletor } from "@/components/ui/Seletor";
+import { CampoData } from "@/components/ui/CampoData";
 
 const SUGESTOES = [
   "Qual a alíquota da CBS e do IBS em 2026?",
@@ -328,22 +330,21 @@ export function PesquisaMesa({
           />
           <div className="mesa-campo-pe">
             <span className="mesa-campo-opcoes">
-              <label className="app-data">
+              <span className="app-data">
                 Vigência em
-                <input type="date" value={data} min="2023-12-21" onChange={(e) => setData(e.target.value)} required />
-              </label>
+                <CampoData value={data} onChange={setData} min="2023-12-21" rotulo="Vigência em" compacto />
+              </span>
               {casos && casos.length > 0 && (
-                <label className="app-data">
+                <span className="app-data">
                   Caso
-                  <select value={caso} onChange={(e) => setCaso(e.target.value)}>
-                    <option value="">Nenhum</option>
-                    {casos.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.titulo}
-                      </option>
-                    ))}
-                  </select>
-                </label>
+                  <Seletor
+                    value={caso}
+                    onChange={setCaso}
+                    rotulo="Caso"
+                    compacto
+                    opcoes={[{ valor: "", rotulo: "Nenhum" }, ...casos.map((c) => ({ valor: c.id, rotulo: c.titulo }))]}
+                  />
+                </span>
               )}
             </span>
             <button className="app-enviar" disabled={pendente || pergunta.trim().length < 8} aria-label="Pesquisar">

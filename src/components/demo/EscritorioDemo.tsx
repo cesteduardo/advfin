@@ -212,6 +212,7 @@ function Convidar({ avisar, irPessoas }: { avisar: (m: string) => void; irPessoa
   const e = useDemo()!;
   const eu = euDe(e);
   const [erro, setErro] = useState<string | null>(null);
+  const pendentes = e.pessoas.filter((p) => p.situacao === "convidado");
   const enviar = (ev: FormEvent<HTMLFormElement>) => {
     ev.preventDefault();
     const f = new FormData(ev.currentTarget);
@@ -229,7 +230,8 @@ function Convidar({ avisar, irPessoas }: { avisar: (m: string) => void; irPessoa
     irPessoas();
   };
   return (
-    <form className="mesa-cartao mesa-entra" onSubmit={enviar} noValidate style={{ maxWidth: 720 }}>
+    <div className="mesa-grade-2 convidar-grade">
+    <form className="mesa-cartao mesa-entra" onSubmit={enviar} noValidate>
       <h2>Convidar pessoa</h2>
       <p>O link vale por 7 dias, serve uma vez e só para o e-mail convidado.</p>
       {erro && <p className="alerta erro" role="alert">{erro}</p>}
@@ -261,6 +263,28 @@ function Convidar({ avisar, irPessoas }: { avisar: (m: string) => void; irPessoa
       </fieldset>
       <div className="mesa-form-pe"><button className="mesa-botao">Enviar convite</button></div>
     </form>
+    <aside className="mesa-cartao mesa-entra convidar-lado" style={{ "--i": 1 } as CSSProperties}>
+      <h2>Convites pendentes</h2>
+      {pendentes.length === 0 ? (
+        <p className="mesa-vazio-cartao">Nenhum convite aguardando resposta.</p>
+      ) : (
+        <ul className="inicio-lista">
+          {pendentes.map((p) => (
+            <li key={p.id}>
+              <span>{p.email}</span>
+              <small>{ROTULO_NIVEL[p.nivel]} · enviado em {new Date(p.desde).toLocaleDateString("pt-BR")}</small>
+            </li>
+          ))}
+        </ul>
+      )}
+      <h2 className="convidar-sub">Como funciona</h2>
+      <ol className="convidar-passos">
+        <li><strong>O convite sai por e-mail.</strong> O link vale 7 dias e só abre com o e-mail convidado.</li>
+        <li><strong>A pessoa cria a senha.</strong> Se o escritório exigir, ativa a verificação em duas etapas.</li>
+        <li><strong>O acesso segue o nível.</strong> Você pode mudar o nível ou suspender a qualquer momento, em Pessoas.</li>
+      </ol>
+    </aside>
+    </div>
   );
 }
 

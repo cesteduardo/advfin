@@ -5,6 +5,7 @@ import { Fragment, useEffect, useRef, useState, useTransition, type CSSPropertie
 import type { DesfechoPesquisa } from "@/lib/pesquisa/tipos";
 import type { Trecho } from "@/lib/pesquisa/tipos";
 import { normalizar, normalizarComMapa } from "@/lib/pesquisa/verificador";
+import { flushSync } from "react-dom";
 import { Icone } from "./Icone";
 import { Simbolo } from "./Marca";
 import { Seletor } from "@/components/ui/Seletor";
@@ -112,40 +113,6 @@ const movimentoReduzido = () => typeof matchMedia !== "undefined" && matchMedia(
 const ordem = (i: number) => ({ "--i": i }) as CSSProperties;
 
 /**
- * Progresso da pesquisa: a barra avança por etapas e as etapas vão sendo confirmadas.
- * Mesmo quando a resposta chega rápido, a pessoa vê o que foi feito antes de ler.
- */
-function Progresso({ data, concluindo }: { data: string; concluindo: boolean }) {
-  const [etapa, setEtapa] = useState(0);
-  useEffect(() => {
-    const t = [setTimeout(() => setEtapa(1), 750), setTimeout(() => setEtapa(2), 1500)];
-    return () => t.forEach(clearTimeout);
-  }, []);
-  const feitas = concluindo ? 3 : etapa;
-  const etapas = [`Buscando dispositivos vigentes em ${dataBR(data)}`, "Conferindo cada citação na base versionada", "Confirmando a vigência das fontes"];
-  return (
-    <div className="mesa-resposta mesa-progresso mesa-entra" role="status" aria-label="Pesquisa em andamento">
-      <p className="mesa-autor">
-        <Simbolo /> AdvFin · {concluindo ? "pronto" : "pesquisando"}
-      </p>
-      <div className="progresso-barra" data-fim={concluindo ? "" : undefined}>
-        <i style={{ transform: `scaleX(${[0.3, 0.62, 0.86, 1][feitas]})` }} />
-      </div>
-      <ol className="progresso-etapas">
-        {etapas.map((t, i) => (
-          <li key={t} data-estado={i < feitas ? "feita" : i === feitas ? "agora" : "espera"}>
-            <span className="progresso-marca" aria-hidden="true">
-              <svg viewBox="0 0 16 16"><path d="m3.5 8.5 3 3 6-7" /></svg>
-            </span>
-            {t}
-          </li>
-        ))}
-      </ol>
-    </div>
-  );
-}
-
-/**
  * A mesa da pesquisa, sem saber de onde vem a resposta: no app, de uma ação do servidor;
  * na demonstração estática, do laboratório que roda no navegador.
  */
@@ -179,40 +146,47 @@ export function PesquisaMesa({
   abaixoDoCampo?: ReactNode;
 }) {
   const [pergunta, setPergunta] = useState("");
-  const [enviada, setEnviada] = useState<{ texto: string; data: string; hora: string } | null>(null);
+  const [turnos, setTurnos] = useState<Turno[]>([]);
   const [data, setData] = useState(dataInicial ?? hoje);
   const [caso, setCaso] = useState(casoInicial);
-  const [desfecho, setDesfecho] = useState<Desfecho | null>(null);
-  const [ativa, setAtiva] = useState<string | null>(null);
+  const [ativa, setAtiva] = useState<{ turno: string; ref: string } | null>(null);
+  const [emFoco, setEmFoco] = useState<string | null>(null);
   const [pendente, iniciar] = useTransition();
-  const [concluindo, setConcluindo] = useState(false);
-  const [rodada, setRodada] = useState(0);
+  const [etapa, setEtapa] = useState(0);
+  const [digitando, setDigitando] = useState<string | null>(null);
   const campo = useRef<HTMLTextAreaElement>(null);
+  const fim = useRef<HTMLDivElement>(null);
   // A saudação depende da hora local; calculada só no navegador para não divergir do HTML estático.
   const [saudacao, setSaudacao] = useState("Olá");
   useEffect(() => {
     const h = Number(new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", hour12: false, timeZone: "America/Sao_Paulo" }).slice(0, 2));
     setSaudacao(h >= 5 && h < 12 ? "Bom dia" : h >= 12 && h < 18 ? "Boa tarde" : "Boa noite");
   }, []);
-  const bolha = useRef<HTMLParagraphElement>(null);
-  // A pergunta entra deslizando a cada envio. Sem trocar a key do elemento: trocar no meio da
-  // pesquisa deixava cópias da bolha na tela quando outro estado mudava junto.
+
+  // As etapas do "pensando" trocam enquanto a resposta não chega.
   useEffect(() => {
-    if (!rodada || !bolha.current) return;
-    const calmo = movimentoReduzido();
-    bolha.current.animate(
-      calmo ? [{ opacity: 0 }, { opacity: 1 }] : [{ opacity: 0, transform: "translateY(8px)" }, { opacity: 1, transform: "none" }],
-      { duration: calmo ? 200 : 420, easing: "cubic-bezier(.16, 1, .3, 1)" },
-    );
-  }, [rodada]);
+    if (!pendente) return setEtapa(0);
+    const t = [setTimeout(() => setEtapa(1), 800), setTimeout(() => setEtapa(2), 1600)];
+    return () => t.forEach(clearTimeout);
+  }, [pendente]);
+
+  // A conversa acompanha o fim, como num chat, a cada pergunta e enquanto a resposta é digitada.
+  const rolarAoFim = (suave = true) => fim.current?.scrollIntoView({ behavior: suave && !movimentoReduzido() ? "smooth" : "auto", block: "end" });
 
   const enviar = (q = pergunta) => {
     if (q.trim().length < 8 || pendente) return;
-    setEnviada({ texto: q.trim(), data, hora: hora() });
-    setPergunta("");
-    setAtiva(null);
-    setDesfecho(null);
-    setRodada((r) => r + 1);
+    const turno: Turno = { id: novoId(), texto: q.trim(), data, hora: hora(), desfecho: null };
+    const aplicar = () => {
+      setTurnos((t) => [...t, turno]);
+      setPergunta("");
+      setAtiva(null);
+      setEmFoco(turno.id);
+    };
+    // Da tela inicial para a conversa, o campo desce ao rodapé numa transição contínua (onde o navegador permite).
+    const doc = document as Document & { startViewTransition?: (f: () => void) => unknown };
+    if (!turnos.length && doc.startViewTransition && !movimentoReduzido()) doc.startViewTransition(() => flushSync(aplicar));
+    else aplicar();
+    requestAnimationFrame(() => rolarAoFim());
     iniciar(async () => {
       const inicio = performance.now();
       let r: Desfecho;
@@ -221,31 +195,33 @@ export function PesquisaMesa({
       } catch {
         r = { status: "erro", id: "", mensagem: falhaRede, fontes: [] };
       }
-      // Resposta nunca cai de uma vez: as etapas da barra aparecem, e ela completa antes da leitura.
-      const calmo = movimentoReduzido();
-      await espera(Math.max(0, (calmo ? 500 : 2100) - (performance.now() - inicio)));
-      setConcluindo(true);
-      await espera(calmo ? 0 : 420);
-      setConcluindo(false);
-      setDesfecho(r);
+      // A resposta nunca cai de uma vez: o "pensando" mostra o que está sendo feito, depois o texto é digitado.
+      await espera(Math.max(0, (movimentoReduzido() ? 400 : 1900) - (performance.now() - inicio)));
+      setTurnos((t) => t.map((x) => (x.id === turno.id ? { ...x, desfecho: r } : x)));
+      setDigitando(r.status === "respondida" && !movimentoReduzido() ? turno.id : null);
       aoConcluir?.();
     });
   };
 
-  const focar = (ref: string) => {
-    setAtiva(ref);
-    document.getElementById(`fonte-${ref}`)?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  const focar = (turno: string, ref: string) => {
+    setEmFoco(turno);
+    setAtiva({ turno, ref });
+    requestAnimationFrame(() => document.getElementById(`fonte-${ref}`)?.scrollIntoView({ behavior: "smooth", block: "nearest" }));
   };
 
-  const dataRef = enviada?.data ?? data;
-  const fontes = desfecho && "fontes" in desfecho ? desfecho.fontes : [];
+  // Fontes ao lado: as do turno em foco (o mais recente, ou aquele cuja citação foi clicada).
+  const turnoFoco = turnos.find((t) => t.id === emFoco) ?? turnos[turnos.length - 1];
+  const desfechoFoco = turnoFoco?.desfecho ?? null;
+  const dataRef = turnoFoco?.data ?? data;
+  const fontes = desfechoFoco && "fontes" in desfechoFoco ? desfechoFoco.fontes : [];
   const citados = new Map<string, string[]>();
-  if (desfecho?.status === "respondida") {
-    for (const c of desfecho.citacoes) citados.set(c.ref, [...(citados.get(c.ref) ?? []), c.trecho]);
+  if (desfechoFoco?.status === "respondida") {
+    for (const c of desfechoFoco.citacoes) citados.set(c.ref, [...(citados.get(c.ref) ?? []), c.trecho]);
   }
-  const exibidas = desfecho?.status === "respondida" ? fontes.filter((f) => citados.has(f.ref)) : fontes;
-  const foco = exibidas.find((f) => f.ref === ativa) ?? exibidas[0];
-  const provisorio = exibidas.some((f) => f.origem === "semente" || f.curadoria !== "publicado");
+  const exibidas = desfechoFoco?.status === "respondida" ? fontes.filter((f) => citados.has(f.ref)) : fontes;
+  const refAtiva = ativa && ativa.turno === turnoFoco?.id ? ativa.ref : null;
+  const foco = exibidas.find((f) => f.ref === refAtiva) ?? exibidas[0];
+  const aguardando = turnoFoco && !turnoFoco.desfecho;
 
   const formulario = (
     <form
@@ -261,7 +237,7 @@ export function PesquisaMesa({
       <textarea
         id="pergunta"
         ref={campo}
-        rows={2}
+        rows={turnos.length ? 1 : 2}
         value={pergunta}
         onChange={(e) => setPergunta(e.target.value)}
         onKeyDown={(e) => {
@@ -270,7 +246,7 @@ export function PesquisaMesa({
             enviar();
           }
         }}
-        placeholder="Pergunte sobre a transição…"
+        placeholder={turnos.length ? "Responder ou perguntar outra coisa…" : "Pergunte sobre a transição…"}
         maxLength={2000}
       />
       <div className="mesa-campo-pe">
@@ -301,7 +277,7 @@ export function PesquisaMesa({
   );
 
   // Tela inicial: saudação, campo grande no centro e sugestões logo abaixo. A conversa só ocupa a tela depois do primeiro envio.
-  if (!enviada) {
+  if (!turnos.length) {
     return (
       <div className="pesquisa-inicio">
         <div className="pesquisa-inicio-cabeca">
@@ -327,68 +303,196 @@ export function PesquisaMesa({
   }
 
   return (
-    <div className="mesa-grade pesquisa-conversa">
+    <div className="mesa-grade pesquisa-chat">
       <section className="mesa-conversa" aria-live="polite">
+        {turnos.map((t) => (
+          <TurnoChat
+            key={t.id}
+            t={t}
+            etapa={etapa}
+            digitar={digitando === t.id}
+            aoDigitar={() => rolarAoFim(false)}
+            aoTerminar={() => {
+              setDigitando((d) => (d === t.id ? null : d));
+              requestAnimationFrame(() => rolarAoFim());
+            }}
+            ativa={ativa?.turno === t.id ? ativa.ref : null}
+            focar={(ref) => focar(t.id, ref)}
+            exportar={exportar}
+            novaPergunta={() => campo.current?.focus()}
+          />
+        ))}
+        <div ref={fim} className="pesquisa-fim" aria-hidden="true" />
+        <div className="pesquisa-rodape">
+          {formulario}
+          {abaixoDoCampo}
+          <p className="pesquisa-rodape-nota">Respostas só com dispositivos vigentes em {dataBR(data)}. Confira as fontes ao lado.</p>
+        </div>
+      </section>
 
-        {enviada && (
-          <p ref={bolha} className="mesa-pergunta">
-            {enviada.texto}
-          </p>
-        )}
+      <aside className="mesa-fontes" aria-label="Fontes">
+        <p className="mesa-rotulo">{desfechoFoco?.status === "respondida" ? "Fontes conferidas" : "Dispositivos encontrados"}</p>
+        {aguardando && <p className="mesa-vazio-cartao pesquisa-fontes-carregando">Buscando dispositivos vigentes em {dataBR(dataRef)}…</p>}
+        {!aguardando && exibidas.length === 0 && <p className="mesa-vazio-cartao">As fontes aparecem aqui, com o trecho original e a vigência.</p>}
+        {exibidas.map((f, i) => (
+          <CartaoFonte key={`${turnoFoco?.id}-${f.id}`} ordem={i} t={f} data={dataRef} citados={citados.get(f.ref) ?? []} ativa={foco?.ref === f.ref && exibidas.length > 1} aoClicar={() => turnoFoco && setAtiva({ turno: turnoFoco.id, ref: f.ref })} />
+        ))}
+        {foco && <Regua t={foco} data={dataRef} />}
+      </aside>
+    </div>
+  );
+}
 
-        {pendente && <Progresso key={rodada} data={dataRef} concluindo={concluindo} />}
+interface Turno {
+  id: string;
+  texto: string;
+  data: string;
+  hora: string;
+  desfecho: Desfecho | null;
+}
 
-        {!pendente && desfecho?.status === "respondida" && (
-          <>
-            <article className="mesa-resposta">
-              <p className="mesa-autor mesa-entra" style={ordem(0)}>
-                <Simbolo /> AdvFin · {desfecho.redigida ? "revisão pendente" : "trechos literais, sem redação"}
-              </p>
-              {provisorio && (
-                <p className="alerta aviso mesa-entra" style={ordem(1)}>Fontes ainda não conferidas pelo tributarista curador. Use como ponto de partida, não em peça.</p>
-              )}
-              {desfecho.paragrafos.map((p, i) => (
-                <p key={i} className="mesa-entra" style={ordem(i + 2)}>
-                  {p.split(/(\[D\d{1,2}\])/).map((parte, j) => {
-                    const m = /^\[(D\d{1,2})\]$/.exec(parte);
-                    return m ? (
-                      <sup key={j} className="cit">
-                        <button type="button" aria-pressed={ativa === m[1]} onClick={() => focar(m[1])} aria-label={`Ver fonte ${m[1].slice(1)}`}>
-                          {m[1].slice(1)}
-                        </button>
-                      </sup>
-                    ) : (
-                      <Fragment key={j}>{parte}</Fragment>
-                    );
-                  })}
-                </p>
-              ))}
-              <div className="mesa-acoes mesa-entra" style={ordem(desfecho.paragrafos.length + 2)}>
+let seq = 0;
+const novoId = () => `t${Date.now().toString(36)}${(seq++).toString(36)}`;
+
+/** Quebra um parágrafo em palavras, espaços e marcas de citação [Dn], para digitar sem cortar uma marca ao meio. */
+const tokens = (p: string) => p.split(/(\[D\d{1,2}\]|\s+)/).filter(Boolean);
+
+/**
+ * Digitação da resposta, como nos assistentes de conversa: as palavras surgem em ritmo de leitura,
+ * com um cursor no fim. Respostas longas aceleram para não passar de uns 3,5 segundos.
+ */
+function useDigitacao(paragrafos: string[], ligado: boolean, aoAvancar: () => void, aoTerminar: () => void) {
+  const total = paragrafos.reduce((n, p) => n + tokens(p).length, 0);
+  const [mostrados, setMostrados] = useState(ligado ? 0 : total);
+  const avancar = useRef(aoAvancar);
+  const terminar = useRef(aoTerminar);
+  avancar.current = aoAvancar;
+  terminar.current = aoTerminar;
+  useEffect(() => {
+    if (!ligado) return setMostrados(total);
+    const porSegundo = Math.max(48, total / 3.5);
+    const inicio = performance.now();
+    let quadro = 0;
+    let ultimo = 0;
+    const passo = (agora: number) => {
+      const n = Math.min(total, Math.floor(((agora - inicio) / 1000) * porSegundo));
+      if (n !== ultimo) {
+        ultimo = n;
+        setMostrados(n);
+        avancar.current();
+      }
+      if (n < total) quadro = requestAnimationFrame(passo);
+      else terminar.current();
+    };
+    quadro = requestAnimationFrame(passo);
+    return () => cancelAnimationFrame(quadro);
+  }, [ligado, total]);
+  return { mostrados, total };
+}
+
+function TurnoChat({
+  t,
+  etapa,
+  digitar,
+  aoDigitar,
+  aoTerminar,
+  ativa,
+  focar,
+  exportar,
+  novaPergunta,
+}: {
+  t: Turno;
+  etapa: number;
+  digitar: boolean;
+  aoDigitar: () => void;
+  aoTerminar: () => void;
+  ativa: string | null;
+  focar: (ref: string) => void;
+  exportar?: (id: string) => ReactNode;
+  novaPergunta: () => void;
+}) {
+  const d = t.desfecho;
+  const paragrafos = d?.status === "respondida" ? d.paragrafos : [];
+  const { mostrados, total } = useDigitacao(paragrafos, digitar, aoDigitar, aoTerminar);
+  const terminou = mostrados >= total;
+  const provisorio = d?.status === "respondida" && d.fontes.some((f) => f.origem === "semente" || f.curadoria !== "publicado");
+
+  let resta = mostrados;
+  const corpo = paragrafos.map((p, i) => {
+    if (resta <= 0) return null;
+    const tk = tokens(p);
+    const vis = tk.slice(0, resta);
+    resta -= tk.length;
+    const ultimoVisivel = resta <= 0 && !terminou;
+    return (
+      <p key={i}>
+        {vis.map((parte, j) => {
+          const m = /^\[(D\d{1,2})\]$/.exec(parte);
+          return m ? (
+            <sup key={j} className="cit">
+              <button type="button" aria-pressed={ativa === m[1]} onClick={() => focar(m[1])} aria-label={`Ver fonte ${m[1].slice(1)}`}>
+                {m[1].slice(1)}
+              </button>
+            </sup>
+          ) : (
+            <Fragment key={j}>{parte}</Fragment>
+          );
+        })}
+        {ultimoVisivel && <span className="pesquisa-cursor" aria-hidden="true" />}
+      </p>
+    );
+  });
+
+  const etapas = [`Buscando dispositivos vigentes em ${dataBR(t.data)}`, "Conferindo cada citação na base versionada", "Confirmando a vigência das fontes"];
+
+  return (
+    <div className="pesquisa-turno">
+      <p className="mesa-pergunta pesquisa-bolha">{t.texto}</p>
+
+      {!d && (
+        <div className="pesquisa-pensando" role="status">
+          <span className="pesquisa-pensando-simbolo"><Simbolo /></span>
+          <span className="pesquisa-pensando-texto" key={etapa}>{etapas[etapa]}…</span>
+        </div>
+      )}
+
+      {d?.status === "respondida" && (
+        <>
+          <article className="mesa-resposta pesquisa-resposta" aria-busy={!terminou}>
+            <p className="mesa-autor">
+              <Simbolo /> AdvFin · {d.redigida ? "revisão pendente" : "trechos literais, sem redação"}
+            </p>
+            {provisorio && <p className="alerta aviso pesquisa-surge">Fontes ainda não conferidas pelo tributarista curador. Use como ponto de partida, não em peça.</p>}
+            {corpo}
+            {terminou && (
+              <div className="mesa-acoes pesquisa-surge">
                 {exportar ? (
-                  exportar(desfecho.id)
+                  exportar(d.id)
                 ) : (
                   <button type="button" className="primaria" onClick={() => window.print()}>
                     Imprimir ou salvar PDF
                   </button>
                 )}
                 <Link href="/app/calculo">Simular a transição</Link>
-                <button type="button" onClick={() => campo.current?.focus()}>
+                <button type="button" onClick={novaPergunta}>
                   Nova pergunta
                 </button>
               </div>
-            </article>
-            <div className="mesa-auditoria mesa-entra" style={ordem(desfecho.paragrafos.length + 3)}>
+            )}
+          </article>
+          {terminou && (
+            <div className="mesa-auditoria pesquisa-surge" style={ordem(1)}>
               <p className="mesa-rotulo">Trilha de auditoria</p>
               <ul>
                 <li>
                   <i className="ok" />
-                  {desfecho.citacoes.length === 1 ? "Citação conferida" : `${desfecho.citacoes.length} citações conferidas`} na base versionada
-                  <span>{enviada?.hora}</span>
+                  {d.citacoes.length === 1 ? "Citação conferida" : `${d.citacoes.length} citações conferidas`} na base versionada
+                  <span>{t.hora}</span>
                 </li>
                 <li>
                   <i className="ok" />
-                  Vigência confirmada em {dataBR(dataRef)}
-                  <span>{enviada?.hora}</span>
+                  Vigência confirmada em {dataBR(t.data)}
+                  <span>{t.hora}</span>
                 </li>
                 <li>
                   <i />
@@ -396,61 +500,49 @@ export function PesquisaMesa({
                 </li>
               </ul>
             </div>
-          </>
-        )}
+          )}
+        </>
+      )}
 
-        {!pendente && desfecho?.status === "bloqueada_citacao" && (
-          <>
-            <article className="mesa-resposta mesa-entra">
-              <p className="mesa-autor">
-                <Simbolo /> AdvFin · resposta bloqueada
-              </p>
-              <p>A resposta não foi exibida porque não se sustenta inteiramente na base. Reformule a pergunta ou leia os dispositivos ao lado.</p>
-            </article>
-            <div className="mesa-auditoria mesa-entra" style={ordem(2)}>
-              <p className="mesa-rotulo">Trilha de auditoria</p>
-              <ul>
-                {desfecho.motivos.map((m, i) => (
-                  <li key={i}>
-                    <i className="falha" />
-                    {m}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </>
-        )}
-
-        {!pendente && desfecho?.status === "sem_resultado" && (
-          <div className="mesa-resposta mesa-entra">
+      {d?.status === "bloqueada_citacao" && (
+        <>
+          <article className="mesa-resposta pesquisa-resposta pesquisa-surge">
             <p className="mesa-autor">
-              <Simbolo /> AdvFin · sem dispositivos
+              <Simbolo /> AdvFin · resposta bloqueada
             </p>
-            <p>
-              Nenhum dispositivo vigente em {dataBR(dataRef)} trata disso na base atual, que ainda cobre só o núcleo da Reforma (EC
-              132/2023 e LC 214/2025).
-            </p>
+            <p>A resposta não foi exibida porque não se sustenta inteiramente na base. Reformule a pergunta ou leia os dispositivos ao lado.</p>
+          </article>
+          <div className="mesa-auditoria pesquisa-surge" style={ordem(1)}>
+            <p className="mesa-rotulo">Trilha de auditoria</p>
+            <ul>
+              {d.motivos.map((m, i) => (
+                <li key={i}>
+                  <i className="falha" />
+                  {m}
+                </li>
+              ))}
+            </ul>
           </div>
-        )}
+        </>
+      )}
 
-        {!pendente && (desfecho?.status === "erro" || desfecho?.status === "invalida") && (
-          <p className="alerta erro mesa-entra" role="alert">
-            {desfecho.mensagem}
+      {d?.status === "sem_resultado" && (
+        <article className="mesa-resposta pesquisa-resposta pesquisa-surge">
+          <p className="mesa-autor">
+            <Simbolo /> AdvFin · sem dispositivos
           </p>
-        )}
+          <p>
+            Nenhum dispositivo vigente em {dataBR(t.data)} trata disso na base atual, que ainda cobre só o núcleo da Reforma (EC 132/2023 e LC
+            214/2025).
+          </p>
+        </article>
+      )}
 
-        {formulario}
-        {abaixoDoCampo}
-      </section>
-
-      <aside className="mesa-fontes" aria-label="Fontes">
-        <p className="mesa-rotulo">{desfecho?.status === "respondida" ? "Fontes conferidas" : "Dispositivos encontrados"}</p>
-        {exibidas.length === 0 && <p className="mesa-vazio-cartao">As fontes aparecem aqui, com o trecho original e a vigência.</p>}
-        {exibidas.map((f, i) => (
-          <CartaoFonte key={`${rodada}-${f.id}`} ordem={i} t={f} data={dataRef} citados={citados.get(f.ref) ?? []} ativa={foco?.ref === f.ref && exibidas.length > 1} aoClicar={() => setAtiva(f.ref)} />
-        ))}
-        {foco && <Regua t={foco} data={dataRef} />}
-      </aside>
+      {(d?.status === "erro" || d?.status === "invalida") && (
+        <p className="alerta erro pesquisa-surge" role="alert">
+          {d.mensagem}
+        </p>
+      )}
     </div>
   );
 }

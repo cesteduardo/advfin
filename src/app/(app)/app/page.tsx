@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Cabeca } from "@/components/app/Cabeca";
+import { AgendaReforma } from "@/components/app/AgendaReforma";
 import { Icone } from "@/components/app/Icone";
 import { exigirSessao } from "@/lib/auth/sessao";
 import { noEscritorio } from "@/lib/db";
@@ -54,6 +55,8 @@ export default async function Inicio() {
           <p>Encontre o regime de IBS/CBS de um produto ou serviço, com o fundamento e o status de conferência.</p>
         </Link>
       </div>
+
+      <AgendaReforma />
 
       <section className="bloco" aria-labelledby="recentes">
         <p className="mesa-rotulo" id="recentes">{s.nivel === "supervisionado" ? "Suas consultas recentes" : "Consultas recentes que você pode ver"}</p>

@@ -53,7 +53,7 @@ export default function Inicio() {
                   Entrar no beta
                 </a>
               </div>
-              <p className="nota-pequena heroi-entra" style={{ "--d": "1.02s" } as CSSProperties}>Gratuito, sem cartão. Beta para os primeiros 50 escritórios.</p>
+              <p className="nota-pequena heroi-entra" style={{ "--d": "1.02s" } as CSSProperties}>Gratuito, sem cartão. Beta para os primeiros 10 escritórios.</p>
             </div>
 
             <Aparelhos />
@@ -148,7 +148,7 @@ export default function Inicio() {
                 Ajude a construir <em>a ferramenta que você vai usar.</em>
               </h2>
               <p className="lead">
-                Os 50 primeiros escritórios têm desconto vitalício em troca de uma conversa quinzenal sobre o produto.
+                Os 10 primeiros escritórios têm desconto vitalício em troca de uma conversa quinzenal sobre o produto.
               </p>
             </div>
             <ListaEspera />

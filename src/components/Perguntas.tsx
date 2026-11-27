@@ -42,8 +42,8 @@ const PERGUNTAS = [
   },
   {
     p: "Quanto custa e como funciona o beta?",
-    r: "O beta é gratuito, sem cartão, para os primeiros 50 escritórios, que também ganham desconto vitalício. Depois, a assinatura é mensal e em reais, com teste de 7 dias e plano anual com dois meses de desconto.",
-    curta: "Beta gratuito para os primeiros 50 escritórios. Depois, assinatura mensal em reais.",
+    r: "O beta é gratuito, sem cartão, para os primeiros 10 escritórios, que também ganham desconto vitalício. Depois, a assinatura é mensal e em reais, com teste de 7 dias e plano anual com dois meses de desconto.",
+    curta: "Beta gratuito para os primeiros 10 escritórios. Depois, assinatura mensal em reais.",
   },
   {
     p: "Posso cancelar quando quiser?",

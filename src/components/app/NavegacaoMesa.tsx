@@ -1,4 +1,5 @@
 "use client";
+import { ChaveTema } from "./Tema";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -125,6 +126,10 @@ export function NavegacaoMesa({
         ) : (
           <p className="mesa-vazio">Suas perguntas aparecem aqui.</p>
         )}
+        <div className="tema-linha">
+          <span>Tema</span>
+          <ChaveTema />
+        </div>
         <div className="mesa-usuario">
           {perfilHref ? (
             <Link href={perfilHref} className="mesa-usuario-perfil" aria-label={`Perfil de ${nome}`}>

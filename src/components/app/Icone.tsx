@@ -27,6 +27,16 @@ const ICONES = {
   curadoria: <><path d="M5 6.5h2M5 12h2M5 17.5h2M10 6.5h9M10 12h9M10 17.5h5" /></>,
   selo: <><circle cx="12" cy="9.5" r="5" /><path d="m9.5 13.8-1.5 6 4-2 4 2-1.5-6" /></>,
   predio: <><path d="M5 20V5.5A1.5 1.5 0 0 1 6.5 4h7A1.5 1.5 0 0 1 15 5.5V20M15 10h3.5a1.5 1.5 0 0 1 1.5 1.5V20M3.5 20h17M8.5 8h3M8.5 11.5h3M8.5 15h3" /></>,
+  mais: <><path d="M12 5v14M5 12h14" /></>,
+  microfone: <><rect x="9" y="3.5" width="6" height="11" rx="3" /><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v2.5" /></>,
+  voz: <><path d="M4 10.5v3M8 7.5v9M12 4.5v15M16 8v8M20 10.5v3" /></>,
+  documento: <><path d="M14 3.5H7.5A1.5 1.5 0 0 0 6 5v14a1.5 1.5 0 0 0 1.5 1.5h9A1.5 1.5 0 0 0 18 19V7.5Z" /><path d="M14 3.5v4h4M9 12.5h6M9 16h4" /></>,
+  imagem: <><rect x="4" y="5" width="16" height="14" rx="2.5" /><circle cx="9.5" cy="10" r="1.6" /><path d="m4.5 17 4.5-4.5 3.5 3.5 2.5-2.5 4.5 4.5" /></>,
+  fechar: <><path d="M7 7l10 10M17 7 7 17" /></>,
+  parar: <><rect x="7" y="7" width="10" height="10" rx="2" /></>,
+  sol: <><circle cx="12" cy="12" r="4" /><path d="M12 2.5v2M12 19.5v2M21.5 12h-2M4.5 12h-2M18.7 5.3l-1.4 1.4M6.7 17.3l-1.4 1.4M18.7 18.7l-1.4-1.4M6.7 6.7 5.3 5.3" /></>,
+  lua: <><path d="M19.5 14.5A8 8 0 0 1 9.5 4.5a8 8 0 1 0 10 10Z" /></>,
+  automatico: <><circle cx="12" cy="12" r="8" /><path d="M12 4v16" /><path d="M12 4a8 8 0 0 1 0 16Z" fill="currentColor" stroke="none" /></>,
 } satisfies Record<string, ReactNode>;
 
 export type NomeIcone = keyof typeof ICONES;

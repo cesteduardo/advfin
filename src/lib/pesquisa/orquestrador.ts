@@ -1,4 +1,5 @@
 import "server-only";
+import type { DocumentoAnexo } from "./geracao";
 import { consultar, noEscritorio, type Contexto } from "@/lib/db";
 import { ProvedorExtrativo, provedor } from "@/lib/llm/provedores";
 import { ErroLLM } from "@/lib/llm/tipos";
@@ -31,7 +32,7 @@ export async function pesquisar(
   pergunta: string,
   data: string,
   casoId?: string | null,
-  opcoes: { forcarExtrativo?: boolean; aoDiagnosticar?: (d: Diagnostico) => void } = {},
+  opcoes: { forcarExtrativo?: boolean; aoDiagnosticar?: (d: Diagnostico) => void; documentos?: DocumentoAnexo[] } = {},
 ): Promise<DesfechoPesquisa> {
   const inicio = Date.now();
   const llm = opcoes.forcarExtrativo ? new ProvedorExtrativo() : provedor();
@@ -59,7 +60,7 @@ export async function pesquisar(
     if (fontes.length === 0) {
       desfecho = { status: "sem_resultado", id, fontes: [] };
     } else {
-      const { resultado, bastidores: b } = await responder(llm, pergunta, data, fontes);
+      const { resultado, bastidores: b } = await responder(llm, pergunta, data, fontes, opcoes.documentos ?? []);
       tokens = { ent: b.tokens.entrada, sai: b.tokens.saida, custo: b.tokens.custo, modelo: b.tokens.modelo };
       diag.sistema = b.sistema;
       diag.mensagem = b.mensagem;

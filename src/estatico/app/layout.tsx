@@ -4,6 +4,8 @@ import { NavegacaoDemo } from "@/components/demo/NavegacaoDemo";
 import { Portao } from "@/components/demo/Portao";
 import "@/styles/mesa.css";
 import "@/styles/celular.css";
+import "@/styles/tema.css";
+import { TemaApp } from "@/components/app/Tema";
 
 /*
  * Demonstração estática do app, publicada no GitHub Pages em /app/.
@@ -19,6 +21,7 @@ export const metadata: Metadata = {
 export default function LayoutDemo({ children }: { children: React.ReactNode }) {
   return (
     <div className="app-corpo">
+      <TemaApp />
       <div className="mesa">
         <NavegacaoDemo />
         <main className="mesa-principal" id="conteudo">

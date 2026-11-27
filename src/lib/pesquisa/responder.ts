@@ -4,7 +4,7 @@
  * (avaliacao/avaliar.test.ts), para que a nota medida seja a do produto real.
  */
 import type { ProvedorLLM } from "@/lib/llm/tipos";
-import { SISTEMA_PESQUISA, lerResposta, montarMensagem, respostaExtrativa } from "./geracao";
+import { SISTEMA_PESQUISA, lerResposta, montarMensagem, respostaExtrativa, type DocumentoAnexo } from "./geracao";
 import type { CitacaoVerificada, RespostaModelo, Trecho } from "./tipos";
 import { verificarCitacoes } from "./verificador";
 
@@ -21,7 +21,7 @@ export interface Bastidores {
   ms: { modelo: number; verificacao: number };
 }
 
-export async function responder(llm: ProvedorLLM, pergunta: string, data: string, fontes: Trecho[]): Promise<{ resultado: ResultadoResposta; bastidores: Bastidores }> {
+export async function responder(llm: ProvedorLLM, pergunta: string, data: string, fontes: Trecho[], documentos: DocumentoAnexo[] = []): Promise<{ resultado: ResultadoResposta; bastidores: Bastidores }> {
   const b: Bastidores = {
     sistema: null,
     mensagem: null,
@@ -34,7 +34,7 @@ export async function responder(llm: ProvedorLLM, pergunta: string, data: string
   let resposta: RespostaModelo | null;
   if (llm.redige) {
     b.sistema = SISTEMA_PESQUISA;
-    b.mensagem = montarMensagem(pergunta, data, fontes);
+    b.mensagem = montarMensagem(pergunta, data, fontes, documentos);
     const r = await llm.gerar({ tarefa: "pesquisa", sistema: b.sistema, mensagem: b.mensagem, json: true, maxTokens: 2048 });
     b.tokens = { entrada: r.tokensEntrada, saida: r.tokensSaida, custo: r.custoMicroreais, modelo: r.modelo };
     b.saidaBruta = r.texto;

@@ -29,7 +29,7 @@
 
   /* Cartões: respiro igual dos dois lados e menos camadas. */
   .mesa .mesa-cartao, .mesa section.mesa-cartao, .mesa .mesa-resposta { padding: 18px; border-radius: 20px; }
-  .mesa-cartao .mesa-vazio-cartao { padding: 16px; background: #f8f7f3; box-shadow: none; }
+  .mesa-cartao .mesa-vazio-cartao { padding: 16px; background: var(--m-fundo-2); box-shadow: none; }
   .mesa-grade-2.lado-largo { grid-template-columns: minmax(0, 1fr); }
 
   /* Alvos de toque */

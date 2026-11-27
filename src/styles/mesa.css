@@ -692,3 +692,111 @@ body:has(.dock-sec) .mesa-principal { padding-bottom: 112px; }
   .pesquisa-rodape { transition: bottom .45s var(--mola); }
   :root[data-dock-recolhida] .pesquisa-rodape { bottom: max(8px, env(safe-area-inset-bottom)); }
 }
+
+/* ══ Celular no estilo do app do Claude ══
+   Topo enxuto (menu, marca, nova conversa), menu lateral em gaveta, sem barra inferior;
+   na pesquisa, saudação ao centro e campo fixo no rodapé; fontes num painel que sobe. */
+.so-celular { display: none !important; }
+.mesa-veu, .pesquisa-veu, .pesquisa-painel-fechar { display: none; }
+@media (max-width: 900px) {
+  .so-celular { display: inline-flex !important; }
+  .mesa-abas.dock { display: none !important; }
+  .mesa { padding-bottom: 24px; }
+  body:has(.dock-sec) .mesa { padding-bottom: 96px; }
+  .dock-sec { bottom: max(12px, env(safe-area-inset-bottom)); }
+  :root[data-dock-recolhida] .dock-sec { transform: none; opacity: 1; pointer-events: auto; }
+
+  /* Topo */
+  .mesa-topo-movel { display: grid; grid-template-columns: 44px 1fr 44px; align-items: center; gap: 8px; padding: 8px 10px; }
+  .mesa-topo-movel .app-marca { justify-self: center; font-size: 18px; }
+  .mesa-topo-botao { display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 0; border-radius: 14px; background: none; color: var(--ink); cursor: pointer; -webkit-tap-highlight-color: transparent; transition: background .2s var(--ease), transform .2s var(--ease); }
+  .mesa-topo-botao:active { background: rgb(15 39 66 / .06); transform: scale(.94); }
+  .mesa-topo-botao svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+  /* Gaveta */
+  .mesa-lateral { display: flex; position: fixed; z-index: 70; inset: 0 auto 0 0; width: min(84vw, 320px); height: 100dvh; padding: calc(18px + env(safe-area-inset-top)) 14px calc(16px + env(safe-area-inset-bottom)); border-right: 0; background: #f6f5f1; box-shadow: 24px 0 60px -30px rgb(11 31 54 / .55); transform: translateX(-104%); visibility: hidden; transition: transform .45s cubic-bezier(.32, .72, 0, 1), visibility 0s linear .45s; }
+  .mesa-lateral[data-aberto] { transform: none; visibility: visible; transition: transform .45s cubic-bezier(.32, .72, 0, 1), visibility 0s; }
+  .mesa-veu { display: block; position: fixed; z-index: 65; inset: 0; background: rgb(11 31 54 / .32); -webkit-backdrop-filter: blur(2px); backdrop-filter: blur(2px); opacity: 0; pointer-events: none; transition: opacity .35s var(--ease); }
+  .gaveta-mesa-aberta .mesa-veu { opacity: 1; pointer-events: auto; }
+  .gaveta-mesa-aberta, .gaveta-mesa-aberta body { overflow: hidden; }
+
+  /* Faixa da demonstração mais discreta */
+  .demo-faixa { padding: 10px 14px; font-size: 13px; line-height: 1.45; }
+
+  /* Pesquisa: tela inicial */
+  .pesquisa-inicio { display: flex; flex-direction: column; gap: 12px; min-height: calc(100dvh - 190px); padding-block: 0; }
+  .pesquisa-inicio-cabeca { flex-direction: column; gap: 14px; margin: auto 0; padding-block: 24px; }
+  .pesquisa-inicio-cabeca .simbolo-app { width: 44px; height: 44px; border-radius: 14px; }
+  .pesquisa-inicio-cabeca h2 { font-size: 28px; }
+  .pesquisa-sugestoes { order: 1; flex-wrap: nowrap; justify-content: flex-start; margin-inline: -16px; padding: 2px 16px; overflow-x: auto; scrollbar-width: none; scroll-snap-type: x proximity; }
+  .pesquisa-sugestoes::-webkit-scrollbar { display: none; }
+  .pesquisa-sugestao { flex: none; max-width: 240px; white-space: normal; scroll-snap-align: start; }
+  .pesquisa-sugestao:nth-child(n + 4) { display: inline-flex; }
+  .pesquisa-inicio > .mesa-campo { order: 2; position: sticky; bottom: max(10px, env(safe-area-inset-bottom)); }
+  .pesquisa-inicio > .demo-origem { order: 3; }
+  .pesquisa-inicio-nota { display: none; }
+
+  /* Pesquisa: conversa */
+  .pesquisa-chat .mesa-conversa { min-height: calc(100dvh - 170px); gap: 22px; }
+  .pesquisa-rodape, :root[data-dock-recolhida] .pesquisa-rodape { bottom: 0; padding: 14px 0 max(10px, env(safe-area-inset-bottom)); }
+  .pesquisa-chat .mesa-pergunta { max-width: 88%; }
+  .pesquisa-chat .mesa-resposta { font-size: 16px; }
+
+  /* Fontes em painel */
+  .pesquisa-chat .mesa-fontes { position: fixed; z-index: 75; inset: auto 0 0; max-height: 78dvh; padding: 10px 16px calc(20px + env(safe-area-inset-bottom)); overflow-y: auto; overscroll-behavior: contain; border-radius: 26px 26px 0 0; background: #f6f5f1; box-shadow: 0 -24px 60px -28px rgb(11 31 54 / .55); transform: translateY(104%); visibility: hidden; transition: transform .45s cubic-bezier(.32, .72, 0, 1), visibility 0s linear .45s; }
+  .pesquisa-chat .mesa-fontes[data-aberto] { transform: none; visibility: visible; transition: transform .45s cubic-bezier(.32, .72, 0, 1), visibility 0s; }
+  .pesquisa-painel-fechar { display: block; justify-self: center; width: 64px; height: 22px; margin: -4px auto 0; padding: 0; border: 0; background: none; cursor: pointer; }
+  .pesquisa-painel-fechar span { display: block; width: 40px; height: 5px; margin: 0 auto; border-radius: 999px; background: rgb(15 39 66 / .2); }
+  .pesquisa-veu { display: block; position: fixed; z-index: 72; inset: 0; background: rgb(11 31 54 / .3); opacity: 0; pointer-events: none; transition: opacity .35s var(--ease); }
+  .pesquisa-veu[data-aberto] { opacity: 1; pointer-events: auto; }
+}
+@media (max-width: 900px) and (prefers-reduced-motion: reduce) {
+  .mesa-lateral, .mesa-lateral[data-aberto], .pesquisa-chat .mesa-fontes, .pesquisa-chat .mesa-fontes[data-aberto] { transition: none; }
+}
+
+/* ══ Chat numa coluna só, centrada; fontes num pop-up dentro do próprio chat ══ */
+.pesquisa-chat { width: 100%; max-width: 820px; margin-inline: auto; }
+.pesquisa-ver-fontes::before { content: ""; width: 14px; height: 14px; margin-right: 6px; border-radius: 4px; background: var(--ouro-claro); box-shadow: 4px -3px 0 -1px #f2f1ec, 4px -3px 0 0 var(--ouro); vertical-align: -2px; display: inline-block; }
+.mesa-acoes > .pesquisa-ver-fontes { display: inline-flex; align-items: center; background: var(--azul-50); color: var(--azul-forte); }
+.mesa-acoes > .pesquisa-ver-fontes:hover { background: #dfe7f1; color: var(--marinho); }
+.fontes-veu { position: fixed; z-index: 80; inset: 0; background: rgb(11 31 54 / .34); -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); opacity: 0; pointer-events: none; transition: opacity .3s var(--ease); }
+.fontes-veu[data-aberto] { opacity: 1; pointer-events: auto; }
+.mesa-fontes.fontes-pop { position: fixed; z-index: 85; top: 50%; left: calc(272px + (100vw - 272px) / 2); display: flex; flex-direction: column; gap: 0; width: min(680px, calc(100vw - 272px - 48px)); max-height: min(82dvh, 860px); padding: 0; overflow: hidden; border-radius: 26px; background: #f6f5f1; box-shadow: 0 0 0 1px rgb(15 39 66 / .08), 0 40px 90px -30px rgb(11 31 54 / .6); opacity: 0; visibility: hidden; transform: translate(-50%, -48%) scale(.96); transition: opacity .25s var(--ease), transform .4s var(--mola), visibility 0s linear .4s; }
+.mesa-fontes.fontes-pop[data-aberto] { opacity: 1; visibility: visible; transform: translate(-50%, -50%); transition: opacity .25s var(--ease), transform .45s var(--mola), visibility 0s; }
+.fontes-alca { display: none; }
+.fontes-pop-topo { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; padding: 22px 22px 14px 26px; border-bottom: 1px solid var(--anel); background: #fff; }
+.fontes-pop-pergunta { margin: 4px 0 0; color: var(--ink); font-size: 16px; font-weight: 600; letter-spacing: -.015em; line-height: 1.35; }
+.fontes-pop-fechar { display: grid; place-items: center; flex: none; width: 38px; height: 38px; padding: 0; border: 0; border-radius: 50%; background: #f2f1ec; color: var(--ink-2); cursor: pointer; transition: background .2s var(--ease), color .2s var(--ease), transform .2s var(--ease); }
+.fontes-pop-fechar:hover { background: #e8e6de; color: var(--ink); }
+.fontes-pop-fechar:active { transform: scale(.92); }
+.fontes-pop-fechar:focus-visible { outline: 2px solid var(--azul); outline-offset: 2px; }
+.fontes-pop-fechar svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
+.fontes-pop-corpo { display: grid; gap: 14px; padding: 18px 22px 24px; overflow-y: auto; overscroll-behavior: contain; }
+@media (max-width: 900px) {
+  .mesa-fontes.fontes-pop { top: auto; bottom: 0; left: 0; width: 100%; max-height: 86dvh; border-radius: 26px 26px 0 0; transform: translateY(104%); }
+  .mesa-fontes.fontes-pop[data-aberto] { transform: none; }
+  .fontes-alca { display: block; position: absolute; top: 8px; left: 50%; width: 40px; height: 5px; border-radius: 999px; background: rgb(15 39 66 / .18); translate: -50% 0; }
+  .fontes-pop-topo { padding: 24px 16px 12px 20px; }
+  .fontes-pop-corpo { padding: 14px 14px calc(20px + env(safe-area-inset-bottom)); }
+}
+@media (prefers-reduced-motion: reduce) { .mesa-fontes.fontes-pop, .mesa-fontes.fontes-pop[data-aberto] { transition: opacity .2s linear, visibility 0s; } }
+
+/* ══ Tela inicial da pesquisa: sugestões em grade 2x2 e letras miúdas no pé ══ */
+.pesquisa-inicio { display: flex; flex-direction: column; }
+.pesquisa-inicio > * { min-width: 0; }
+.pesquisa-inicio-cabeca { margin-top: auto; }
+.mesa-campo-pe > .mesa-campo-opcoes { flex: 1 1 auto; min-width: 0; }
+.pesquisa-sugestoes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.pesquisa-sugestao { display: flex; align-items: flex-start; max-width: none; padding: 13px 16px; border-radius: 18px; white-space: normal; }
+.pesquisa-sugestao .ico { margin-top: 2px; }
+.pesquisa-inicio-nota { margin-top: auto; padding-top: 28px; }
+@media (max-width: 900px) {
+  .pesquisa-inicio-cabeca { margin: auto 0 0; }
+  .pesquisa-sugestoes { order: 1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-inline: 0; padding: 0; overflow: visible; }
+  .pesquisa-sugestao { padding: 11px 12px; font-size: 13px; line-height: 1.35; gap: 8px; }
+  .pesquisa-sugestao .ico { width: 14px; height: 14px; }
+  .pesquisa-inicio-nota { display: block; order: 4; margin: 0; padding-top: 6px; font-size: 11.5px; line-height: 1.4; }
+}
+/* Com o topo e o campo fixos, o que entra em foco ou é rolado para a vista não fica escondido atrás deles. */
+:root:has(.pesquisa-chat) { scroll-padding: 80px 0 210px; }
+.mesa-campo > * { min-width: 0; }

@@ -2,9 +2,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import type { ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { Dica } from "@/components/ui/Dica";
-import { Dock, ativoEm } from "./Dock";
+import { ativoEm } from "./Dock";
 import { Icone, type NomeIcone } from "./Icone";
 import { Marca } from "./Marca";
 
@@ -70,6 +70,19 @@ export function NavegacaoMesa({
 }) {
   const caminho = usePathname();
   const ativo = (href: string) => ativoEm(caminho, href);
+  // Celular: o menu lateral vira uma gaveta, como no app do Claude. Fecha ao navegar, com Esc ou no véu.
+  const [menu, setMenu] = useState(false);
+  useEffect(() => setMenu(false), [caminho]);
+  useEffect(() => {
+    if (!menu) return;
+    const esc = (e: KeyboardEvent) => e.key === "Escape" && setMenu(false);
+    document.addEventListener("keydown", esc);
+    document.documentElement.classList.add("gaveta-mesa-aberta");
+    return () => {
+      document.removeEventListener("keydown", esc);
+      document.documentElement.classList.remove("gaveta-mesa-aberta");
+    };
+  }, [menu]);
   const hoje = new Date().toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" });
   const link = (l: { href: string; nome: string; icone: NomeIcone; conta?: number }) => (
     <Link key={l.href} href={l.href} className={ativo(l.href) ? "ativo" : undefined} aria-current={ativo(l.href) ? "page" : undefined}>
@@ -91,7 +104,7 @@ export function NavegacaoMesa({
 
   return (
     <>
-      <aside className="mesa-lateral">
+      <aside id="mesa-menu" className="mesa-lateral" data-aberto={menu ? "" : undefined}>
         <Marca href="/app" />
         <nav aria-label="Ferramentas">
           {LINKS.map(link)}
@@ -124,17 +137,16 @@ export function NavegacaoMesa({
         </div>
       </aside>
 
+      <div className="mesa-veu" aria-hidden="true" onClick={() => setMenu(false)} />
       <header className="app-topo mesa-topo-movel">
+        <button type="button" className="mesa-topo-botao" aria-label={menu ? "Fechar menu" : "Abrir menu"} aria-expanded={menu} aria-controls="mesa-menu" onClick={() => setMenu((v) => !v)}>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h11M4 17h16" /></svg>
+        </button>
         <Marca href="/app" />
-        {perfilHref ? (
-          <Link href={perfilHref} className="mesa-topo-perfil" aria-label="Perfil e escritório">
-            <Avatar nome={nome} foto={foto} />
-          </Link>
-        ) : (
-          <span className="app-data">Vigência {hoje}</span>
-        )}
+        <Link href="/app/pesquisa" className="mesa-topo-botao" aria-label="Nova conversa" title={`Nova conversa · vigência ${hoje}`}>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h8M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" /></svg>
+        </Link>
       </header>
-      <Dock links={LINKS} />
     </>
   );
 }

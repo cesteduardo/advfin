@@ -5,7 +5,7 @@ import { Fragment, useEffect, useRef, useState, useTransition, type CSSPropertie
 import type { DesfechoPesquisa } from "@/lib/pesquisa/tipos";
 import type { Trecho } from "@/lib/pesquisa/tipos";
 import { normalizar, normalizarComMapa } from "@/lib/pesquisa/verificador";
-import { flushSync } from "react-dom";
+import { createPortal, flushSync } from "react-dom";
 import { Icone } from "./Icone";
 import { Simbolo } from "./Marca";
 import { Seletor } from "@/components/ui/Seletor";
@@ -154,6 +154,19 @@ export function PesquisaMesa({
   const [pendente, iniciar] = useTransition();
   const [etapa, setEtapa] = useState(0);
   const [digitando, setDigitando] = useState<string | null>(null);
+  // No celular as fontes ficam num painel que sobe do rodapé, como os anexos de um chat.
+  const [painel, setPainel] = useState(false);
+  const fechar = useRef<HTMLButtonElement>(null);
+  // O pop-up de fontes é montado dentro da .mesa (para herdar os estilos), fora de qualquer animação que prenda o position: fixed.
+  const [destino, setDestino] = useState<HTMLElement | null>(null);
+  useEffect(() => setDestino(document.querySelector<HTMLElement>(".mesa") ?? document.body), []);
+  useEffect(() => {
+    if (!painel) return;
+    requestAnimationFrame(() => fechar.current?.focus());
+    const esc = (e: KeyboardEvent) => e.key === "Escape" && setPainel(false);
+    document.addEventListener("keydown", esc);
+    return () => document.removeEventListener("keydown", esc);
+  }, [painel]);
   const campo = useRef<HTMLTextAreaElement>(null);
   const fim = useRef<HTMLDivElement>(null);
   // A saudação depende da hora local; calculada só no navegador para não divergir do HTML estático.
@@ -183,9 +196,13 @@ export function PesquisaMesa({
       setEmFoco(turno.id);
     };
     // Da tela inicial para a conversa, o campo desce ao rodapé numa transição contínua (onde o navegador permite).
-    const doc = document as Document & { startViewTransition?: (f: () => void) => unknown };
-    if (!turnos.length && doc.startViewTransition && !movimentoReduzido()) doc.startViewTransition(() => flushSync(aplicar));
-    else aplicar();
+    type Transicao = { ready: Promise<void>; finished: Promise<void>; updateCallbackDone: Promise<void> };
+    const doc = document as Document & { startViewTransition?: (f: () => void) => Transicao };
+    if (!turnos.length && doc.startViewTransition && !movimentoReduzido()) {
+      // Se o navegador interromper a transição (ex.: a tela girou), a mudança acontece igual, sem erro.
+      const vt = doc.startViewTransition(() => flushSync(aplicar));
+      [vt.ready, vt.finished, vt.updateCallbackDone].forEach((p) => p?.catch(() => {}));
+    } else aplicar();
     requestAnimationFrame(() => rolarAoFim());
     iniciar(async () => {
       const inicio = performance.now();
@@ -206,6 +223,7 @@ export function PesquisaMesa({
   const focar = (turno: string, ref: string) => {
     setEmFoco(turno);
     setAtiva({ turno, ref });
+    setPainel(true);
     requestAnimationFrame(() => document.getElementById(`fonte-${ref}`)?.scrollIntoView({ behavior: "smooth", block: "nearest" }));
   };
 
@@ -221,7 +239,6 @@ export function PesquisaMesa({
   const exibidas = desfechoFoco?.status === "respondida" ? fontes.filter((f) => citados.has(f.ref)) : fontes;
   const refAtiva = ativa && ativa.turno === turnoFoco?.id ? ativa.ref : null;
   const foco = exibidas.find((f) => f.ref === refAtiva) ?? exibidas[0];
-  const aguardando = turnoFoco && !turnoFoco.desfecho;
 
   const formulario = (
     <form
@@ -297,13 +314,13 @@ export function PesquisaMesa({
             </button>
           ))}
         </div>
-        <p className="pesquisa-inicio-nota">Só dispositivos vigentes na data escolhida, com o trecho original ao lado. Se uma citação não existir na base, a resposta é bloqueada.</p>
+        <p className="pesquisa-inicio-nota">Só dispositivos vigentes na data escolhida, com o trecho original a um toque. Se uma citação não existir na base, a resposta é bloqueada.</p>
       </div>
     );
   }
 
   return (
-    <div className="mesa-grade pesquisa-chat">
+    <div className="pesquisa-chat">
       <section className="mesa-conversa" aria-live="polite">
         {turnos.map((t) => (
           <TurnoChat
@@ -320,25 +337,46 @@ export function PesquisaMesa({
             focar={(ref) => focar(t.id, ref)}
             exportar={exportar}
             novaPergunta={() => campo.current?.focus()}
+            verFontes={() => {
+              setEmFoco(t.id);
+              setPainel(true);
+            }}
           />
         ))}
         <div ref={fim} className="pesquisa-fim" aria-hidden="true" />
         <div className="pesquisa-rodape">
           {formulario}
           {abaixoDoCampo}
-          <p className="pesquisa-rodape-nota">Respostas só com dispositivos vigentes em {dataBR(data)}. Confira as fontes ao lado.</p>
+          <p className="pesquisa-rodape-nota">Respostas só com dispositivos vigentes em {dataBR(data)}. Toque no número da citação para ver a fonte.</p>
         </div>
       </section>
 
-      <aside className="mesa-fontes" aria-label="Fontes">
-        <p className="mesa-rotulo">{desfechoFoco?.status === "respondida" ? "Fontes conferidas" : "Dispositivos encontrados"}</p>
-        {aguardando && <p className="mesa-vazio-cartao pesquisa-fontes-carregando">Buscando dispositivos vigentes em {dataBR(dataRef)}…</p>}
-        {!aguardando && exibidas.length === 0 && <p className="mesa-vazio-cartao">As fontes aparecem aqui, com o trecho original e a vigência.</p>}
-        {exibidas.map((f, i) => (
-          <CartaoFonte key={`${turnoFoco?.id}-${f.id}`} ordem={i} t={f} data={dataRef} citados={citados.get(f.ref) ?? []} ativa={foco?.ref === f.ref && exibidas.length > 1} aoClicar={() => turnoFoco && setAtiva({ turno: turnoFoco.id, ref: f.ref })} />
-        ))}
-        {foco && <Regua t={foco} data={dataRef} />}
-      </aside>
+      {destino &&
+        createPortal(
+          <>
+            <div className="fontes-veu" data-aberto={painel ? "" : undefined} aria-hidden="true" onClick={() => setPainel(false)} />
+            <div className="fontes-pop mesa-fontes" role="dialog" aria-modal="true" aria-labelledby="fontes-titulo" data-aberto={painel ? "" : undefined} inert={!painel}>
+              <span className="fontes-alca" aria-hidden="true" />
+              <div className="fontes-pop-topo">
+                <div>
+                  <p className="mesa-rotulo" id="fontes-titulo">{desfechoFoco?.status === "respondida" ? "Fontes conferidas" : "Dispositivos encontrados"}</p>
+                  {turnoFoco && <p className="fontes-pop-pergunta">{turnoFoco.texto}</p>}
+                </div>
+                <button type="button" ref={fechar} className="fontes-pop-fechar" onClick={() => setPainel(false)} aria-label="Fechar fontes">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" /></svg>
+                </button>
+              </div>
+              <div className="fontes-pop-corpo">
+                {exibidas.length === 0 && <p className="mesa-vazio-cartao">Nenhum dispositivo para mostrar.</p>}
+                {exibidas.map((f, i) => (
+                  <CartaoFonte key={`${turnoFoco?.id}-${f.id}`} ordem={i} t={f} data={dataRef} citados={citados.get(f.ref) ?? []} ativa={foco?.ref === f.ref && exibidas.length > 1} aoClicar={() => turnoFoco && setAtiva({ turno: turnoFoco.id, ref: f.ref })} />
+                ))}
+                {foco && <Regua t={foco} data={dataRef} />}
+              </div>
+            </div>
+          </>,
+          destino,
+        )}
     </div>
   );
 }
@@ -400,6 +438,7 @@ function TurnoChat({
   focar,
   exportar,
   novaPergunta,
+  verFontes,
 }: {
   t: Turno;
   etapa: number;
@@ -410,6 +449,7 @@ function TurnoChat({
   focar: (ref: string) => void;
   exportar?: (id: string) => ReactNode;
   novaPergunta: () => void;
+  verFontes: () => void;
 }) {
   const d = t.desfecho;
   const paragrafos = d?.status === "respondida" ? d.paragrafos : [];
@@ -473,6 +513,9 @@ function TurnoChat({
                     Imprimir ou salvar PDF
                   </button>
                 )}
+                <button type="button" className="pesquisa-ver-fontes" onClick={verFontes}>
+                  Fontes · {d.citacoes.length ? new Set(d.citacoes.map((c) => c.ref)).size : d.fontes.length}
+                </button>
                 <Link href="/app/calculo">Simular a transição</Link>
                 <button type="button" onClick={novaPergunta}>
                   Nova pergunta
@@ -510,7 +553,10 @@ function TurnoChat({
             <p className="mesa-autor">
               <Simbolo /> AdvFin · resposta bloqueada
             </p>
-            <p>A resposta não foi exibida porque não se sustenta inteiramente na base. Reformule a pergunta ou leia os dispositivos ao lado.</p>
+            <p>A resposta não foi exibida porque não se sustenta inteiramente na base. Reformule a pergunta ou leia os dispositivos encontrados.</p>
+            <div className="mesa-acoes">
+              <button type="button" onClick={verFontes}>Ver dispositivos · {d.fontes.length}</button>
+            </div>
           </article>
           <div className="mesa-auditoria pesquisa-surge" style={ordem(1)}>
             <p className="mesa-rotulo">Trilha de auditoria</p>

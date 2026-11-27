@@ -7,3 +7,4 @@ next-env.d.ts
 data/
 advfin-site.zip
 out
+public/vendor/

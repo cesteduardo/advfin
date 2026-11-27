@@ -1,0 +1,188 @@
+/* ══ Tema do app: claro (marfim) e escuro (marinho profundo) ══
+   Carregado depois de celular.css, só nas telas do app. O atributo data-tema="escuro" vai no <html>
+   pelo script de components/app/Tema.tsx, antes da primeira pintura: segue o sistema e guarda a
+   escolha da chave. No escuro a identidade se mantém: fundo marinho, texto marfim, dourado nos acentos.
+   Os cartões e superfícies do app usam os tokens --m-* e --enfase (definidos aqui no claro). */
+
+:root {
+  --enfase: var(--marinho);
+  --sobre-enfase: #fff;
+  --m-fundo: #f6f5f1;
+  --m-fundo-0: rgb(246 245 241 / 0);
+  --m-fundo-2: #f8f7f3;
+  --m-cartao: #fff;
+  --m-pilula: #f2f1ec;
+  --m-pilula-2: #e8e6de;
+  --m-azul-claro: #dfe7f1;
+  --m-vidro: rgb(255 255 255 / .78);
+  --m-topo: rgb(246 245 241 / .92);
+}
+
+@media screen {
+  :root[data-tema="escuro"] {
+    color-scheme: dark;
+    --bg: #0a1424;
+    --branco: #111f35;
+    --superficie: #17273f;
+    --superficie-2: #1f314d;
+    --ink: #f1eadb;
+    --ink-2: #c9c2b2;
+    --muted: #98a1b0;
+    --titulo-2: #808a9a;
+    --line: rgb(241 234 219 / .12);
+    --anel: rgb(241 234 219 / .09);
+    --azul: #9bb8e0;
+    --azul-forte: #c3d4ec;
+    --azul-50: #17273f;
+    --ouro: #d9bf86;
+    --ouro-fundo: rgb(217 191 134 / .13);
+    --verde: #86cfa8;
+    --verde-fundo: rgb(134 207 168 / .12);
+    --bordo: #f2a9a0;
+    --bordo-fundo: rgb(242 169 160 / .12);
+    --sombra: 0 1px 2px rgb(0 0 0 / .3), 0 14px 30px -16px rgb(0 0 0 / .6);
+    --sombra-alta: 0 2px 4px rgb(0 0 0 / .3), 0 26px 50px -24px rgb(0 0 0 / .7);
+
+    --enfase: #efe7d4;
+    --sobre-enfase: #0f2742;
+    --m-fundo: #0a1424;
+    --m-fundo-0: rgb(10 20 36 / 0);
+    --m-fundo-2: #0e1a2e;
+    --m-cartao: #111f35;
+    --m-pilula: #1a2b45;
+    --m-pilula-2: #243858;
+    --m-azul-claro: #243a5c;
+    --m-vidro: rgb(17 31 53 / .8);
+    --m-topo: rgb(10 20 36 / .9);
+  }
+
+  [data-tema="escuro"] body { background: var(--bg); }
+  [data-tema="escuro"] ::selection { background: rgb(217 191 134 / .32); color: var(--ink); }
+
+  /* Superfícies translúcidas: topo, dock e sugestões */
+  [data-tema="escuro"] .mesa-topo-movel { background: var(--m-topo); }
+  [data-tema="escuro"] .mesa-abas, [data-tema="escuro"] .dock-sec, [data-tema="escuro"] .dock-sec-trilha { background: var(--m-vidro); }
+  [data-tema="escuro"] .dock-sec { box-shadow: 0 0 0 1px var(--anel), inset 0 1px 0 rgb(241 234 219 / .06), 0 18px 40px -18px rgb(0 0 0 / .8); }
+  [data-tema="escuro"] .dock-sec-trilha { box-shadow: 0 0 0 1px var(--anel), 0 18px 40px -18px rgb(0 0 0 / .8); }
+  @media (max-width: 900px) { [data-tema="escuro"] .dock-sec-trilha { background: none; box-shadow: none; } }
+  [data-tema="escuro"] .dock-sec .dock-sec-pilula, [data-tema="escuro"] .mesa-abas.dock .dock-pilula { background: var(--enfase); box-shadow: 0 6px 14px -8px rgb(0 0 0 / .8); }
+  [data-tema="escuro"] .mesa-abas.dock a.ativo, [data-tema="escuro"] .mesa-abas a.ativo { color: var(--sobre-enfase); }
+  [data-tema="escuro"] .dock-sec-item.ativo .mesa-conta { background: var(--marinho); color: var(--ouro-claro); }
+  [data-tema="escuro"] .mesa-lateral { border-right-color: var(--anel); }
+  @media (max-width: 1000px) { [data-tema="escuro"] .mesa-lateral { background: var(--m-fundo-2); } }
+  [data-tema="escuro"] .pesquisa-sugestao { background: rgb(17 31 53 / .7); }
+  [data-tema="escuro"] .pesquisa-sugestao:hover { background: var(--m-cartao); box-shadow: 0 0 0 1px var(--line); }
+
+  /* Controles compartilhados com a landing */
+  [data-tema="escuro"] .segmentado-pilula, [data-tema="escuro"] .nav-trilha .segmentado-pilula { background: var(--enfase); box-shadow: 0 6px 14px -8px rgb(0 0 0 / .7); }
+  [data-tema="escuro"] .segmentado-trilha > [aria-checked="true"], [data-tema="escuro"] .segmentado-trilha > [aria-current="true"], [data-tema="escuro"] .segmentado-trilha > [aria-current="page"] { color: var(--sobre-enfase); }
+  [data-tema="escuro"] .segmentado-trilha > button:hover, [data-tema="escuro"] .segmentado-trilha > a:hover { color: var(--ink); }
+  [data-tema="escuro"] .seletor-compacto { background: var(--m-pilula); }
+  [data-tema="escuro"] .seletor-compacto:focus-visible, [data-tema="escuro"] .seletor-compacto[aria-expanded="true"] { background: var(--m-pilula-2); box-shadow: 0 0 0 2px var(--ouro); }
+  [data-tema="escuro"] .seletor > svg { stroke: var(--ink-2); }
+  [data-tema="escuro"] .seletor:focus-visible, [data-tema="escuro"] .seletor[aria-expanded="true"],
+  [data-tema="escuro"] input:focus-visible, [data-tema="escuro"] select:focus-visible { box-shadow: 0 0 0 3px rgb(217 191 134 / .28); border-color: var(--ouro); }
+  [data-tema="escuro"] .balao { background: #15253e; box-shadow: 0 0 0 1px var(--line), 0 24px 48px -18px rgb(0 0 0 / .8); }
+  [data-tema="escuro"] .balao-opcao[aria-selected="true"] { color: var(--ouro); }
+  [data-tema="escuro"] .balao-opcao > svg { stroke: var(--ouro); }
+  [data-tema="escuro"] .cal-dia[aria-pressed="true"], [data-tema="escuro"] .cal-dia[aria-pressed="true"]:hover { background: var(--enfase); color: var(--sobre-enfase); }
+  [data-tema="escuro"] .cal-dia[aria-current="date"] { color: var(--ouro); }
+  [data-tema="escuro"] .balao-dica { background: var(--enfase); color: var(--sobre-enfase); }
+  [data-tema="escuro"] select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%23c9c2b2' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m4 6 4 4 4-4'/%3E%3C/svg%3E"); }
+
+  /* Recados e selos */
+  [data-tema="escuro"] .alerta.aviso { color: var(--ouro); }
+  [data-tema="escuro"] .alerta.aviso a { color: var(--ouro-claro); }
+  [data-tema="escuro"] .selo.nivel-titular, [data-tema="escuro"] .avatar, [data-tema="escuro"] .atalho .icone { background: #1d3557; }
+  [data-tema="escuro"] .mesa-acoes > .primaria:hover, [data-tema="escuro"] .mesa-botao:hover { background: #fff8ea; color: var(--sobre-enfase); }
+  [data-tema="escuro"] .mesa-acoes > .pesquisa-ver-fontes:hover { color: var(--ink); }
+  [data-tema="escuro"] .pesquisa-ver-fontes::before { box-shadow: 4px -3px 0 -1px var(--m-pilula), 4px -3px 0 0 var(--ouro); }
+  [data-tema="escuro"] .mesa .cartao-fonte[data-ativa] { box-shadow: 0 0 0 1.5px var(--ouro), 0 6px 18px -10px rgb(0 0 0 / .6); }
+  [data-tema="escuro"] .cit button { background: rgb(217 191 134 / .16); color: var(--ouro); }
+  [data-tema="escuro"] .cit button[aria-pressed="true"] { background: var(--ouro); color: var(--marinho); }
+  [data-tema="escuro"] mark { background: rgb(217 191 134 / .26); color: var(--ink); }
+  [data-tema="escuro"] .mesa-cartao, [data-tema="escuro"] .mesa-resposta, [data-tema="escuro"] .atalho, [data-tema="escuro"] .inicio-numero, [data-tema="escuro"] .mesa-caso, [data-tema="escuro"] .regime-cartao { box-shadow: 0 0 0 1px var(--anel), 0 14px 34px -22px rgb(0 0 0 / .7); }
+  [data-tema="escuro"] .simbolo-app { box-shadow: 0 0 0 1px rgb(217 191 134 / .35), 0 10px 24px -12px rgb(0 0 0 / .8); }
+  [data-tema="escuro"] .fontes-veu { background: rgb(3 8 16 / .6); }
+  [data-tema="escuro"] .demo-faixa { background: rgb(217 191 134 / .1); }
+}
+
+/* ── Chave do tema: três estados (sistema, claro, escuro) ── */
+.tema-chave { display: inline-flex; gap: 2px; padding: 3px; border-radius: 999px; background: var(--m-pilula); box-shadow: inset 0 0 0 1px var(--anel); }
+.tema-chave button { display: grid; place-items: center; width: 32px; height: 28px; padding: 0; border: 0; border-radius: 999px; background: transparent; color: var(--muted); cursor: pointer; transition: background .2s var(--ease), color .2s var(--ease); }
+.tema-chave button:hover { color: var(--ink); }
+.tema-chave button[aria-pressed="true"] { background: var(--m-cartao); color: var(--ink); box-shadow: 0 0 0 1px var(--anel), 0 2px 6px -3px rgb(15 39 66 / .3); }
+[data-tema="escuro"] .tema-chave button[aria-pressed="true"] { color: var(--ouro); }
+.tema-chave button:focus-visible { outline: 2px solid var(--azul); outline-offset: 1px; }
+.tema-chave .ico { width: 16px; height: 16px; }
+.tema-linha { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 4px 4px 0 8px; color: var(--muted); font-size: 12.5px; font-weight: 600; }
+@media (max-width: 1000px) { .mesa-topo-movel .tema-chave button { width: 30px; height: 30px; } }
+
+/* ══ Campo da pesquisa no desenho de chat: anexar à esquerda, ditado e voz à direita,
+   opções numa linha logo abaixo da caixa. ══ */
+.compositor { position: relative; }
+.compositor input[type="file"] { display: none; }
+.compositor .mesa-campo-pe { flex-wrap: nowrap; }
+.compositor-esq, .compositor-dir { display: inline-flex; align-items: center; gap: 6px; }
+.compositor-botao { display: grid; place-items: center; width: 38px; height: 38px; flex: none; padding: 0; border: 0; border-radius: 50%; background: transparent; color: var(--ink-2); cursor: pointer; box-shadow: inset 0 0 0 1px var(--anel); transition: background .2s var(--ease), color .2s var(--ease), transform .25s var(--mola); }
+.compositor-botao:hover:not(:disabled) { background: var(--m-pilula); color: var(--ink); }
+.compositor-botao:active:not(:disabled) { transform: scale(.94); }
+.compositor-botao:disabled { opacity: .4; cursor: default; }
+.compositor-botao:focus-visible, .compositor .app-enviar:focus-visible { outline: 2px solid var(--azul); outline-offset: 2px; }
+.compositor-botao .ico { width: 19px; height: 19px; }
+.compositor-botao[data-ligado] { background: var(--bordo-fundo); color: var(--bordo); box-shadow: inset 0 0 0 1px currentColor; animation: ouvindo 1.4s var(--ease) infinite; }
+.compositor-voz[data-ligado] { animation: ouvindo 1.4s var(--ease) infinite; }
+.compositor-voz .ico { width: 19px; height: 19px; }
+@keyframes ouvindo { 0%, 100% { box-shadow: 0 0 0 0 rgb(138 42 42 / .28); } 50% { box-shadow: 0 0 0 7px rgb(138 42 42 / 0); } }
+.compositor[data-ouvindo] textarea::placeholder { color: var(--bordo); }
+
+.compositor-anexos { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 2px; padding: 0; list-style: none; }
+.anexo { display: flex; align-items: center; gap: 10px; max-width: min(100%, 300px); padding: 8px 6px 8px 8px; border-radius: 14px; background: var(--m-fundo); box-shadow: inset 0 0 0 1px var(--anel); animation: entra .4s var(--mola) backwards; }
+.anexo-ico { display: grid; place-items: center; flex: none; width: 34px; height: 34px; border-radius: 10px; background: var(--enfase); color: var(--ouro-claro); }
+[data-tema="escuro"] .anexo-ico { background: #1d3557; }
+.anexo-ico .ico { width: 18px; height: 18px; }
+.anexo-texto { display: grid; min-width: 0; line-height: 1.3; }
+.anexo-texto strong { overflow: hidden; color: var(--ink); font-size: 13px; font-weight: 600; white-space: nowrap; text-overflow: ellipsis; }
+.anexo-texto span { overflow: hidden; color: var(--muted); font-size: 11.5px; white-space: nowrap; text-overflow: ellipsis; }
+.anexo[data-estado="erro"] .anexo-texto span { color: var(--bordo); white-space: normal; }
+.anexo[data-estado="erro"] .anexo-ico { background: var(--bordo-fundo); color: var(--bordo); }
+.anexo-tirar { display: grid; place-items: center; flex: none; width: 28px; height: 28px; padding: 0; border: 0; border-radius: 50%; background: transparent; color: var(--muted); cursor: pointer; }
+.anexo-tirar:hover { background: var(--m-pilula); color: var(--ink); }
+.anexo-tirar .ico { width: 14px; height: 14px; }
+.anexo-gira { width: 16px; height: 16px; border-radius: 50%; border: 2px solid rgb(217 191 134 / .35); border-top-color: var(--ouro-claro); animation: gira .8s linear infinite; }
+@keyframes gira { to { transform: rotate(360deg); } }
+
+.compositor-solte { position: absolute; inset: 0; display: grid; place-items: center; border-radius: inherit; background: rgb(246 245 241 / .92); color: var(--ink); font-weight: 600; box-shadow: inset 0 0 0 2px var(--ouro); pointer-events: none; }
+[data-tema="escuro"] .compositor-solte { background: rgb(10 20 36 / .92); }
+.compositor-aviso { margin: -6px 6px 0; color: var(--muted); font-size: 12.5px; line-height: 1.45; }
+.compositor-aviso[role="alert"] { color: var(--bordo); }
+
+.compositor-opcoes { justify-content: center; }
+.pesquisa-inicio .compositor-opcoes { margin-top: -4px; animation: entra .6s var(--mola) .28s backwards; }
+.pesquisa-rodape .compositor-opcoes { justify-content: flex-start; }
+.pesquisa-inicio .mesa-campo.compositor { padding: 18px 14px 12px 22px; }
+
+.pesquisa-bolha-anexos { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; margin: 0 0 6px; padding: 0; list-style: none; }
+.pesquisa-bolha-anexos li { display: inline-flex; align-items: center; gap: 6px; max-width: 240px; padding: 6px 10px; border-radius: 10px; background: var(--m-cartao); color: var(--ink-2); font-size: 12.5px; font-weight: 600; box-shadow: 0 0 0 1px var(--anel); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.pesquisa-bolha-anexos .ico { flex: none; width: 14px; height: 14px; color: var(--ouro); }
+
+@media (max-width: 640px) {
+  .compositor-botao { width: 40px; height: 40px; }
+  .compositor-opcoes { justify-content: flex-start; }
+  .pesquisa-inicio .mesa-campo.compositor { padding: 16px 12px 12px 18px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .compositor-botao[data-ligado], .compositor-voz[data-ligado], .anexo-gira { animation: none; }
+}
+
+/* Celular: o campo desce ao pé da tela; as opções e o aviso descem junto, logo abaixo dele. */
+@media (max-width: 900px) {
+  .pesquisa-inicio > .compositor-aviso, .pesquisa-inicio > .compositor-opcoes { order: 2; }
+  .pesquisa-inicio > .compositor-opcoes { margin-top: 0; }
+  .pesquisa-inicio > .mesa-campo.compositor { z-index: 2; }
+}
+@media (max-width: 640px) {
+  .compositor-anexos { flex-wrap: nowrap; margin-inline: -4px; padding: 2px 4px 4px; overflow-x: auto; scrollbar-width: none; }
+  .compositor-anexos::-webkit-scrollbar { display: none; }
+  .anexo { flex: none; max-width: 220px; }
+}

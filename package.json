@@ -13,21 +13,26 @@
     "site": "bash scripts/gerar-site.sh",
     "avaliar": "vitest run --config avaliacao/vitest.config.mts",
     "carregar-reforma": "node scripts/carregar-base.mjs --grupo reforma",
-    "carregar-base": "node scripts/carregar-base.mjs"
+    "carregar-base": "node scripts/carregar-base.mjs",
+    "predev": "node scripts/copiar-ocr.mjs",
+    "prebuild": "node scripts/copiar-ocr.mjs"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "@anthropic-ai/sdk": "^1.14.0",
     "next": "^16.4.6",
+    "pdfjs-dist": "^6.5.438",
     "pg": "^8.23.1",
     "qrcode": "^1.5.4",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
     "server-only": "^0.0.1",
+    "tesseract.js": "^7.0.0",
     "zod": "^4.6.7"
   },
   "devDependencies": {
+    "@tesseract.js-data/por": "^1.0.0",
     "@types/node": "^26.6.11",
     "@types/pg": "^8.23.1",
     "@types/qrcode": "^1.5.6",

@@ -8,7 +8,7 @@
  */
 import Anthropic from "@anthropic-ai/sdk";
 import { recuperarLocal } from "./base-local";
-import { SISTEMA_PESQUISA, lerResposta, montarMensagem, respostaExtrativa } from "./geracao";
+import { SISTEMA_PESQUISA, lerResposta, montarMensagem, respostaExtrativa, type DocumentoAnexo } from "./geracao";
 import type { DesfechoPesquisa, Diagnostico, RespostaModelo, Trecho } from "./tipos";
 import { verificarCitacoes } from "./verificador";
 
@@ -27,6 +27,7 @@ export interface PedidoLab {
   modo: ModoLab;
   chave?: string;
   modelo?: string;
+  documentos?: DocumentoAnexo[];
 }
 
 /**
@@ -89,7 +90,7 @@ export async function rodarLab(p: PedidoLab): Promise<{ desfecho: DesfechoPesqui
       if (!p.chave) throw new Error("Cole sua chave da Anthropic para usar o modelo de verdade.");
       const modelo = p.modelo ?? MODELOS_LAB[0].id;
       diag.sistema = SISTEMA_PESQUISA;
-      diag.mensagem = montarMensagem(p.pergunta, p.data, fontes);
+      diag.mensagem = montarMensagem(p.pergunta, p.data, fontes, p.documentos ?? []);
       const { r, texto } = await chamarAnthropic(p.chave, modelo, diag.sistema, diag.mensagem);
       diag.modelo = r.model;
       diag.saidaBruta = texto || `(sem texto; stop_reason: ${r.stop_reason})`;

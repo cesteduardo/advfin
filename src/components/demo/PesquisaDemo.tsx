@@ -5,6 +5,7 @@ import { Seletor } from "@/components/ui/Seletor";
 import { CamposChave, useChaveAnthropic } from "@/components/app/ChaveAnthropic";
 import { PesquisaMesa } from "@/components/app/PesquisaMesa";
 import { rodarLab } from "@/lib/pesquisa/laboratorio";
+import type { DocumentoAnexo } from "@/lib/pesquisa/geracao";
 import { agora, alterar, euDe, novoId, useDemo } from "./estado";
 
 const STATUS: Record<string, string> = { respondida: "Respondida", bloqueada_citacao: "Bloqueada pelo verificador", sem_resultado: "Sem dispositivos", erro: "Erro" };
@@ -26,11 +27,11 @@ export function PesquisaDemo() {
   const [casoInicial, setCasoInicial] = useState<string | undefined>(undefined);
   useEffect(() => setCasoInicial(new URLSearchParams(location.search).get("caso") ?? undefined), []);
 
-  const executar = async (pergunta: string, data: string, caso?: string | null) => {
+  const executar = async (pergunta: string, data: string, caso?: string | null, documentos: DocumentoAnexo[] = []) => {
     if (modo === "anthropic" && !c.chave.trim()) {
       return { status: "invalida" as const, mensagem: "Cole sua chave da Anthropic no quadro abaixo do campo, ou volte ao modo sem IA." };
     }
-    const desfecho = (await rodarLab({ pergunta, data, modo, chave: c.chave.trim(), modelo: c.modelo })).desfecho;
+    const desfecho = (await rodarLab({ pergunta, data, modo, chave: c.chave.trim(), modelo: c.modelo, documentos })).desfecho;
     {
       alterar(
         (x) => ({ ...x, consultas: [{ id: novoId(), pergunta, data, caso: caso ?? null, status: STATUS[desfecho.status] ?? desfecho.status, criadoEm: agora() }, ...x.consultas].slice(0, 200) }),
@@ -52,6 +53,7 @@ export function PesquisaDemo() {
         casos={e?.casos.map((x) => ({ id: x.id, titulo: x.titulo }))}
         casoInicial={casoInicial && e?.casos.some((x) => x.id === casoInicial) ? casoInicial : ""}
         nome={eu?.nome.split(" ")[0]}
+        notaAnexos={modo === "extrativo" ? "Sem IA, o texto do anexo é lido mas não entra na resposta. Escolha o Claude em Resposta para ele ser considerado." : undefined}
         opcoesCampo={
           <span className="app-data">
             <span className="app-data-rotulo">Resposta</span>

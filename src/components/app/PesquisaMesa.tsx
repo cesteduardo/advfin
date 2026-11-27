@@ -11,6 +11,23 @@ import { Simbolo } from "./Marca";
 import { RelatarCitacao, type EnviarRelato } from "./RelatarCitacao";
 import { Seletor } from "@/components/ui/Seletor";
 import { CampoData } from "@/components/ui/CampoData";
+import { lerAnexo, TIPOS_ACEITOS } from "@/lib/anexos/ler";
+import { calar, falar, falaSuportada, useDitado } from "@/lib/anexos/voz";
+import type { DocumentoAnexo } from "@/lib/pesquisa/geracao";
+
+const MAX_ANEXOS = 3;
+
+interface Anexo {
+  id: string;
+  nome: string;
+  imagem: boolean;
+  estado: "lendo" | "pronto" | "erro";
+  etapa: string;
+  texto?: string;
+  cortado?: boolean;
+  usouOcr?: boolean;
+  erro?: string;
+}
 
 const SUGESTOES = [
   "Qual a alíquota da CBS e do IBS em 2026?",
@@ -146,8 +163,9 @@ export function PesquisaMesa({
   nome,
   opcoesCampo,
   abaixoDoCampo,
+  notaAnexos,
 }: {
-  executar: (pergunta: string, data: string, caso?: string | null) => Promise<Desfecho>;
+  executar: (pergunta: string, data: string, caso?: string | null, documentos?: DocumentoAnexo[]) => Promise<Desfecho>;
   aoConcluir?: () => void;
   falhaRede?: string;
   /** Data de vigência ao abrir (preferência do perfil); sem ela, hoje. */
@@ -165,8 +183,41 @@ export function PesquisaMesa({
   opcoesCampo?: ReactNode;
   /** Algo logo abaixo do campo (ex.: a chave da Anthropic, quando escolhida). */
   abaixoDoCampo?: ReactNode;
+  /** Aviso curto sobre o uso dos anexos (ex.: no modo sem IA, eles não entram na resposta). */
+  notaAnexos?: string;
 }) {
   const [pergunta, setPergunta] = useState("");
+  const [anexos, setAnexos] = useState<Anexo[]>([]);
+  const [arrastando, setArrastando] = useState(false);
+  const seletorArquivo = useRef<HTMLInputElement>(null);
+  // Modo voz: a pergunta falada vai sozinha ao terminar, e a resposta é lida em voz alta.
+  const modoVoz = useRef(false);
+  const [falando, setFalando] = useState(false);
+  const enviarRef = useRef<(q?: string) => void>(() => {});
+  const ditado = useDitado({
+    aoParcial: (t) => setPergunta(t),
+    aoFim: (t) => {
+      if (modoVoz.current && t.trim().length >= 8) enviarRef.current(t);
+      else modoVoz.current = false;
+    },
+  });
+  const [podeFalar, setPodeFalar] = useState(false);
+  useEffect(() => setPodeFalar(falaSuportada()), []);
+  useEffect(() => () => void calar(), []);
+
+  const anexar = (lista: FileList | File[]) => {
+    const livres = MAX_ANEXOS - anexos.length;
+    [...lista].slice(0, Math.max(0, livres)).forEach((f) => {
+      const id = novoId();
+      const imagem = f.type.startsWith("image/");
+      setAnexos((a) => [...a, { id, nome: f.name || (imagem ? "imagem colada" : "documento"), imagem, estado: "lendo", etapa: "Abrindo o arquivo" }]);
+      const mudar = (x: Partial<Anexo>) => setAnexos((a) => a.map((y) => (y.id === id ? { ...y, ...x } : y)));
+      lerAnexo(f, (etapa) => mudar({ etapa }))
+        .then((r) => mudar({ estado: "pronto", texto: r.texto, cortado: r.cortado, usouOcr: r.usouOcr, etapa: r.usouOcr ? "Lido com OCR" : r.paginas ? `${r.paginas} ${r.paginas === 1 ? "página" : "páginas"}` : "Lido" }))
+        .catch((e: Error) => mudar({ estado: "erro", erro: e.message || "Não consegui ler o arquivo." }));
+    });
+  };
+  const lendo = anexos.some((a) => a.estado === "lendo");
   const [turnos, setTurnos] = useState<Turno[]>([]);
   const [data, setData] = useState(dataInicial ?? hoje);
   const [caso, setCaso] = useState(casoInicial);
@@ -208,11 +259,19 @@ export function PesquisaMesa({
   const rolarAoFim = (suave = true) => fim.current?.scrollIntoView({ behavior: suave && !movimentoReduzido() ? "smooth" : "auto", block: "end" });
 
   const enviar = (q = pergunta) => {
-    if (q.trim().length < 8 || pendente) return;
-    const turno: Turno = { id: novoId(), texto: q.trim(), data, hora: hora(), desfecho: null };
+    if (q.trim().length < 8 || pendente || lendo) return;
+    ditado.parar();
+    calar();
+    setFalando(false);
+    const prontos = anexos.filter((a) => a.estado === "pronto" && a.texto);
+    const documentos: DocumentoAnexo[] = prontos.map((a) => ({ nome: a.nome, texto: a.texto! }));
+    const lerEmVoz = modoVoz.current;
+    modoVoz.current = false;
+    const turno: Turno = { id: novoId(), texto: q.trim(), data, hora: hora(), desfecho: null, anexos: prontos.map((a) => ({ nome: a.nome, imagem: a.imagem })) };
     const aplicar = () => {
       setTurnos((t) => [...t, turno]);
       setPergunta("");
+      setAnexos([]);
       setAtiva(null);
       setEmFoco(turno.id);
     };
@@ -229,7 +288,7 @@ export function PesquisaMesa({
       const inicio = performance.now();
       let r: Desfecho;
       try {
-        r = await executar(q, data, caso || null);
+        r = await executar(q, data, caso || null, documentos);
       } catch {
         r = { status: "erro", id: "", mensagem: falhaRede, fontes: [] };
       }
@@ -237,8 +296,27 @@ export function PesquisaMesa({
       await espera(Math.max(0, (movimentoReduzido() ? 400 : 1900) - (performance.now() - inicio)));
       setTurnos((t) => t.map((x) => (x.id === turno.id ? { ...x, desfecho: r } : x)));
       setDigitando(r.status === "respondida" && !movimentoReduzido() ? turno.id : null);
+      if (lerEmVoz && podeFalar) {
+        const texto = r.status === "respondida" ? r.paragrafos.join(" ") : "mensagem" in r ? r.mensagem : "Não encontrei dispositivos vigentes para essa pergunta.";
+        setFalando(true);
+        falar(texto, () => setFalando(false));
+      }
       aoConcluir?.();
     });
+  };
+  enviarRef.current = enviar;
+
+  const alternarVoz = () => {
+    if (falando) {
+      calar();
+      return setFalando(false);
+    }
+    if (ditado.ouvindo) {
+      ditado.parar();
+      return;
+    }
+    modoVoz.current = true;
+    ditado.iniciar(pergunta);
   };
 
   const focar = (turno: string, ref: string) => {
@@ -261,14 +339,45 @@ export function PesquisaMesa({
   const refAtiva = ativa && ativa.turno === turnoFoco?.id ? ativa.ref : null;
   const foco = exibidas.find((f) => f.ref === refAtiva) ?? exibidas[0];
 
+  const temTexto = pergunta.trim().length >= 8;
+  const mostrarVoz = ditado.suportado && !temTexto && !pendente;
   const formulario = (
     <form
-      className="mesa-campo"
+      className="mesa-campo compositor"
+      data-arrastando={arrastando ? "" : undefined}
+      data-ouvindo={ditado.ouvindo ? "" : undefined}
       onSubmit={(e) => {
         e.preventDefault();
         enviar();
       }}
+      onDragOver={(e) => {
+        if (![...e.dataTransfer.types].includes("Files")) return;
+        e.preventDefault();
+        setArrastando(true);
+      }}
+      onDragLeave={(e) => !e.currentTarget.contains(e.relatedTarget as Node) && setArrastando(false)}
+      onDrop={(e) => {
+        e.preventDefault();
+        setArrastando(false);
+        if (e.dataTransfer.files.length) anexar(e.dataTransfer.files);
+      }}
     >
+      {anexos.length > 0 && (
+        <ul className="compositor-anexos" aria-label="Anexos">
+          {anexos.map((a) => (
+            <li key={a.id} className="anexo" data-estado={a.estado}>
+              <span className="anexo-ico">{a.estado === "lendo" ? <span className="anexo-gira" aria-hidden="true" /> : <Icone nome={a.imagem ? "imagem" : "documento"} />}</span>
+              <span className="anexo-texto">
+                <strong>{a.nome}</strong>
+                <span role={a.estado === "erro" ? "alert" : "status"}>{a.estado === "erro" ? a.erro : a.cortado ? `${a.etapa} · texto cortado em 12 mil caracteres` : a.etapa}</span>
+              </span>
+              <button type="button" className="anexo-tirar" onClick={() => setAnexos((x) => x.filter((y) => y.id !== a.id))} aria-label={`Tirar ${a.nome}`}>
+                <Icone nome="fechar" />
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
       <label htmlFor="pergunta" className="so-leitor">
         Pergunta
       </label>
@@ -284,34 +393,104 @@ export function PesquisaMesa({
             enviar();
           }
         }}
-        placeholder={turnos.length ? "Responder ou perguntar outra coisa…" : "Pergunte sobre a transição…"}
+        onPaste={(e) => {
+          const imgs = [...e.clipboardData.files].filter((f) => f.type.startsWith("image/") || f.type === "application/pdf");
+          if (imgs.length) {
+            e.preventDefault();
+            anexar(imgs);
+          }
+        }}
+        placeholder={ditado.ouvindo ? "Pode falar, estou ouvindo…" : turnos.length ? "Responder ou perguntar outra coisa…" : "Pergunte sobre a transição…"}
         maxLength={2000}
       />
       <div className="mesa-campo-pe">
-        <span className="mesa-campo-opcoes">
-          <span className="app-data">
-            <span className="app-data-rotulo">Vigência em</span>
-            <CampoData value={data} onChange={setData} min="2023-12-21" rotulo="Vigência em" compacto />
-          </span>
-          {casos && casos.length > 0 && (
-            <span className="app-data">
-              <span className="app-data-rotulo">Caso</span>
-              <Seletor
-                value={caso}
-                onChange={setCaso}
-                rotulo="Caso"
-                compacto
-                opcoes={[{ valor: "", rotulo: "Nenhum" }, ...casos.map((c) => ({ valor: c.id, rotulo: c.titulo }))]}
-              />
-            </span>
-          )}
-          {opcoesCampo}
+        <span className="compositor-esq">
+          <input
+            ref={seletorArquivo}
+            type="file"
+            accept={TIPOS_ACEITOS}
+            multiple
+            hidden
+            onChange={(e) => {
+              if (e.target.files?.length) anexar(e.target.files);
+              e.target.value = "";
+            }}
+          />
+          <button
+            type="button"
+            className="compositor-botao"
+            onClick={() => seletorArquivo.current?.click()}
+            disabled={anexos.length >= MAX_ANEXOS}
+            aria-label="Anexar PDF ou imagem"
+            title={anexos.length >= MAX_ANEXOS ? "Até 3 anexos por pergunta" : "Anexar PDF ou imagem (o texto é lido com OCR)"}
+          >
+            <Icone nome="mais" />
+          </button>
         </span>
-        <button className="app-enviar" disabled={pendente || pergunta.trim().length < 8} aria-label="Pesquisar">
-          <Icone nome="enviar" />
-        </button>
+        <span className="compositor-dir">
+          {ditado.suportado && (
+            <button
+              type="button"
+              className="compositor-botao"
+              data-ligado={ditado.ouvindo && !modoVoz.current ? "" : undefined}
+              aria-pressed={ditado.ouvindo && !modoVoz.current}
+              onClick={() => {
+                if (ditado.ouvindo) return ditado.parar();
+                modoVoz.current = false;
+                ditado.iniciar(pergunta);
+              }}
+              aria-label={ditado.ouvindo ? "Parar o ditado" : "Ditar a pergunta"}
+              title={ditado.ouvindo ? "Parar o ditado" : "Ditar a pergunta"}
+            >
+              <Icone nome="microfone" />
+            </button>
+          )}
+          {mostrarVoz || falando ? (
+            <button
+              type="button"
+              className="app-enviar compositor-voz"
+              data-ligado={(ditado.ouvindo && modoVoz.current) || falando ? "" : undefined}
+              onClick={alternarVoz}
+              aria-label={falando ? "Parar a leitura" : ditado.ouvindo && modoVoz.current ? "Parar de ouvir" : "Conversar por voz"}
+              title={falando ? "Parar a leitura" : "Conversar por voz: pergunte falando e ouça a resposta"}
+            >
+              <Icone nome={falando ? "parar" : "voz"} />
+            </button>
+          ) : (
+            <button className="app-enviar" disabled={pendente || lendo || !temTexto} aria-label="Pesquisar">
+              <Icone nome="enviar" />
+            </button>
+          )}
+        </span>
       </div>
+      {arrastando && <div className="compositor-solte" aria-hidden="true">Solte o PDF ou a imagem para ler o texto</div>}
     </form>
+  );
+  const avisos = (ditado.erro || (notaAnexos && anexos.length > 0)) && (
+    <p className="compositor-aviso" role={ditado.erro ? "alert" : undefined}>
+      {ditado.erro ?? notaAnexos}
+    </p>
+  );
+  const opcoes = (
+    <div className="mesa-campo-opcoes compositor-opcoes">
+      <span className="app-data">
+        <span className="app-data-rotulo">Vigência em</span>
+        <CampoData value={data} onChange={setData} min="2023-12-21" rotulo="Vigência em" compacto />
+      </span>
+      {casos && casos.length > 0 && (
+        <span className="app-data">
+          <span className="app-data-rotulo">Caso</span>
+          <Seletor
+            value={caso}
+            onChange={setCaso}
+            rotulo="Caso"
+            compacto
+            opcoes={[{ valor: "", rotulo: "Nenhum" }, ...casos.map((c) => ({ valor: c.id, rotulo: c.titulo }))]}
+          />
+        </span>
+      )}
+      {opcoesCampo}
+    </div>
   );
 
   // Tela inicial: saudação, campo grande no centro e sugestões logo abaixo. A conversa só ocupa a tela depois do primeiro envio.
@@ -326,6 +505,8 @@ export function PesquisaMesa({
           </h2>
         </div>
         {formulario}
+        {avisos}
+        {opcoes}
         {abaixoDoCampo}
         <div className="pesquisa-sugestoes" role="list" aria-label="Sugestões de pergunta">
           {SUGESTOES.map((sug, i) => (
@@ -367,6 +548,8 @@ export function PesquisaMesa({
         <div ref={fim} className="pesquisa-fim" aria-hidden="true" />
         <div className="pesquisa-rodape">
           {formulario}
+          {avisos}
+          {opcoes}
           {abaixoDoCampo}
           <p className="pesquisa-rodape-nota">Respostas só com dispositivos vigentes em {dataBR(data)}. Toque no número da citação para ver a fonte.</p>
         </div>
@@ -410,6 +593,7 @@ interface Turno {
   data: string;
   hora: string;
   desfecho: Desfecho | null;
+  anexos: { nome: string; imagem: boolean }[];
 }
 
 let seq = 0;
@@ -510,6 +694,16 @@ function TurnoChat({
 
   return (
     <div className="pesquisa-turno">
+      {t.anexos.length > 0 && (
+        <ul className="pesquisa-bolha-anexos" aria-label="Anexos da pergunta">
+          {t.anexos.map((a, i) => (
+            <li key={i}>
+              <Icone nome={a.imagem ? "imagem" : "documento"} />
+              {a.nome}
+            </li>
+          ))}
+        </ul>
+      )}
       <p className="mesa-pergunta pesquisa-bolha">{t.texto}</p>
 
       {!d && (

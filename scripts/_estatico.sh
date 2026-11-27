@@ -17,6 +17,7 @@ construir_estatico() {
   cp -R src/estatico/app src/app/app
   trap devolver_servidor EXIT
   rm -rf .next out
+  node scripts/copiar-ocr.mjs
   "$@" npx next build
 }
 

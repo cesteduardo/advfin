@@ -65,6 +65,19 @@ export function NavIlha() {
     fim = window.setTimeout(soltar, 1500); // navegadores sem scrollend
   };
 
+  // Como no iPiscinas: no topo da página o header fica apagado sobre o azul do herói,
+  // e acende (vira a pílula branca) assim que a página rola.
+  useEffect(() => {
+    const raiz = document.documentElement;
+    const marcar = () => raiz.classList.toggle("rolou", window.scrollY > 24);
+    marcar();
+    window.addEventListener("scroll", marcar, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", marcar);
+      raiz.classList.remove("rolou");
+    };
+  }, []);
+
   // A gaveta fecha com Esc e quando a tela volta a ser larga.
   useEffect(() => {
     if (!aberto) return;

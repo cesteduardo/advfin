@@ -79,6 +79,18 @@ h1 em, h2 em { display: block; font-style: normal; color: var(--titulo-2); }
 .nav-trilha .segmentado-pilula { background: var(--marinho); box-shadow: 0 6px 14px -8px rgb(15 39 66 / .6); }
 .nav-trilha > a { min-height: 44px; padding: 10px 16px; font-size: 15px; }
 .nav-trilha > a[aria-current="true"] { color: #fff; font-weight: 500; }
+/* Header: apagado no topo, sobre o azul do herói; acende (pílula branca) quando a página rola,
+   como no iPiscinas. Com o menu do celular aberto, fica aceso para o X aparecer. */
+.ilha, .ilha .marca, .ilha .nav-trilha > a, .ilha .menu-btn, .acoes-topo .botao { transition: background-color .35s var(--ease), border-color .35s var(--ease), box-shadow .35s var(--ease), color .35s var(--ease); }
+:root:not(.rolou):not(.menu-aberto) .ilha { background: transparent; border-color: transparent; box-shadow: none; }
+:root:not(.rolou):not(.menu-aberto) .ilha .marca { color: #fff; }
+:root:not(.rolou):not(.menu-aberto) .ilha .marca i { color: var(--ouro-claro); }
+:root:not(.rolou):not(.menu-aberto) .ilha .nav-trilha > a:not([aria-current="true"]) { color: rgb(255 255 255 / .86); }
+:root:not(.rolou):not(.menu-aberto) .ilha .menu-btn { background: rgb(255 255 255 / .14); color: #fff; }
+:root:not(.rolou):not(.menu-aberto) .acoes-topo .botao { background: #fff; color: var(--marinho); box-shadow: 0 8px 20px -10px rgb(0 0 0 / .45); }
+/* Passar o mouse não acende nada no header: só a rolagem e o clique mudam o que está marcado. */
+.ilha .nav-trilha > a:not([aria-current="true"]):hover { color: var(--ink-2); }
+:root:not(.rolou):not(.menu-aberto) .ilha .nav-trilha > a:not([aria-current="true"]):hover { color: rgb(255 255 255 / .86); }
 /* No header, quem move a pílula é a mola do NavIlha (a gota do iPiscinas): só no clique, e esticando com a velocidade. */
 .nav-trilha .segmentado-pilula { transform: translate(var(--px, 0), var(--py, 0)) scale(var(--sx, 1), var(--sy, 1)); transition: opacity .3s var(--ease) !important; will-change: transform; }
 @media (max-width: 860px) { .nav-links { display: none; } .ilha { padding-left: 18px; } }

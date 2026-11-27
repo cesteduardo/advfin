@@ -577,7 +577,13 @@ footer p { max-width: 72ch; }
 .rodape-marca { display: block; margin-bottom: 14px; color: #fff; font-size: 24px; }
 .rodape-marca i { color: var(--ouro-claro); }
 .rodape-lado { display: grid; gap: 10px; justify-items: end; text-align: right; }
-@media (max-width: 860px) { .rodape-lado { justify-items: start; text-align: left; } }
+/* Celular: rodapé todo centralizado (marca, aviso, links, © e crédito empilhados no eixo). */
+@media (max-width: 860px) {
+  footer .envoltorio { justify-items: center; text-align: center; }
+  footer p { margin-inline: auto; }
+  .rodape-lado { justify-items: center; text-align: center; }
+  .rodape-links, .feito-por { justify-content: center; }
+}
 .rodape-links { display: flex; flex-wrap: wrap; gap: 4px 20px; }
 .rodape-links a, .feito-por a { color: #fff; text-decoration: none; background: linear-gradient(var(--ouro-claro), var(--ouro-claro)) 0 100% / 0 1px no-repeat; transition: background-size .35s var(--ease), color .25s; }
 .rodape-links a:hover, .feito-por a:hover { color: var(--ouro-claro); background-size: 100% 1px; }

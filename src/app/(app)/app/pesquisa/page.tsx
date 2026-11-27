@@ -1,4 +1,3 @@
-import { Cabeca } from "@/components/app/Cabeca";
 import { Pesquisa } from "@/components/app/Pesquisa";
 import { exigirSessao, vigenciaPadrao } from "@/lib/auth/sessao";
 import { noEscritorio } from "@/lib/db";
@@ -12,8 +11,8 @@ export default async function PaginaPesquisa({ searchParams }: { searchParams: P
   const casos = await noEscritorio(s, async (c) => (await c.query(`select id, titulo from casos order by criado_em desc limit 100`)).rows);
   return (
     <>
-      <Cabeca trilha={`${s.escritorio} / Pesquisa`} titulo="Pesquisa fundamentada" />
-      <Pesquisa dataInicial={vigenciaPadrao(s.preferencias)} casos={casos} casoInicial={casos.some((c) => c.id === caso) ? caso : undefined} />
+      <h1 className="so-leitor">Pesquisa fundamentada</h1>
+      <Pesquisa nome={s.nome.split(" ")[0]} dataInicial={vigenciaPadrao(s.preferencias)} casos={casos} casoInicial={casos.some((c) => c.id === caso) ? caso : undefined} />
     </>
   );
 }

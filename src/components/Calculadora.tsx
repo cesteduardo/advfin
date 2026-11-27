@@ -5,6 +5,7 @@ import { calcular, linhaDoTempo, type ResultadoCalculo } from "@/lib/tax/engine"
 import { REFERENCIA_ESTIMADA, REGIMES, type Regime, type StatusFonte } from "@/lib/tax/cronograma";
 import { Segmentado } from "./Segmentado";
 import { formatarPercentual, formatarReais, percentualParaPpm, reaisParaCentavos } from "@/lib/tax/money";
+import { Seletor } from "@/components/ui/Seletor";
 
 const ANOS = [2026, 2027, 2028, 2029, 2030, 2031, 2032, 2033];
 const ROTULO_STATUS: Record<StatusFonte, string> = { norma: "Norma", estimativa: "Estimativa", premissa: "Premissa" };
@@ -128,13 +129,12 @@ export function Calculadora() {
 
         <div className="campo">
           <label htmlFor={`${id}-regime`}>Regime de IBS/CBS</label>
-          <select id={`${id}-regime`} value={regime} onChange={(e) => setRegime(e.target.value as Regime)}>
-            {Object.entries(REGIMES).map(([k, r]) => (
-              <option key={k} value={k}>
-                {r.rotulo}
-              </option>
-            ))}
-          </select>
+          <Seletor
+            id={`${id}-regime`}
+            value={regime}
+            onChange={(v) => setRegime(v as Regime)}
+            opcoes={Object.entries(REGIMES).map(([k, r]) => ({ valor: k, rotulo: r.rotulo }))}
+          />
           <span className="ajuda">A classificação por NCM/NBS chega no copiloto da Reforma.</span>
         </div>
 

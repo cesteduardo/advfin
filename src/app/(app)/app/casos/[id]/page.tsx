@@ -9,6 +9,7 @@ import { exigirSessao } from "@/lib/auth/sessao";
 import { incluirNoCaso, retirarDoCaso } from "@/lib/casos/acoes";
 import { lerRevisoes, visibilidade } from "@/lib/casos/consultas";
 import { noEscritorio } from "@/lib/db";
+import { Seletor } from "@/components/ui/Seletor";
 
 export const metadata = { title: "Caso — AdvFin" };
 
@@ -53,7 +54,7 @@ export default async function Caso({ params }: { params: Promise<{ id: string }>
 
       <Revisoes linhas={d.revisoes} decide={acimaOuIgual(s.nivel, "membro")} euId={s.usuarioId} />
 
-      <div className="mesa-grade-2" style={{ gridTemplateColumns: "minmax(0, 2fr) minmax(300px, 1fr)" }}>
+      <div className="mesa-grade-2 lado-largo">
         <section className="bloco" aria-labelledby="consultas-caso">
           <p className="mesa-rotulo" id="consultas-caso">Consultas do caso</p>
           {d.consultas.length === 0 ? (
@@ -108,12 +109,7 @@ export default async function Caso({ params }: { params: Promise<{ id: string }>
                 <input type="hidden" name="caso" value={id} />
                 <div className="campo">
                   <label htmlFor="incluir">Incluir colega</label>
-                  <select id="incluir" name="usuario" required defaultValue="">
-                    <option value="" disabled>Escolha</option>
-                    {candidatos.map((p: any) => (
-                      <option key={p.usuario_id} value={p.usuario_id}>{p.nome} ({ROTULO_NIVEL[p.nivel as Nivel]})</option>
-                    ))}
-                  </select>
+                  <Seletor id="incluir" name="usuario" opcoes={candidatos.map((p: any) => ({ valor: p.usuario_id, rotulo: p.nome, descricao: ROTULO_NIVEL[p.nivel as Nivel] }))} />
                 </div>
                 {pedeRevisao && <p className="mesa-nota">Como Supervisionado, a inclusão vale depois que um Membro aprovar.</p>}
               </FormAcao>

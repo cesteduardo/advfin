@@ -1,5 +1,6 @@
 "use client";
 
+import { DockSecoes } from "@/components/app/DockSecoes";
 import { useId, useMemo, useState } from "react";
 import { Segmentado } from "@/components/Segmentado";
 import { Cabeca } from "./Cabeca";
@@ -7,6 +8,7 @@ import { apurarTransicao, PREMISSAS_APURACAO } from "@/lib/tax/apuracao";
 import { REFERENCIA_ESTIMADA, REGIMES, type Fonte, type Regime, type StatusFonte } from "@/lib/tax/cronograma";
 import { calcular, linhaDoTempo } from "@/lib/tax/engine";
 import { formatarPercentual, formatarReais, percentualParaPpm, reaisParaCentavos, type Ppm } from "@/lib/tax/money";
+import { Seletor } from "@/components/ui/Seletor";
 
 /** Nas tabelas a nota diz que os valores são em reais; sem o "R$" repetido, os números alinham e respiram. */
 const emReais = (c: number) => formatarReais(c).replace(/R\$\s?/g, "");
@@ -180,11 +182,7 @@ export function Calculo({ trilha }: { trilha: string }) {
   const seletorRegime = (valor: Regime, muda: (r: Regime) => void, rid: string, rotulo = "Regime de IBS/CBS") => (
     <div className="campo">
       <label htmlFor={rid}>{rotulo}</label>
-      <select id={rid} value={valor} onChange={(ev) => muda(ev.target.value as Regime)}>
-        {IDS_REGIME.map((r) => (
-          <option key={r} value={r}>{REGIMES[r].rotulo}</option>
-        ))}
-      </select>
+      <Seletor id={rid} value={valor} onChange={(v) => muda(v as Regime)} opcoes={IDS_REGIME.map((r) => ({ valor: r, rotulo: REGIMES[r].rotulo }))} />
     </div>
   );
 
@@ -216,14 +214,14 @@ export function Calculo({ trilha }: { trilha: string }) {
   return (
     <>
       <Cabeca trilha={trilha} titulo="Cálculo da transição" descricao="Motor determinístico, em centavos exatos. Cada número diz se vem de norma, estimativa ou premissa.">
-        <Segmentado
+        <DockSecoes
           rotulo="Ferramenta de cálculo"
-          opcoes={[
+          itens={[
             { id: "tempo", nome: "Linha do tempo" },
             { id: "comparador", nome: "Comparador de regimes" },
             { id: "apuracao", nome: "Apuração com créditos" },
           ]}
-          valor={aba}
+          atual={aba}
           muda={setAba}
         />
       </Cabeca>
@@ -238,7 +236,7 @@ export function Calculo({ trilha }: { trilha: string }) {
           <div className="mesa-coluna">
             <GraficoTransicao tempo={tempo} foco={anoFoco} muda={setAnoFoco} />
             <div className="tabela-envolve">
-              <table className="tabela">
+              <table className="tabela tabela-cartoes">
                 <caption className="so-leitor">Carga por ano na transição</caption>
                 <thead>
                   <tr>
@@ -250,13 +248,13 @@ export function Calculo({ trilha }: { trilha: string }) {
                     const v = (t: string) => r.ano_.linhas.filter((l) => t.split("|").includes(l.tributo)).reduce((s, l) => s + l.valor, 0);
                     return (
                       <tr key={r.ano} className={r.ano === anoFoco ? "em-foco" : undefined} onClick={() => setAnoFoco(r.ano)}>
-                        <td>{r.ano}</td>
-                        <td>{emReais(v("PIS/Cofins"))}</td>
-                        <td>{emReais(v("ICMS|ISS"))}</td>
-                        <td>{emReais(v("CBS"))}</td>
-                        <td>{emReais(v("IBS"))}{r.destacadoCompensado ? " *" : ""}</td>
-                        <td><strong>{emReais(r.ano_.total)}</strong></td>
-                        <td className={r.diferenca < 0 ? "menor" : r.diferenca > 0 ? "maior" : ""}>
+                        <td className="linha-ano">{r.ano}</td>
+                        <td data-rotulo="PIS/Cofins">{emReais(v("PIS/Cofins"))}</td>
+                        <td data-rotulo="ICMS/ISS">{emReais(v("ICMS|ISS"))}</td>
+                        <td data-rotulo="CBS">{emReais(v("CBS"))}</td>
+                        <td data-rotulo="IBS">{emReais(v("IBS"))}{r.destacadoCompensado ? " *" : ""}</td>
+                        <td className="linha-total" data-rotulo="Total no ano"><strong>{emReais(r.ano_.total)}</strong></td>
+                        <td data-rotulo="vs. hoje" className={`linha-nota ${r.diferenca < 0 ? "menor" : r.diferenca > 0 ? "maior" : ""}`}>
                           {r.diferenca > 0 ? "+" : ""}{emReais(r.diferenca)}
                         </td>
                       </tr>
@@ -282,9 +280,7 @@ export function Calculo({ trilha }: { trilha: string }) {
             {operacao}
             <div className="campo">
               <label htmlFor={`${id}-ano`}>Ano</label>
-              <select id={`${id}-ano`} value={anoComp} onChange={(ev) => setAnoComp(Number(ev.target.value))}>
-                {ANOS.map((a) => <option key={a}>{a}</option>)}
-              </select>
+              <Seletor id={`${id}-ano`} value={String(anoComp)} onChange={(v) => setAnoComp(Number(v))} opcoes={ANOS.map((a) => ({ valor: String(a), rotulo: String(a) }))} />
             </div>
             <Referencia c={c} id={id} />
           </form>
@@ -327,7 +323,7 @@ export function Calculo({ trilha }: { trilha: string }) {
           </form>
           <div className="mesa-coluna">
             <div className="tabela-envolve">
-              <table className="tabela">
+              <table className="tabela tabela-cartoes">
                 <caption className="so-leitor">Apuração de CBS e IBS por ano</caption>
                 <thead>
                   <tr>
@@ -337,13 +333,13 @@ export function Calculo({ trilha }: { trilha: string }) {
                 <tbody>
                   {apuracao.map((a) => (
                     <tr key={a.ano}>
-                      <td>{a.ano}{a.compensavelComPisCofins ? " *" : ""}</td>
-                      <td>{emReais(a.debito.cbs)}</td>
-                      <td>{emReais(a.credito.cbs)}</td>
-                      <td>{emReais(a.debito.ibs)}</td>
-                      <td>{emReais(a.credito.ibs)}</td>
-                      <td><strong>{emReais(a.devido.total)}</strong></td>
-                      <td>{emReais(a.saldoCredor)}</td>
+                      <td className="linha-ano">{a.ano}{a.compensavelComPisCofins ? " *" : ""}</td>
+                      <td data-rotulo="Débito CBS">{emReais(a.debito.cbs)}</td>
+                      <td data-rotulo="Crédito CBS">{emReais(a.credito.cbs)}</td>
+                      <td data-rotulo="Débito IBS">{emReais(a.debito.ibs)}</td>
+                      <td data-rotulo="Crédito IBS">{emReais(a.credito.ibs)}</td>
+                      <td className="linha-total" data-rotulo="A recolher"><strong>{emReais(a.devido.total)}</strong></td>
+                      <td className="linha-nota" data-rotulo="Saldo credor">{emReais(a.saldoCredor)}</td>
                     </tr>
                   ))}
                 </tbody>

@@ -63,6 +63,12 @@ export function Dock({ links }: { links: ItemDock[] }) {
   // Trocar de página traz a dock de volta.
   useEffect(() => setRecolhida(false), [caminho]);
 
+  // A dock de seções (DockSecoes) acompanha: recolhe e volta junto com esta.
+  useEffect(() => {
+    document.documentElement.toggleAttribute("data-dock-recolhida", recolhida);
+    return () => document.documentElement.removeAttribute("data-dock-recolhida");
+  }, [recolhida]);
+
   return (
     <nav
       ref={trilha}

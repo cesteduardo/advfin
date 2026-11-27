@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "@/styles/mesa.css";
+import "@/styles/celular.css";
 
 export const metadata: Metadata = {
   title: "Laboratório do chat — AdvFin",

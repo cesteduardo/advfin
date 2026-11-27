@@ -7,6 +7,7 @@ import { comoUsuario } from "@/lib/db";
 import { decidirCuradoria, decidirRelato, definirLimite, definirPapel, verificarOab } from "@/lib/plataforma/acoes";
 import { limitesPadrao } from "@/lib/uso/limites";
 import { ROTULO_PLANO } from "@/lib/stripe";
+import { Seletor } from "@/components/ui/Seletor";
 
 export const metadata = { title: "Plataforma — AdvFin" };
 
@@ -336,12 +337,17 @@ export default async function Plataforma({ searchParams }: { searchParams: Promi
             </div>
             <div className="campo">
               <label htmlFor="eq-papel">Papel</label>
-              <select id="eq-papel" name="papel" defaultValue="curador">
-                <option value="curador">Curadoria da base normativa</option>
-                <option value="suporte">Suporte</option>
-                <option value="admin">Administração da plataforma</option>
-                <option value="nenhum">Tirar da equipe</option>
-              </select>
+              <Seletor
+                id="eq-papel"
+                name="papel"
+                defaultValue="curador"
+                opcoes={[
+                  { valor: "curador", rotulo: "Curadoria da base normativa" },
+                  { valor: "suporte", rotulo: "Suporte" },
+                  { valor: "admin", rotulo: "Administração da plataforma" },
+                  { valor: "nenhum", rotulo: "Tirar da equipe" },
+                ]}
+              />
             </div>
           </FormAcao>
         </div>

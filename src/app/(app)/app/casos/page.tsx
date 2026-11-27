@@ -37,10 +37,10 @@ export default async function Casos() {
         descricao="Cada caso aparece para quem o criou, para quem tem nível igual ou acima, e para quem for incluído nele."
       />
       <Revisoes linhas={revisoes} decide={decide} euId={s.usuarioId} />
-      <div className="mesa-grade-2" style={{ gridTemplateColumns: "minmax(0, 2fr) minmax(300px, 1fr)" }}>
+      <div className="mesa-grade-2 lado-largo">
         <section className="bloco" aria-label="Casos visíveis para você">
           {casos.length === 0 ? (
-            <p className="mesa-vazio-cartao">Nenhum caso que você possa ver. Crie o primeiro ao lado.</p>
+            <p className="mesa-vazio-cartao">Nenhum caso que você possa ver. Crie o primeiro no formulário de novo caso.</p>
           ) : (
             <div className="mesa-casos">
               {casos.map((c: any) => (

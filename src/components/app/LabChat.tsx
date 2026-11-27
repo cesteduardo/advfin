@@ -7,6 +7,7 @@ import { BASE_LOCAL } from "@/lib/pesquisa/base-local";
 import { CamposChave, useChaveAnthropic } from "./ChaveAnthropic";
 import { Icone } from "./Icone";
 import { RodadaView, hoje, type Rodada } from "./RodadaDev";
+import { CampoData } from "@/components/ui/CampoData";
 
 const MODOS: { id: ModoLab; nome: string }[] = [
   { id: "extrativo", nome: "Sem IA" },
@@ -87,10 +88,10 @@ export function LabChat() {
           placeholder="Ex.: Qual a alíquota da CBS e do IBS em 2026?"
         />
         <div className="mesa-campo-pe">
-          <label className="app-data">
+          <span className="app-data">
             Vigência em
-            <input type="date" value={data} onChange={(e) => setData(e.target.value)} />
-          </label>
+            <CampoData value={data} onChange={setData} min="2023-12-21" rotulo="Vigência em" compacto />
+          </span>
           <button className="app-enviar" disabled={!podeEnviar} aria-label="Enviar">
             <Icone nome="enviar" />
           </button>

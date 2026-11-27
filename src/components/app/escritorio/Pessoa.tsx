@@ -5,6 +5,7 @@ import { DESCRICAO_NIVEL, ROTULO_NIVEL, niveisConcedidos, type Nivel } from "@/l
 import { mudarCargo, mudarNivel, remover, suspender } from "@/lib/escritorio/acoes";
 import { FormAcao } from "../FormAcao";
 import { Avatar } from "../NavegacaoMesa";
+import { Seletor } from "@/components/ui/Seletor";
 
 export interface PessoaLinha {
   usuario_id: string;
@@ -69,13 +70,13 @@ export function Pessoa({ p, eu, euId }: { p: PessoaLinha; eu: Nivel; euId: strin
             <div className="campo">
               <label htmlFor={`nivel-${p.usuario_id}`}>Nível</label>
               {/* key: depois de salvar, o React restaura o formulário; remontar mostra o nível novo. */}
-              <select key={p.nivel} id={`nivel-${p.usuario_id}`} name="nivel" defaultValue={p.nivel}>
-                {niveisConcedidos(eu).map((n) => (
-                  <option key={n} value={n}>
-                    {ROTULO_NIVEL[n]}
-                  </option>
-                ))}
-              </select>
+              <Seletor
+                key={p.nivel}
+                id={`nivel-${p.usuario_id}`}
+                name="nivel"
+                defaultValue={p.nivel}
+                opcoes={niveisConcedidos(eu).map((n) => ({ valor: n, rotulo: ROTULO_NIVEL[n] }))}
+              />
             </div>
             <p className="mesa-nota">{DESCRICAO_NIVEL[p.nivel]}</p>
           </FormAcao>

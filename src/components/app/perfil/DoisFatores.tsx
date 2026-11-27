@@ -56,7 +56,7 @@ export function DoisFatores({ ativo, restantes, obrigatorio }: { ativo: boolean;
       <h2>Verificação em duas etapas</h2>
       <p>Além da senha, o login pede um código de 6 dígitos de um aplicativo no seu celular. Quem descobrir a senha não entra sem ele.</p>
       {!qr?.qr && (
-        <div className="mesa-form-pe" style={{ justifyContent: "flex-start" }}>
+        <div className="mesa-form-pe inicio">
           <button type="button" className="mesa-botao" disabled={pendente} onClick={() => iniciar(async () => setQr(await iniciar2fa()))}>
             {pendente ? "Preparando…" : "Ativar"}
           </button>

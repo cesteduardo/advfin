@@ -141,7 +141,6 @@
 .mesa .app-data { display: inline-flex; align-items: center; gap: 8px; padding: 5px 6px 5px 12px; border-radius: 999px; background: #fff; color: var(--muted); font-size: 12.5px; font-weight: 600; box-shadow: 0 0 0 1px var(--anel); }
 .mesa .app-data input[type="date"] { padding: 3px 8px; border: 0; border-radius: 999px; background: #f6f5f1; color: var(--ink); font-size: 12.5px; font-weight: 600; }
 .mesa .app-enviar { display: grid; place-items: center; width: 40px; height: 40px; flex: none; border: 0; border-radius: 50%; background: var(--marinho); color: #fff; cursor: pointer; transition: transform var(--t) var(--saida), opacity var(--t) var(--ease); }
-.mesa .app-enviar:hover { transform: scale(1.05); }
 .mesa .app-enviar:disabled { opacity: .35; cursor: default; transform: none; }
 .mesa .app-enviar .ico { width: 18px; height: 18px; }
 .mesa-boas-vindas .mesa-acoes > button { background: var(--azul-50); color: var(--azul-forte); }
@@ -436,6 +435,371 @@
 .acesso-convite strong { color: var(--ink); }
 .mesa-input-linha { min-height: 36px; padding: 6px 12px; border: 0; border-radius: 10px; background: #f6f5f1; box-shadow: inset 0 0 0 1px var(--anel); font-size: 13.5px; }
 
+/* Seletor e calendário próprios dentro da mesa: o mesmo desenho dos campos dos cartões. */
+.mesa-cartao .campo .seletor { min-height: 46px; padding: 10px 14px; border: 0; border-radius: 12px; background: #f6f5f1; box-shadow: inset 0 0 0 1px var(--anel); font-size: 15px; }
+.mesa-cartao .mesa-sub .campo .seletor, .mesa-pessoa-acoes .seletor { background: #fff; }
+.mesa-pessoa-acoes .seletor, .mesa-filtros .seletor { min-height: 40px; padding: 8px 12px; border: 0; border-radius: 12px; box-shadow: inset 0 0 0 1px var(--anel); font-size: 14px; }
+.mesa-filtros .seletor { min-width: 150px; background: #fff; }
+.mesa-cartao .campo .seletor:hover, .mesa-pessoa-acoes .seletor:hover, .mesa-filtros .seletor:hover { box-shadow: inset 0 0 0 1px rgb(15 39 66 / .18); }
+.mesa-cartao .campo .seletor[aria-expanded="true"], .mesa-pessoa-acoes .seletor[aria-expanded="true"], .mesa-filtros .seletor[aria-expanded="true"],
+.mesa-cartao .campo .seletor:focus-visible, .mesa-pessoa-acoes .seletor:focus-visible, .mesa-filtros .seletor:focus-visible { background: #fff; box-shadow: inset 0 0 0 1.5px var(--marinho); }
+.mesa-recente { display: block; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.mesa-lateral li .mesa-recente a { display: inline; }
+
+/* ── Movimento da mesa ──
+   Entradas curtas (até 420 ms) com a curva de saída do site, só opacidade e deslocamento;
+   cascata de 60 ms entre partes; com movimento reduzido, tudo só esmaece. */
+@keyframes mesa-sobe { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@keyframes mesa-aparece { from { opacity: 0; } to { opacity: 1; } }
+.mesa-entra { animation: mesa-sobe .42s var(--saida) both; animation-delay: calc(var(--i, 0) * 60ms); }
+.mesa-pagina { display: flex; flex-direction: column; gap: inherit; min-width: 0; animation: mesa-sobe .3s var(--saida) both; }
+.mesa-pessoa-acoes { animation: mesa-sobe .26s var(--saida) both; }
+.mesa-cartao .alerta, .mesa-sub .alerta, .mesa-form-linha .alerta { animation: mesa-sobe .26s var(--saida) both; }
+
+/* Pesquisa: barra por etapas, com um brilho correndo enquanto trabalha */
+.mesa-progresso { gap: 16px; }
+.progresso-barra { position: relative; height: 6px; overflow: hidden; border-radius: 999px; background: #efede6; }
+.progresso-barra i { position: absolute; inset: 0; overflow: hidden; border-radius: inherit; background: var(--marinho); transform-origin: left center; transition: transform .7s var(--saida); }
+.progresso-barra i::after { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, transparent 0%, rgb(255 255 255 / .38) 50%, transparent 100%); transform: translateX(-100%); animation: progresso-brilho 1.15s linear infinite; }
+.progresso-barra[data-fim] i { transition-duration: .38s; }
+.progresso-barra[data-fim] i::after { animation: none; opacity: 0; }
+@keyframes progresso-brilho { to { transform: translateX(100%); } }
+.progresso-etapas { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; font-size: 14.5px; line-height: 1.4; }
+.progresso-etapas li { display: flex; align-items: center; gap: 10px; color: var(--ink-2); transition: opacity .3s var(--ease), color .3s var(--ease); }
+.progresso-etapas li[data-estado="espera"] { opacity: .42; }
+.progresso-etapas li[data-estado="agora"] { color: var(--ink); font-weight: 550; }
+.progresso-marca { position: relative; display: grid; place-items: center; flex: none; width: 18px; height: 18px; border-radius: 50%; box-shadow: inset 0 0 0 1.5px rgb(15 39 66 / .2); transition: background-color .3s var(--ease), box-shadow .3s var(--ease); }
+.progresso-marca svg { width: 12px; height: 12px; fill: none; stroke: #fff; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 16; stroke-dashoffset: 16; transition: stroke-dashoffset .35s var(--saida) .08s; }
+[data-estado="feita"] > .progresso-marca { background: var(--marinho); box-shadow: none; }
+[data-estado="feita"] > .progresso-marca svg { stroke-dashoffset: 0; }
+[data-estado="agora"] > .progresso-marca::before { content: ''; position: absolute; inset: 0; border-radius: 50%; border: 1.5px solid transparent; border-top-color: var(--marinho); animation: etapa-gira .8s linear infinite; }
+@keyframes etapa-gira { to { transform: rotate(360deg); } }
+
+/* Aperto: botões cedem um pouco no clique (100–160 ms) */
+.mesa-botao, .mesa-acoes > a, .mesa-acoes > button, .mesa-pessoa-gerir, .mesa-usuario button, .mesa-usuario-acao, .cal-pe button, .mesa-link button { transition-property: background-color, color, box-shadow, opacity, transform; transition-duration: .2s; transition-timing-function: var(--ease); }
+.mesa-botao:active, .mesa-acoes > a:active, .mesa-acoes > button:active, .mesa-pessoa-gerir:active, .mesa-usuario button:active, .mesa-usuario-acao:active, .mesa-link button:active, .mesa .app-enviar:active:not(:disabled) { transform: scale(.97); transition-duration: .1s; }
+/* Levantar no mouse só onde há mouse: no toque, o hover fica preso depois do toque. */
+.atalho:hover, .mesa-caso:hover { transform: none; }
+@media (hover: hover) and (pointer: fine) {
+  .atalho:hover, .mesa-caso:hover { transform: translateY(-2px); }
+  .mesa .app-enviar:hover:not(:disabled) { transform: scale(1.05); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mesa-entra, .mesa-pagina, .mesa-pessoa-acoes, .mesa-cartao .alerta, .mesa-sub .alerta, .mesa-form-linha .alerta { animation-name: mesa-aparece; animation-duration: .2s; animation-delay: 0s; }
+  .progresso-barra i::after, [data-estado="agora"] > .progresso-marca::before { animation: none; }
+  .progresso-barra i { transition-duration: .2s; }
+  .mesa-botao:active, .mesa-acoes > a:active, .mesa-acoes > button:active, .atalho:hover, .mesa-caso:hover { transform: none; }
+}
+
+/* Demonstração: o primeiro cadastro e o espaço enquanto o navegador lê os dados */
+.demo-carregando { min-height: 50vh; }
+.demo-cadastro { display: grid; justify-items: center; padding-top: 8px; }
+.demo-cadastro > form { width: min(640px, 100%); }
+.demo-cadastro h2 { font-size: clamp(22px, 2vw, 28px); letter-spacing: -.03em; }
+.demo-cadastro .mesa-rotulo { margin-top: 6px; }
+
+/* ── Lado a lado, do mesmo tamanho ──
+   Cartões vizinhos na mesma linha têm a mesma altura, com as ações alinhadas no pé;
+   botões vizinhos têm a mesma largura (a do maior). */
+.mesa-grade-2 { align-items: stretch; }
+.mesa-grade-2 > .mesa-cartao { display: flex; flex-direction: column; gap: 14px; }
+.mesa-grade-2 > .mesa-cartao > .mesa-form-pe:last-child { margin-top: auto; padding-top: 4px; }
+.mesa-form-pe.inicio, .mesa-sub .mesa-form-pe, .mesa-pessoa-acoes .mesa-form-pe { justify-content: flex-start; }
+.mesa-form-pe:has(> .mesa-botao + .mesa-botao) { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); width: fit-content; max-width: 100%; margin-left: auto; }
+.mesa-form-pe.inicio:has(> .mesa-botao + .mesa-botao), .mesa-sub .mesa-form-pe:has(> .mesa-botao + .mesa-botao), .mesa-pessoa-acoes .mesa-form-pe:has(> .mesa-botao + .mesa-botao) { margin-left: 0; }
+.mesa-form-pe:has(> .mesa-botao + .mesa-botao) > .mesa-botao { width: 100%; }
+.atalhos { align-items: stretch; }
+
+/* ── Dock de seções: as abas em pílula, com ícone e nome, numa barra flutuante no rodapé ── */
+.dock-sec { --lateral: 272px; position: fixed; z-index: 45; bottom: 18px; left: calc(var(--lateral) + (100vw - var(--lateral)) / 2); translate: -50% 0; max-width: calc(100vw - var(--lateral) - 32px); animation: dock-sec-entra .7s var(--mola) .1s backwards; }
+.dock-sec-trilha { position: relative; display: flex; gap: 2px; padding: 6px; overflow-x: auto; border-radius: 999px; background: rgb(255 255 255 / .72); -webkit-backdrop-filter: blur(20px) saturate(1.5); backdrop-filter: blur(20px) saturate(1.5); box-shadow: 0 0 0 1px rgb(15 39 66 / .08), inset 0 1px 0 rgb(255 255 255 / .9), 0 18px 40px -18px rgb(15 39 66 / .45), 0 2px 6px -2px rgb(15 39 66 / .12); scrollbar-width: none; overscroll-behavior-x: contain; }
+.dock-sec-trilha::-webkit-scrollbar { display: none; }
+.dock-sec .dock-sec-pilula { box-shadow: 0 6px 14px -8px rgb(15 39 66 / .6), inset 0 1px 0 rgb(255 255 255 / .12); }
+.dock-sec-trilha[data-pronta] .dock-sec-pilula { transition: transform .5s var(--mola), width .5s var(--mola), height .5s var(--mola); }
+.dock-sec-mira { position: absolute; top: 6px; bottom: 6px; left: 0; width: var(--hw, 0); border-radius: 999px; background: rgb(15 39 66 / .07); opacity: 0; transform: translateX(var(--hx, 0)); pointer-events: none; transition: transform .38s var(--mola), width .38s var(--mola), opacity .2s var(--ease); }
+.dock-sec-trilha[data-mira] .dock-sec-mira { opacity: 1; }
+.dock-sec-item { position: relative; z-index: 1; display: inline-flex; flex: none; align-items: center; gap: 8px; min-height: 42px; padding: 8px 18px 8px 14px; border: 0; border-radius: 999px; background: transparent; color: var(--ink-2); font-size: 14.5px; font-weight: 600; letter-spacing: -.01em; white-space: nowrap; text-decoration: none; cursor: pointer; -webkit-tap-highlight-color: transparent; transition: color .3s var(--ease), transform .2s var(--ease); }
+.dock-sec-item .ico { flex: none; width: 17px; height: 17px; color: var(--muted); transition: color .3s var(--ease); }
+.dock-sec-item:hover { color: var(--ink); }
+.dock-sec-item:active { transform: scale(.97); }
+.dock-sec-item.ativo { color: #fff; }
+.dock-sec-item.ativo .ico { color: var(--ouro-claro); }
+.dock-sec-item.ativo .mesa-conta { background: var(--ouro-claro); color: var(--marinho); }
+.dock-sec-item:focus-visible { outline: 2px solid var(--azul); outline-offset: -2px; }
+body:has(.dock-sec) .mesa-principal { padding-bottom: 112px; }
+@keyframes dock-sec-entra { from { opacity: 0; transform: translateY(22px) scale(.96); filter: blur(6px); } to { opacity: 1; transform: none; filter: none; } }
+@media (max-width: 900px) {
+  .dock-sec { --lateral: 0px; left: 50%; bottom: calc(max(12px, env(safe-area-inset-bottom)) + 72px); max-width: calc(100vw - 24px); animation-delay: .25s; transition: transform .5s var(--mola), opacity .3s var(--ease); }
+  :root[data-dock-recolhida] .dock-sec { transform: translateY(calc(100% + 100px)) scale(.94); opacity: 0; pointer-events: none; transition: transform .4s var(--ease), opacity .25s var(--ease); }
+  .dock-sec-trilha { padding: 5px; }
+  .dock-sec-mira { top: 5px; bottom: 5px; }
+  .dock-sec-item { min-height: 38px; padding: 7px 14px 7px 11px; gap: 6px; font-size: 13.5px; }
+  .dock-sec-item .ico { width: 15px; height: 15px; }
+  body:has(.dock-sec) .mesa { padding-bottom: 160px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dock-sec { animation: none !important; }
+  .dock-sec, .dock-sec-mira, .dock-sec-trilha[data-pronta] .dock-sec-pilula { transition: opacity .2s linear; }
+  :root[data-dock-recolhida] .dock-sec { transform: none; }
+}
+@media print { .dock-sec { display: none !important; } }
+
+/* ── Pesquisa: tela inicial como a de um assistente de conversa ── */
+.pesquisa-inicio { display: grid; align-content: center; gap: 18px; width: 100%; max-width: 760px; min-height: calc(100dvh - 170px); margin-inline: auto; padding-block: 24px; }
+.pesquisa-inicio-cabeca { display: flex; align-items: center; justify-content: center; gap: 16px; margin-bottom: 14px; text-align: center; }
+.pesquisa-inicio-cabeca .simbolo-app { flex: none; width: 42px; height: 42px; border-radius: 13px; box-shadow: 0 10px 24px -12px rgb(15 39 66 / .6); animation: entra .7s var(--mola) backwards; }
+.pesquisa-inicio-cabeca h2 { margin: 0; font-size: clamp(30px, 3.4vw, 44px); font-weight: 600; letter-spacing: -.045em; line-height: 1.1; color: var(--ink); animation: entra .7s var(--mola) .08s backwards; }
+.pesquisa-inicio-cabeca p { margin: 0; color: var(--ink-2); font-size: clamp(16px, 1.3vw, 18px); animation: entra .7s var(--mola) .16s backwards; }
+.pesquisa-inicio .mesa-campo { gap: 14px; padding: 18px 16px 14px 24px; border-radius: 28px; box-shadow: 0 0 0 1px var(--anel), 0 22px 48px -26px rgb(15 39 66 / .5), 0 2px 6px -3px rgb(15 39 66 / .12); animation: entra .7s var(--mola) .22s backwards; }
+.pesquisa-inicio .mesa-campo:focus-within { box-shadow: 0 0 0 1.5px rgb(15 39 66 / .38), 0 22px 48px -26px rgb(15 39 66 / .5); }
+.pesquisa-inicio .mesa-campo textarea { min-height: 58px; font-size: 17.5px; }
+.pesquisa-inicio .mesa-campo .app-enviar { width: 44px; height: 44px; }
+.pesquisa-sugestoes { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+.pesquisa-sugestao { display: inline-flex; max-width: 100%; align-items: center; gap: 8px; padding: 9px 15px 9px 12px; border: 0; border-radius: 999px; background: rgb(255 255 255 / .55); color: var(--ink-2); font-size: 14.5px; font-weight: 550; line-height: 1.4; text-align: left; cursor: pointer; box-shadow: 0 0 0 1px var(--anel); animation: entra .6s var(--mola) calc(.3s + var(--i, 0) * .06s) backwards; transition: background .2s var(--ease), color .2s var(--ease), transform .25s var(--mola), box-shadow .2s var(--ease); }
+.pesquisa-sugestao .ico { flex: none; width: 16px; height: 16px; color: var(--ouro); }
+.pesquisa-sugestao:hover { background: #fff; color: var(--ink); transform: translateY(-1px); box-shadow: 0 0 0 1px var(--anel), 0 10px 22px -16px rgb(15 39 66 / .5); }
+.pesquisa-sugestao:active { transform: scale(.98); }
+.pesquisa-sugestao:focus-visible { outline: 2px solid var(--azul); outline-offset: 2px; }
+.pesquisa-inicio-nota { margin: 4px 0 0; color: var(--muted); font-size: 13px; text-align: center; animation: entra .6s var(--ease) .55s backwards; }
+.pesquisa-inicio .demo-origem { margin: 0; }
+.pesquisa-conversa { animation: entra .5s var(--ease) backwards; }
+@media (max-width: 900px) {
+  .pesquisa-inicio { min-height: calc(100dvh - 230px); padding-block: 12px; }
+  .pesquisa-inicio-cabeca { gap: 12px; }
+  .pesquisa-inicio-cabeca .simbolo-app { width: 34px; height: 34px; border-radius: 11px; }
+  .pesquisa-sugestoes { justify-content: flex-start; }
+  .pesquisa-sugestao { font-size: 13.5px; }
+  .pesquisa-sugestao:nth-child(n + 4) { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pesquisa-inicio *, .pesquisa-conversa { animation: none !important; }
+}
+/* Cartão de foto ao lado de um formulário: em vez de sobrar vazio, centraliza a foto em tamanho maior. */
+@media (min-width: 901px) {
+  .mesa-grade-2 > .mesa-cartao > .mesa-perfil-topo:last-child { flex: 1; flex-direction: column; justify-content: center; gap: 16px; text-align: center; }
+  .mesa-grade-2 > .mesa-cartao > .mesa-perfil-topo:last-child .avatar-grande { width: 132px; height: 132px; font-size: 44px; box-shadow: 0 18px 36px -20px rgb(15 39 66 / .6); }
+  .mesa-grade-2 > .mesa-cartao > .mesa-perfil-topo:last-child .mesa-acoes { justify-content: center; }
+}
+/* Pé do campo sempre numa linha: opções rolam por dentro, o botão de enviar fica à direita. */
+.mesa-campo-pe { flex-wrap: nowrap; }
+.mesa-campo-opcoes { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; padding: 1px; }
+.mesa-campo-opcoes::-webkit-scrollbar { display: none; }
+.mesa-campo-opcoes > .app-data { flex: none; }
+@media (max-width: 640px) {
+  .mesa-campo-opcoes .app-data-rotulo { display: none; }
+  .mesa .mesa-campo-opcoes .app-data { padding-left: 6px; }
+  .pesquisa-inicio .mesa-campo { padding: 14px 12px 12px 18px; border-radius: 24px; }
+  .pesquisa-inicio .mesa-campo textarea { min-height: 48px; font-size: 16.5px; }
+  .pesquisa-inicio-cabeca h2 { font-size: 30px; }
+}
+@media (max-width: 900px) {
+}
+
+/* ── Pesquisa como conversa: perguntas e respostas em sequência, campo fixo no rodapé ── */
+.pesquisa-chat { align-items: stretch; }
+.pesquisa-chat .mesa-conversa { display: flex; flex-direction: column; gap: 26px; min-height: calc(100dvh - 150px); }
+.pesquisa-chat .mesa-fontes { align-self: start; }
+.pesquisa-turno { display: grid; gap: 16px; }
+.pesquisa-bolha { animation: bolha-entra .45s cubic-bezier(.16, 1, .3, 1) backwards; transform-origin: 100% 100%; }
+@keyframes bolha-entra { from { opacity: 0; transform: translateY(10px) scale(.97); } }
+.pesquisa-pensando { display: flex; align-items: center; gap: 12px; min-height: 32px; animation: entra .4s var(--ease) .15s backwards; }
+.pesquisa-pensando-simbolo { display: grid; place-items: center; }
+.pesquisa-pensando-simbolo .simbolo-app { width: 28px; height: 28px; animation: pensando-pulso 1.4s ease-in-out infinite; }
+@keyframes pensando-pulso { 0%, 100% { transform: scale(1); filter: none; } 50% { transform: scale(.9); filter: brightness(1.25); } }
+.pesquisa-pensando-texto { font-size: 15px; font-weight: 550; color: transparent; background: linear-gradient(90deg, var(--muted) 0%, var(--muted) 35%, var(--ink) 50%, var(--muted) 65%, var(--muted) 100%) 0 0 / 250% 100%; -webkit-background-clip: text; background-clip: text; animation: pensando-brilho 1.6s linear infinite, entra .35s var(--ease) backwards; }
+@keyframes pensando-brilho { from { background-position: 100% 0; } to { background-position: -150% 0; } }
+.pesquisa-resposta { gap: 12px; }
+.pesquisa-resposta > p:not(.mesa-autor):not(.alerta) { animation: entra .3s var(--ease) backwards; }
+.pesquisa-cursor { display: inline-block; width: 8px; height: 1.05em; margin-left: 3px; border-radius: 2px; background: var(--marinho); vertical-align: -.15em; animation: cursor-pisca .9s steps(1) infinite; }
+@keyframes cursor-pisca { 50% { opacity: 0; } }
+.pesquisa-surge { animation: entra .45s var(--ease) calc(var(--i, 0) * 90ms) backwards; }
+.pesquisa-fim { height: 1px; margin-top: -26px; scroll-margin-bottom: 190px; }
+.pesquisa-rodape { position: sticky; bottom: 0; z-index: 5; display: grid; gap: 8px; margin-top: auto; padding: 18px 0 16px; background: linear-gradient(to bottom, rgb(246 245 241 / 0), #f6f5f1 22px); }
+.pesquisa-rodape .mesa-campo { box-shadow: 0 0 0 1px var(--anel), 0 18px 40px -22px rgb(15 39 66 / .5); }
+.pesquisa-rodape-nota { margin: 0; color: var(--muted); font-size: 12.5px; text-align: center; }
+.pesquisa-fontes-carregando { color: transparent; background: linear-gradient(90deg, var(--muted) 35%, var(--ink) 50%, var(--muted) 65%) 0 0 / 250% 100%; -webkit-background-clip: text; background-clip: text; animation: pensando-brilho 1.6s linear infinite; }
+/* O campo é o mesmo elemento visual na tela inicial e no rodapé: a transição o leva de um lugar ao outro. */
+.mesa-campo { view-transition-name: pesquisa-campo; }
+::view-transition-group(pesquisa-campo) { animation-duration: .55s; animation-timing-function: cubic-bezier(.2, .9, .25, 1); }
+@media (max-width: 900px) {
+  .pesquisa-chat .mesa-conversa { min-height: calc(100dvh - 230px); }
+  .pesquisa-rodape { bottom: calc(max(12px, env(safe-area-inset-bottom)) + 66px); padding-bottom: 10px; }
+  .pesquisa-rodape-nota { display: none; }
+  .pesquisa-fim { scroll-margin-bottom: 260px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pesquisa-bolha, .pesquisa-pensando, .pesquisa-pensando-simbolo .simbolo-app, .pesquisa-surge, .pesquisa-resposta > p, .pesquisa-cursor { animation: none !important; }
+  .pesquisa-pensando-texto, .pesquisa-fontes-carregando { animation: none; color: var(--muted); background: none; }
+}
+
+/* ── Início: resumo do escritório ── */
+.inicio-cabeca { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 16px 24px; }
+.inicio-cabeca h1 { margin: 4px 0 0; font-size: clamp(30px, 3vw, 40px); font-weight: 650; letter-spacing: -.045em; line-height: 1.08; }
+.inicio-cabeca .mesa-trilha::first-letter { text-transform: uppercase; }
+.inicio-chat { gap: 8px; min-height: 46px; padding-inline: 22px; }
+.inicio-chat .ico { width: 17px; height: 17px; color: var(--ouro-claro); }
+.inicio-numeros { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.inicio-numero { display: grid; gap: 4px; padding: 18px 22px; border-radius: 20px; background: #fff; color: inherit; text-decoration: none; box-shadow: 0 0 0 1px var(--anel), 0 14px 34px -24px rgb(15 39 66 / .4); transition: transform .25s var(--mola), box-shadow .25s var(--ease); }
+.inicio-numero:hover { transform: translateY(-2px); box-shadow: 0 0 0 1px var(--anel), 0 20px 40px -24px rgb(15 39 66 / .5); }
+.inicio-numero-topo { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 13.5px; font-weight: 600; }
+.inicio-numero-topo .ico { width: 16px; height: 16px; color: var(--ouro); }
+.inicio-numero strong { font-size: 34px; font-weight: 650; letter-spacing: -.04em; line-height: 1.1; font-variant-numeric: tabular-nums; color: var(--marinho); }
+.inicio-numero-nota { overflow: hidden; color: var(--ink-2); font-size: 13.5px; text-overflow: ellipsis; white-space: nowrap; }
+.inicio-grade { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 16px; align-items: stretch; }
+.inicio-coluna { display: grid; gap: 16px; grid-auto-rows: 1fr; }
+.inicio-cartao-topo { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px 12px; }
+.inicio-cartao-topo h2 { margin: 0; font-size: 18px; letter-spacing: -.02em; }
+.inicio-ver { color: var(--azul); font-size: 14px; font-weight: 600; text-decoration: none; }
+.inicio-ver:hover { text-decoration: underline; }
+.inicio-lista { display: grid; margin: 0; padding: 0; list-style: none; }
+.inicio-lista li { display: grid; gap: 2px; padding: 11px 0; border-top: 1px solid var(--anel); font-size: 14.5px; line-height: 1.4; }
+.inicio-lista li:first-child { border-top: 0; padding-top: 2px; }
+.inicio-lista small { color: var(--muted); font-size: 12.5px; }
+.inicio-agenda { animation: entra .6s var(--ease) .2s backwards; }
+.inicio-marcos { position: relative; display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; }
+.inicio-marcos li { position: relative; display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 12px; padding: 10px 0 12px; }
+.inicio-marcos li:not(:last-child)::before { content: ""; position: absolute; left: 10px; top: 28px; bottom: -6px; width: 2px; border-radius: 2px; background: rgb(15 39 66 / .1); }
+.inicio-marco-ponto { width: 12px; height: 12px; margin: 5px 0 0 5px; border-radius: 50%; background: #fff; box-shadow: inset 0 0 0 2px rgb(15 39 66 / .25); }
+.inicio-marcos li[data-estado="passado"] .inicio-marco-ponto { background: var(--marinho); box-shadow: none; }
+.inicio-marcos li[data-estado="proximo"] .inicio-marco-ponto { background: var(--ouro-claro); box-shadow: 0 0 0 4px rgb(217 191 134 / .3); animation: marco-pulso 2s ease-in-out infinite; }
+@keyframes marco-pulso { 50% { box-shadow: 0 0 0 7px rgb(217 191 134 / .12); } }
+.inicio-marcos strong { display: block; font-size: 15.5px; letter-spacing: -.015em; }
+.inicio-marcos p { margin: 2px 0 0; color: var(--ink-2); font-size: 14px; line-height: 1.45; }
+.inicio-marcos .inicio-marco-data { margin: 0 0 2px; color: var(--muted); font-size: 12.5px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.inicio-marcos li[data-estado="proximo"] .inicio-marco-data { color: var(--ouro); }
+@media (max-width: 1100px) { .inicio-grade { grid-template-columns: minmax(0, 1fr); } .inicio-coluna { grid-auto-rows: auto; } }
+@media (max-width: 640px) {
+  .inicio-numeros { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+  .inicio-numero { grid-template-columns: 1fr auto; align-items: center; padding: 14px 18px; }
+  .inicio-numero strong { grid-row: 1 / 3; grid-column: 2; font-size: 28px; }
+  .inicio-chat { width: 100%; }
+}
+@media (prefers-reduced-motion: reduce) { .inicio-marcos li[data-estado="proximo"] .inicio-marco-ponto { animation: none; } }
+
+/* ── Convidar: formulário e, ao lado, os convites pendentes e como o convite funciona ── */
+.convidar-grade { grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); }
+.convidar-sub { margin-top: 10px; }
+.convidar-passos { display: grid; gap: 12px; margin: 0; padding: 0; list-style: none; counter-reset: passo; }
+.convidar-passos li { position: relative; padding-left: 38px; color: var(--ink-2); font-size: 14.5px; line-height: 1.45; counter-increment: passo; }
+.convidar-passos li::before { content: counter(passo); position: absolute; left: 0; top: 0; display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: var(--azul-50); color: var(--azul-forte); font-size: 13px; font-weight: 700; }
+.convidar-passos strong { display: block; color: var(--ink); }
+@media (max-width: 1000px) { .convidar-grade { grid-template-columns: minmax(0, 1fr); } }
+.mesa section.mesa-cartao { padding: 24px 26px; }
+/* Resposta como texto corrido, sem cartão, como nos assistentes de conversa; a pergunta segue em bolha. */
+.pesquisa-chat .pesquisa-resposta { padding: 0 4px; background: none; box-shadow: none; border-radius: 0; }
+@media (max-width: 900px) {
+  .pesquisa-rodape { transition: bottom .45s var(--mola); }
+  :root[data-dock-recolhida] .pesquisa-rodape { bottom: max(8px, env(safe-area-inset-bottom)); }
+}
+
+/* ══ Celular no estilo do app do Claude ══
+   Topo enxuto (menu, marca, nova conversa), menu lateral em gaveta, sem barra inferior;
+   na pesquisa, saudação ao centro e campo fixo no rodapé; fontes num painel que sobe. */
+.so-celular { display: none !important; }
+.mesa-veu, .pesquisa-veu, .pesquisa-painel-fechar { display: none; }
+@media (max-width: 900px) {
+  .so-celular { display: inline-flex !important; }
+  .mesa-abas.dock { display: none !important; }
+  .mesa { padding-bottom: 24px; }
+  body:has(.dock-sec) .mesa { padding-bottom: 96px; }
+  .dock-sec { bottom: max(12px, env(safe-area-inset-bottom)); }
+  :root[data-dock-recolhida] .dock-sec { transform: none; opacity: 1; pointer-events: auto; }
+
+  /* Topo */
+  .mesa-topo-movel { display: grid; grid-template-columns: 44px 1fr 44px; align-items: center; gap: 8px; padding: 8px 10px; }
+  .mesa-topo-movel .app-marca { justify-self: center; font-size: 18px; }
+  .mesa-topo-botao { display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 0; border-radius: 14px; background: none; color: var(--ink); cursor: pointer; -webkit-tap-highlight-color: transparent; transition: background .2s var(--ease), transform .2s var(--ease); }
+  .mesa-topo-botao:active { background: rgb(15 39 66 / .06); transform: scale(.94); }
+  .mesa-topo-botao svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+  /* Gaveta */
+  .mesa-lateral { display: flex; position: fixed; z-index: 70; inset: 0 auto 0 0; width: min(84vw, 320px); height: 100dvh; padding: calc(18px + env(safe-area-inset-top)) 14px calc(16px + env(safe-area-inset-bottom)); border-right: 0; background: #f6f5f1; box-shadow: 24px 0 60px -30px rgb(11 31 54 / .55); transform: translateX(-104%); visibility: hidden; transition: transform .45s cubic-bezier(.32, .72, 0, 1), visibility 0s linear .45s; }
+  .mesa-lateral[data-aberto] { transform: none; visibility: visible; transition: transform .45s cubic-bezier(.32, .72, 0, 1), visibility 0s; }
+  .mesa-veu { display: block; position: fixed; z-index: 65; inset: 0; background: rgb(11 31 54 / .32); -webkit-backdrop-filter: blur(2px); backdrop-filter: blur(2px); opacity: 0; pointer-events: none; transition: opacity .35s var(--ease); }
+  .gaveta-mesa-aberta .mesa-veu { opacity: 1; pointer-events: auto; }
+  .gaveta-mesa-aberta, .gaveta-mesa-aberta body { overflow: hidden; }
+
+  /* Faixa da demonstração mais discreta */
+  .demo-faixa { padding: 10px 14px; font-size: 13px; line-height: 1.45; }
+
+  /* Pesquisa: tela inicial */
+  .pesquisa-inicio { display: flex; flex-direction: column; gap: 12px; min-height: calc(100dvh - 190px); padding-block: 0; }
+  .pesquisa-inicio-cabeca { flex-direction: column; gap: 14px; margin: auto 0; padding-block: 24px; }
+  .pesquisa-inicio-cabeca .simbolo-app { width: 44px; height: 44px; border-radius: 14px; }
+  .pesquisa-inicio-cabeca h2 { font-size: 28px; }
+  .pesquisa-sugestoes { order: 1; flex-wrap: nowrap; justify-content: flex-start; margin-inline: -16px; padding: 2px 16px; overflow-x: auto; scrollbar-width: none; scroll-snap-type: x proximity; }
+  .pesquisa-sugestoes::-webkit-scrollbar { display: none; }
+  .pesquisa-sugestao { flex: none; max-width: 240px; white-space: normal; scroll-snap-align: start; }
+  .pesquisa-sugestao:nth-child(n + 4) { display: inline-flex; }
+  .pesquisa-inicio > .mesa-campo { order: 2; position: sticky; bottom: max(10px, env(safe-area-inset-bottom)); }
+  .pesquisa-inicio > .demo-origem { order: 3; }
+  .pesquisa-inicio-nota { display: none; }
+
+  /* Pesquisa: conversa */
+  .pesquisa-chat .mesa-conversa { min-height: calc(100dvh - 170px); gap: 22px; }
+  .pesquisa-rodape, :root[data-dock-recolhida] .pesquisa-rodape { bottom: 0; padding: 14px 0 max(10px, env(safe-area-inset-bottom)); }
+  .pesquisa-chat .mesa-pergunta { max-width: 88%; }
+  .pesquisa-chat .mesa-resposta { font-size: 16px; }
+
+  /* Fontes em painel */
+  .pesquisa-chat .mesa-fontes { position: fixed; z-index: 75; inset: auto 0 0; max-height: 78dvh; padding: 10px 16px calc(20px + env(safe-area-inset-bottom)); overflow-y: auto; overscroll-behavior: contain; border-radius: 26px 26px 0 0; background: #f6f5f1; box-shadow: 0 -24px 60px -28px rgb(11 31 54 / .55); transform: translateY(104%); visibility: hidden; transition: transform .45s cubic-bezier(.32, .72, 0, 1), visibility 0s linear .45s; }
+  .pesquisa-chat .mesa-fontes[data-aberto] { transform: none; visibility: visible; transition: transform .45s cubic-bezier(.32, .72, 0, 1), visibility 0s; }
+  .pesquisa-painel-fechar { display: block; justify-self: center; width: 64px; height: 22px; margin: -4px auto 0; padding: 0; border: 0; background: none; cursor: pointer; }
+  .pesquisa-painel-fechar span { display: block; width: 40px; height: 5px; margin: 0 auto; border-radius: 999px; background: rgb(15 39 66 / .2); }
+  .pesquisa-veu { display: block; position: fixed; z-index: 72; inset: 0; background: rgb(11 31 54 / .3); opacity: 0; pointer-events: none; transition: opacity .35s var(--ease); }
+  .pesquisa-veu[data-aberto] { opacity: 1; pointer-events: auto; }
+}
+@media (max-width: 900px) and (prefers-reduced-motion: reduce) {
+  .mesa-lateral, .mesa-lateral[data-aberto], .pesquisa-chat .mesa-fontes, .pesquisa-chat .mesa-fontes[data-aberto] { transition: none; }
+}
+
+/* ══ Chat numa coluna só, centrada; fontes num pop-up dentro do próprio chat ══ */
+.pesquisa-chat { width: 100%; max-width: 820px; margin-inline: auto; }
+.pesquisa-ver-fontes::before { content: ""; width: 14px; height: 14px; margin-right: 6px; border-radius: 4px; background: var(--ouro-claro); box-shadow: 4px -3px 0 -1px #f2f1ec, 4px -3px 0 0 var(--ouro); vertical-align: -2px; display: inline-block; }
+.mesa-acoes > .pesquisa-ver-fontes { display: inline-flex; align-items: center; background: var(--azul-50); color: var(--azul-forte); }
+.mesa-acoes > .pesquisa-ver-fontes:hover { background: #dfe7f1; color: var(--marinho); }
+.fontes-veu { position: fixed; z-index: 80; inset: 0; background: rgb(11 31 54 / .34); -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); opacity: 0; pointer-events: none; transition: opacity .3s var(--ease); }
+.fontes-veu[data-aberto] { opacity: 1; pointer-events: auto; }
+.mesa-fontes.fontes-pop { position: fixed; z-index: 85; top: 50%; left: calc(272px + (100vw - 272px) / 2); display: flex; flex-direction: column; gap: 0; width: min(680px, calc(100vw - 272px - 48px)); max-height: min(82dvh, 860px); padding: 0; overflow: hidden; border-radius: 26px; background: #f6f5f1; box-shadow: 0 0 0 1px rgb(15 39 66 / .08), 0 40px 90px -30px rgb(11 31 54 / .6); opacity: 0; visibility: hidden; transform: translate(-50%, -48%) scale(.96); transition: opacity .25s var(--ease), transform .4s var(--mola), visibility 0s linear .4s; }
+.mesa-fontes.fontes-pop[data-aberto] { opacity: 1; visibility: visible; transform: translate(-50%, -50%); transition: opacity .25s var(--ease), transform .45s var(--mola), visibility 0s; }
+.fontes-alca { display: none; }
+.fontes-pop-topo { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; padding: 22px 22px 14px 26px; border-bottom: 1px solid var(--anel); background: #fff; }
+.fontes-pop-pergunta { margin: 4px 0 0; color: var(--ink); font-size: 16px; font-weight: 600; letter-spacing: -.015em; line-height: 1.35; }
+.fontes-pop-fechar { display: grid; place-items: center; flex: none; width: 38px; height: 38px; padding: 0; border: 0; border-radius: 50%; background: #f2f1ec; color: var(--ink-2); cursor: pointer; transition: background .2s var(--ease), color .2s var(--ease), transform .2s var(--ease); }
+.fontes-pop-fechar:hover { background: #e8e6de; color: var(--ink); }
+.fontes-pop-fechar:active { transform: scale(.92); }
+.fontes-pop-fechar:focus-visible { outline: 2px solid var(--azul); outline-offset: 2px; }
+.fontes-pop-fechar svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
+.fontes-pop-corpo { display: grid; gap: 14px; padding: 18px 22px 24px; overflow-y: auto; overscroll-behavior: contain; }
+@media (max-width: 900px) {
+  .mesa-fontes.fontes-pop { top: auto; bottom: 0; left: 0; width: 100%; max-height: 86dvh; border-radius: 26px 26px 0 0; transform: translateY(104%); }
+  .mesa-fontes.fontes-pop[data-aberto] { transform: none; }
+  .fontes-alca { display: block; position: absolute; top: 8px; left: 50%; width: 40px; height: 5px; border-radius: 999px; background: rgb(15 39 66 / .18); translate: -50% 0; }
+  .fontes-pop-topo { padding: 24px 16px 12px 20px; }
+  .fontes-pop-corpo { padding: 14px 14px calc(20px + env(safe-area-inset-bottom)); }
+}
+@media (prefers-reduced-motion: reduce) { .mesa-fontes.fontes-pop, .mesa-fontes.fontes-pop[data-aberto] { transition: opacity .2s linear, visibility 0s; } }
+
+/* ══ Tela inicial da pesquisa: sugestões em grade 2x2 e letras miúdas no pé ══ */
+.pesquisa-inicio { display: flex; flex-direction: column; }
+.pesquisa-inicio > * { min-width: 0; }
+.pesquisa-inicio-cabeca { margin-top: auto; }
+.mesa-campo-pe > .mesa-campo-opcoes { flex: 1 1 auto; min-width: 0; }
+.pesquisa-sugestoes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.pesquisa-sugestao { display: flex; align-items: flex-start; max-width: none; padding: 13px 16px; border-radius: 18px; white-space: normal; }
+.pesquisa-sugestao .ico { margin-top: 2px; }
+.pesquisa-inicio-nota { margin-top: auto; padding-top: 28px; }
+@media (max-width: 900px) {
+  .pesquisa-inicio-cabeca { margin: auto 0 0; }
+  .pesquisa-sugestoes { order: 1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-inline: 0; padding: 0; overflow: visible; }
+  .pesquisa-sugestao { padding: 11px 12px; font-size: 13px; line-height: 1.35; gap: 8px; }
+  .pesquisa-sugestao .ico { width: 14px; height: 14px; }
+  .pesquisa-inicio-nota { display: block; order: 4; margin: 0; padding-top: 6px; font-size: 11.5px; line-height: 1.4; }
+}
+/* Com o topo e o campo fixos, o que entra em foco ou é rolado para a vista não fica escondido atrás deles. */
+:root:has(.pesquisa-chat) { scroll-padding: 80px 0 210px; }
+.mesa-campo > * { min-width: 0; }
 /* ───────── Teste público: relato de citação, aviso de IA, rodapé legal ───────── */
 .mesa .relato-abrir { justify-self: start; padding: 0; border: 0; background: none; color: var(--ink-3, #6b7380); font-size: 12.5px; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
 .mesa .relato-abrir:hover { color: var(--bordo); }
@@ -453,7 +817,7 @@
 .mesa .relato-acoes .mesa-botao { min-height: 36px; padding: 6px 16px; font-size: 13.5px; }
 .mesa .relato-feito { margin: 0; font-size: 12.5px; color: var(--verde); font-weight: 600; }
 .mesa-aviso-ia { margin: 4px 0 0; padding-top: 12px; border-top: 1px solid var(--anel); color: var(--ink-2); font-size: 13px; line-height: 1.5; }
-.mesa-rodape-legal { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-top: 48px; padding-top: 16px; border-top: 1px solid var(--anel); color: var(--ink-2); font-size: 12.5px; line-height: 1.5; }
+.mesa .mesa-rodape-legal { position: static; display: flex; flex-wrap: wrap; gap: 6px 16px; margin-top: 48px; padding: 16px 0 0; border-radius: 0; background: none; box-shadow: none; border-top: 1px solid var(--anel); color: var(--ink-2); font-size: 12.5px; line-height: 1.5; }
 .mesa-rodape-legal p { flex: 1 1 420px; margin: 0; }
 .mesa-rodape-legal nav { display: flex; gap: 14px; }
 .mesa-rodape-legal a { color: inherit; font-weight: 600; }

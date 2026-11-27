@@ -16,6 +16,8 @@ import {
 import { ROTULO_ACAO, limiteMensal } from "@/lib/escritorio/rotulos";
 import { formatarReais } from "@/lib/tax/money";
 import { PLANOS, ROTULO_PLANO, listarFaturas, precoDoPlano, stripeConfigurado } from "@/lib/stripe";
+import { Seletor } from "@/components/ui/Seletor";
+import { CampoData } from "@/components/ui/CampoData";
 
 export const metadata = { title: "Escritório — AdvFin" };
 
@@ -100,9 +102,7 @@ export default async function Escritorio({ searchParams }: { searchParams: Promi
                         <input type="hidden" name="aprovar" value="1" />
                         <div className="campo">
                           <label htmlFor={`pedido-nivel-${p.id}`}>Entra como</label>
-                          <select id={`pedido-nivel-${p.id}`} name="nivel" defaultValue="supervisionado">
-                            {niveisConcedidos(s.nivel).map((n) => <option key={n} value={n}>{ROTULO_NIVEL[n]}</option>)}
-                          </select>
+                          <Seletor id={`pedido-nivel-${p.id}`} name="nivel" defaultValue="supervisionado" opcoes={niveisConcedidos(s.nivel).map((n) => ({ valor: n, rotulo: ROTULO_NIVEL[n] }))} />
                         </div>
                         <div className="campo">
                           <label htmlFor={`pedido-cargo-${p.id}`}>Cargo</label>
@@ -218,25 +218,19 @@ export default async function Escritorio({ searchParams }: { searchParams: Promi
             <input type="hidden" name="aba" value="auditoria" />
             <div className="campo">
               <label htmlFor="f-pessoa">Pessoa</label>
-              <select id="f-pessoa" name="pessoa" defaultValue={busca.pessoa ?? ""}>
-                <option value="">Todas</option>
-                {d.pessoas.map((p) => <option key={p.usuario_id} value={p.usuario_id}>{p.nome}</option>)}
-              </select>
+              <Seletor id="f-pessoa" name="pessoa" defaultValue={busca.pessoa ?? ""} opcoes={[{ valor: "", rotulo: "Todas" }, ...d.pessoas.map((p) => ({ valor: p.usuario_id, rotulo: p.nome }))]} />
             </div>
             <div className="campo">
               <label htmlFor="f-acao">Ação</label>
-              <select id="f-acao" name="acao" defaultValue={busca.acao ?? ""}>
-                <option value="">Todas</option>
-                {Object.entries(ROTULO_ACAO).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-              </select>
+              <Seletor id="f-acao" name="acao" defaultValue={busca.acao ?? ""} opcoes={[{ valor: "", rotulo: "Todas" }, ...Object.entries(ROTULO_ACAO).map(([k, v]) => ({ valor: k, rotulo: v }))]} />
             </div>
             <div className="campo">
               <label htmlFor="f-de">De</label>
-              <input id="f-de" type="date" name="de" defaultValue={busca.de} />
+              <CampoData id="f-de" name="de" defaultValue={busca.de} vazio placeholder="Qualquer dia" />
             </div>
             <div className="campo">
               <label htmlFor="f-ate">Até</label>
-              <input id="f-ate" type="date" name="ate" defaultValue={busca.ate} />
+              <CampoData id="f-ate" name="ate" defaultValue={busca.ate} vazio placeholder="Qualquer dia" />
             </div>
             <button className="mesa-botao">Filtrar</button>
             <a
@@ -300,11 +294,12 @@ export default async function Escritorio({ searchParams }: { searchParams: Promi
             <div className="duas-col">
               <div className="campo">
                 <label htmlFor="cfg-sessao">Tempo da sessão</label>
-                <select id="cfg-sessao" name="sessao_horas" defaultValue={String(d.esc.sessao_horas)}>
-                  {[[8, "8 horas"], [24, "1 dia"], [72, "3 dias"], [168, "7 dias"], [336, "14 dias"], [720, "30 dias"]].map(([h, t]) => (
-                    <option key={h} value={h}>{t}</option>
-                  ))}
-                </select>
+                <Seletor
+                  id="cfg-sessao"
+                  name="sessao_horas"
+                  defaultValue={String(d.esc.sessao_horas)}
+                  opcoes={[[8, "8 horas"], [24, "1 dia"], [72, "3 dias"], [168, "7 dias"], [336, "14 dias"], [720, "30 dias"]].map(([h, t]) => ({ valor: String(h), rotulo: String(t) }))}
+                />
                 <span className="ajuda">Vale para os próximos logins.</span>
               </div>
               <div className="campo">
@@ -342,12 +337,11 @@ export default async function Escritorio({ searchParams }: { searchParams: Promi
               <p>A pessoa escolhida vira Titular, e você passa a Administrador. Plano, cobrança e encerramento passam a ser dela.</p>
               <div className="campo">
                 <label htmlFor="novo-titular">Novo Titular</label>
-                <select id="novo-titular" name="usuario" required defaultValue="">
-                  <option value="" disabled>Escolha</option>
-                  {ativos.filter((p) => p.usuario_id !== s.usuarioId).map((p) => (
-                    <option key={p.usuario_id} value={p.usuario_id}>{p.nome} ({ROTULO_NIVEL[p.nivel]})</option>
-                  ))}
-                </select>
+                <Seletor
+                  id="novo-titular"
+                  name="usuario"
+                  opcoes={ativos.filter((p) => p.usuario_id !== s.usuarioId).map((p) => ({ valor: p.usuario_id, rotulo: p.nome, descricao: ROTULO_NIVEL[p.nivel] }))}
+                />
               </div>
               <div className="campo">
                 <label htmlFor="senha-transferir">Sua senha</label>

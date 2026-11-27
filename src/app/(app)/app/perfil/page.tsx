@@ -7,6 +7,8 @@ import { trocarEscritorio } from "@/lib/auth/acoes";
 import { ROTULO_NIVEL, acimaOuIgual, type Nivel } from "@/lib/auth/niveis";
 import { exigirSessao, hashSessaoAtual } from "@/lib/auth/sessao";
 import { noEscritorio } from "@/lib/db";
+import { Seletor } from "@/components/ui/Seletor";
+import { CampoData } from "@/components/ui/CampoData";
 import {
   encerrarOutrasSessoes, encerrarSessaoPorId, pedirExclusaoConta, pedirTrocaEmail, sairDoEscritorio, salvarDados, salvarFoto, salvarPreferencias, trocarSenha,
 } from "@/lib/perfil/acoes";
@@ -77,10 +79,7 @@ export default async function Perfil({ searchParams }: { searchParams: Promise<{
                 </div>
                 <div className="campo">
                   <label htmlFor="oab_uf">UF</label>
-                  <select id="oab_uf" name="oab_uf" defaultValue={perfil.oab_uf?.trim() ?? ""}>
-                    <option value="">—</option>
-                    {UFS.map((u) => <option key={u}>{u}</option>)}
-                  </select>
+                  <Seletor id="oab_uf" name="oab_uf" defaultValue={perfil.oab_uf?.trim() ?? ""} opcoes={[{ valor: "", rotulo: "—" }, ...UFS.map((u) => ({ valor: u, rotulo: u }))]} />
                 </div>
               </div>
               {perfil.oab_numero && (
@@ -174,15 +173,15 @@ export default async function Perfil({ searchParams }: { searchParams: Promise<{
               <input type="radio" name="vigencia_modo" value="data" defaultChecked={/^\d{4}/.test(perfil.preferencias?.vigencia ?? "")} />
               <span>
                 Uma data fixa<small>Para quem trabalha casos de um período antigo.</small>
-                <input type="date" name="vigencia_data" min="2023-12-21" defaultValue={/^\d{4}/.test(perfil.preferencias?.vigencia ?? "") ? perfil.preferencias.vigencia : ""} aria-label="Data fixa de vigência" style={{ marginTop: 6, maxWidth: 200 }} />
+                <span style={{ display: "block", marginTop: 6, maxWidth: 220 }}>
+                  <CampoData name="vigencia_data" min="2023-12-21" defaultValue={/^\d{4}/.test(perfil.preferencias?.vigencia ?? "") ? perfil.preferencias.vigencia : ""} rotulo="Data fixa de vigência" />
+                </span>
               </span>
             </label>
           </fieldset>
           <div className="campo">
             <label htmlFor="modelo">Modelo de IA</label>
-            <select id="modelo" disabled defaultValue="padrao">
-              <option value="padrao">O do escritório</option>
-            </select>
+            <Seletor id="modelo" disabled defaultValue="padrao" opcoes={[{ valor: "padrao", rotulo: "O do escritório" }]} />
             <span className="ajuda">A escolha aparece quando houver mais de um modelo disponível.</span>
           </div>
           <fieldset className="mesa-escolhas">

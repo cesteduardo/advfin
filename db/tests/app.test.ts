@@ -49,7 +49,7 @@ beforeAll(async () => {
   db = new Client({ connectionString: url.toString() });
   await db.connect();
   await db.query("set client_min_messages = warning");
-  for (const f of ["001_init.sql", "002_app.sql", "003_perfis.sql", "004_teste_publico.sql"]) await db.query(readFileSync(join(__dirname, "../migrations", f), "utf8"));
+  for (const f of ["001_init.sql", "002_app.sql", "003_perfis.sql", "004_teste_publico.sql", "005_base_ampliada.sql"]) await db.query(readFileSync(join(__dirname, "../migrations", f), "utf8"));
   await db.query(readFileSync(join(__dirname, "../seeds/semente_reforma.sql"), "utf8"));
 });
 

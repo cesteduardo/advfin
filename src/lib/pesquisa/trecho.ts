@@ -7,7 +7,7 @@ export function paraTrecho(l: any, i: number): Trecho {
   return {
     ref: `D${i + 1}`,
     id: l.id,
-    norma: `${l.norma_tipo} ${l.norma_numero}/${l.norma_ano}`,
+    norma: l.norma_apelido || `${l.norma_tipo} ${l.norma_numero}/${l.norma_ano}`,
     ementa: l.norma_ementa,
     url: l.url_oficial,
     rotulo: l.rotulo,

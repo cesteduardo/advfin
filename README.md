@@ -22,6 +22,8 @@ Precisa de PostgreSQL. Com um superusuário em `ADMIN_URL`:
 psql "$ADMIN_URL" -f db/migrations/001_init.sql
 psql "$ADMIN_URL" -f db/migrations/002_app.sql
 psql "$ADMIN_URL" -f db/migrations/003_perfis.sql
+psql "$ADMIN_URL" -f db/migrations/004_teste_publico.sql
+psql "$ADMIN_URL" -f db/migrations/005_base_ampliada.sql
 psql "$ADMIN_URL" -f db/seeds/semente_reforma.sql
 psql "$ADMIN_URL" -c "create role advfin_web login password 'dev' in role app_user"
 cp .env.example .env.local   # ajuste DATABASE_URL; LLM_CHAVE é opcional

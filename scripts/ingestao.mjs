@@ -1,6 +1,6 @@
 /**
  * Gravação de uma norma lida do Planalto na base versionada (usada pelos scripts
- * ingerir-planalto.mjs e carregar-reforma.mjs, e testada em db/tests/ingestao.test.ts).
+ * ingerir-planalto.mjs e carregar-base.mjs, e testada em db/tests/ingestao.test.ts).
  *
  * Regras:
  *   - cada artigo entra como status 'em_revisao' e origem 'ingestao': vai direto para a
@@ -10,20 +10,33 @@
  *   - mesma redação já carregada não duplica; redação diferente vira nova versão, e a
  *     anterior continua valendo até o curador fechar a vigência dela.
  */
-import { artigoDeVigencia, artigos, textoLimpo } from "./planalto.mjs";
+import { artigoDeVigencia, artigos, dentroDaFaixa, ementaDoDocumento, recortar, textoLimpo } from "./planalto.mjs";
 
-const NOME = { EC: "EC", LC: "LC", LEI: "Lei", DECRETO: "Decreto" };
+const NOME = { CF: "CF", EC: "EC", LC: "LC", LEI: "Lei", DECRETO: "Decreto", DECRETO_LEI: "Decreto-Lei", LEI_ESTADUAL: "Lei estadual", DECRETO_ESTADUAL: "Decreto estadual", LEI_MUNICIPAL: "Lei municipal", DECRETO_MUNICIPAL: "Decreto municipal", INSTRUCAO_NORMATIVA: "IN", SOLUCAO_CONSULTA: "Solução de Consulta" };
 
-export function lerNorma(html) {
-  const lista = artigos(textoLimpo(html, { manterNotas: true }));
-  return { lista, vigencia: artigoDeVigencia(lista) };
+/**
+ * meta.recorte = { ate, artigos: [de, até] } lê só parte da página (a CF inteira tem 250 artigos;
+ * o vade-mécum quer o Sistema Tributário Nacional). meta.modo = "documento" guarda a ementa
+ * inteira como um dispositivo só (soluções de consulta, pareceres, atos declaratórios).
+ */
+export function lerNorma(html, meta = {}) {
+  const limpo = textoLimpo(html, { manterNotas: true });
+  if (meta.modo === "documento") {
+    const texto = ementaDoDocumento(limpo);
+    const lista = texto ? [{ rotulo: "ementa", numero: 0, texto, notas: [], citado: false, destino: null, introducao: false }] : [];
+    return { lista, vigencia: null };
+  }
+  const { texto, faixa } = recortar(limpo, meta.recorte);
+  const todos = artigos(texto);
+  return { lista: todos.filter((a) => dentroDaFaixa(a, faixa)), vigencia: faixa ? null : artigoDeVigencia(todos) };
 }
 
 function notaDe(meta, item, vigencia, versaoNova) {
-  const norma = `${NOME[meta.tipo] ?? meta.tipo} ${meta.numero}/${meta.ano}`;
+  const norma = meta.apelido ?? `${NOME[meta.tipo] ?? meta.tipo} ${meta.numero}/${meta.ano}`;
   const partes = [];
   if (item.citado) partes.push(`Texto que a ${norma} insere em ${item.destino ?? "outra norma (identificar)"}.`);
-  partes.push(
+  if (meta.modo === "documento") partes.push("Documento guardado pela ementa: conferir se ainda vale (revogação, reforma ou vinculação).");
+  else partes.push(
     vigencia
       ? `Vigência provisória: publicação. Conferir a produção de efeitos no ${vigencia.rotulo} da ${norma}.`
       : `Vigência provisória: publicação. Conferir a produção de efeitos na ${norma}.`,
@@ -39,18 +52,18 @@ function notaDe(meta, item, vigencia, versaoNova) {
  * @param html página do Planalto já decodificada
  */
 export async function ingerirNorma(db, meta, html) {
-  const { lista, vigencia } = lerNorma(html);
+  const { lista, vigencia } = lerNorma(html, meta);
   if (lista.length === 0) throw new Error(`nenhum artigo lido em ${meta.tipo} ${meta.numero}/${meta.ano}: a página mudou?`);
-  const relatorio = { norma: `${meta.tipo} ${meta.numero}/${meta.ano}`, lidos: lista.length, introducoes: 0, novos: 0, versoesNovas: 0, iguais: 0, sementesAposentadas: 0, vigencia: vigencia?.rotulo ?? null };
+  const relatorio = { norma: meta.apelido ?? `${meta.tipo} ${meta.numero}/${meta.ano}`, lidos: lista.length, introducoes: 0, novos: 0, versoesNovas: 0, iguais: 0, sementesAposentadas: 0, vigencia: vigencia?.rotulo ?? null };
   await db.query("begin");
   try {
     const {
       rows: [n],
     } = await db.query(
-      `insert into normas (tipo, numero, ano, ementa, url_oficial, publicada_em) values ($1,$2,$3,$4,$5,$6)
-       on conflict (tipo, numero, ano) do update set ementa = excluded.ementa, url_oficial = excluded.url_oficial
+      `insert into normas (tipo, numero, ano, ementa, url_oficial, publicada_em, esfera, ente, apelido) values ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+       on conflict (tipo, numero, ano, ente) do update set ementa = excluded.ementa, url_oficial = excluded.url_oficial, apelido = excluded.apelido
        returning id`,
-      [meta.tipo, meta.numero, Number(meta.ano), meta.ementa, meta.url, meta.publicada],
+      [meta.tipo, meta.numero, Number(meta.ano), meta.ementa, meta.url ?? meta.portal ?? "", meta.publicada, meta.esfera ?? "federal", meta.ente ?? "BR", meta.apelido ?? null],
     );
     // Rótulo repetido na mesma página (raro: artigo citado duas vezes) fica com a última redação.
     const porRotulo = new Map(lista.map((x) => [x.rotulo, x]));

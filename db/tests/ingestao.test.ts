@@ -39,7 +39,7 @@ beforeAll(async () => {
   db = new Client({ connectionString: url.toString() });
   await db.connect();
   await db.query("set client_min_messages = warning");
-  for (const f of ["001_init.sql", "002_app.sql", "003_perfis.sql", "004_teste_publico.sql"]) {
+  for (const f of ["001_init.sql", "002_app.sql", "003_perfis.sql", "004_teste_publico.sql", "005_base_ampliada.sql"]) {
     await db.query(readFileSync(join(__dirname, "../migrations", f), "utf8"));
   }
   await db.query(readFileSync(join(__dirname, "../seeds/semente_reforma.sql"), "utf8"));
@@ -84,6 +84,28 @@ describe("carga do texto oficial", () => {
     try {
       const busca = (await db.query(`select rotulo, origem from pesquisar_dispositivos('alíquota 2026 0,9% 195', '2026-06-01', 5, true)`)).rows;
       expect(busca[0]).toMatchObject({ rotulo: "ADCT, art. 125", origem: "ingestao" });
+    } finally {
+      await db.query("reset role");
+    }
+  });
+
+  it("normas de entes diferentes convivem com o mesmo número; o apelido chega à busca", async () => {
+    const lei = (t: string) => `<p>Artigo 1º - ${t}</p>`;
+    const fed = { tipo: "LEI", numero: "6374", ano: "1989", publicada: "1989-03-01", ementa: "Lei federal fictícia de mesmo número.", url: "https://www.planalto.gov.br/x.htm" };
+    const sp = { ...fed, tipo: "LEI_ESTADUAL", esfera: "estadual", ente: "SP", apelido: "Lei SP 6.374/1989 (ICMS)", ementa: "ICMS em São Paulo.", url: undefined, portal: "https://legislacao.fazenda.sp.gov.br/" };
+    const spLei = { ...sp, tipo: "LEI" }; // mesmo tipo, número e ano da federal, outro ente
+    await ingerirNorma(db, fed, lei("Texto federal sobre mercadorias importadas."));
+    const r = await ingerirNorma(db, spLei, lei("O imposto incide sobre a circulação de mercadorias paulistas."));
+    expect(r).toMatchObject({ norma: "Lei SP 6.374/1989 (ICMS)", novos: 1 });
+    const { rows } = await db.query(`select ente, esfera, apelido, url_oficial from normas where numero = '6374' order by ente`);
+    expect(rows).toEqual([
+      { ente: "BR", esfera: "federal", apelido: null, url_oficial: "https://www.planalto.gov.br/x.htm" },
+      { ente: "SP", esfera: "estadual", apelido: "Lei SP 6.374/1989 (ICMS)", url_oficial: "https://legislacao.fazenda.sp.gov.br/" },
+    ]);
+    await db.query("set role app_user");
+    try {
+      const busca = (await db.query(`select norma_ente, norma_apelido from pesquisar_dispositivos('circulação mercadorias paulistas', '2026-06-01', 3, true)`)).rows;
+      expect(busca[0]).toEqual({ norma_ente: "SP", norma_apelido: "Lei SP 6.374/1989 (ICMS)" });
     } finally {
       await db.query("reset role");
     }

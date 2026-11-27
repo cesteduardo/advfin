@@ -20,6 +20,7 @@ O que só o Eduardo pode fazer está marcado com **[Eduardo]**. O resto é coman
    psql "$ADMIN_URL" -f db/migrations/002_app.sql
    psql "$ADMIN_URL" -f db/migrations/003_perfis.sql   # níveis, convites, 2FA, cobrança, plataforma
    psql "$ADMIN_URL" -f db/migrations/004_teste_publico.sql   # aceite, limites, erros, relatos de citação
+   psql "$ADMIN_URL" -f db/migrations/005_base_ampliada.sql   # normas por esfera e ente, apelidos
    psql "$ADMIN_URL" -f db/seeds/semente_reforma.sql   # textos provisórios, marcados como não conferidos
    ```
 4. Criar o login da aplicação, que herda `app_user` e por isso fica preso ao RLS:
@@ -61,7 +62,7 @@ Sem a chave, o app já funciona: a pesquisa responde no modo extrativo, só com 
 Do seu computador (o servidor de testes não alcança o Planalto), as duas normas da Reforma de uma vez:
 
 ```bash
-ADMIN_DATABASE_URL="$ADMIN_URL" node scripts/carregar-reforma.mjs            # --simular só lê; --pasta usa páginas salvas
+ADMIN_DATABASE_URL="$ADMIN_URL" node scripts/carregar-base.mjs --grupo reforma   # depois: federal, receita, sp, solucoes; --simular só lê; --pasta usa páginas salvas
 ```
 
 Os artigos entram como `em_revisao`, com nota para o curador, e a semente coberta sai da pesquisa sozinha. Os artigos que a EC 132 insere na Constituição e no ADCT já chegam rotulados (`CF, art. 156-A`, `ADCT, art. 125`). Para outra norma, `scripts/ingerir-planalto.mjs` com `--tipo --numero --ano --publicada --ementa --url`.

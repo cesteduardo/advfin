@@ -65,3 +65,60 @@ describe("alterações em outras normas", () => {
     expect(artigoDeVigencia(lista).rotulo).toBe("art. 23");
   });
 });
+
+describe("vade-mécum: formatos além da EC", () => {
+  it("lê 'Artigo 1º' (leis paulistas) como art. 1º", async () => {
+    // @ts-expect-error módulo .mjs sem tipos
+    const { artigos: art, textoLimpo: limpo } = await import("../../../scripts/planalto.mjs");
+    const lista = art(limpo("<p>Artigo 1º - Fica instituído o ICMS.</p><p>Artigo 2º - Ocorre o fato gerador do imposto.</p>"));
+    expect(lista.map((a: any) => a.rotulo)).toEqual(["art. 1º", "art. 2º"]);
+    expect(lista[0].texto).toBe("Fica instituído o ICMS.");
+  });
+
+  it("recorta a Constituição: só os arts. 145 a 162, antes do ADCT", async () => {
+    // @ts-expect-error módulo .mjs sem tipos
+    const { lerNorma } = await import("../../../scripts/ingestao.mjs");
+    const cf = `<p>Art. 5º Todos são iguais perante a lei.</p>
+<p>Art. 145. A União, os Estados, o Distrito Federal e os Municípios poderão instituir tributos.</p>
+<p>Art. 156-A. Lei complementar instituirá imposto sobre bens e serviços.</p>
+<p>Art. 163. Lei complementar disporá sobre finanças públicas.</p>
+<p>ATO DAS DISPOSIÇÕES CONSTITUCIONAIS TRANSITÓRIAS</p>
+<p>Art. 150. Artigo do ADCT com número na faixa, que não pode entrar.</p>`;
+    const { lista, vigencia } = lerNorma(cf, { recorte: { ate: "ATO DAS DISPOSI[CÇ][OÕ]ES CONSTITUCIONAIS TRANSIT[OÓ]RIAS", artigos: [145, 162] } });
+    expect(lista.map((a: any) => a.rotulo)).toEqual(["art. 145", "art. 156-A"]);
+    expect(vigencia).toBeNull();
+  });
+
+  it("guarda a solução de consulta pela ementa", async () => {
+    // @ts-expect-error módulo .mjs sem tipos
+    const { lerNorma } = await import("../../../scripts/ingestao.mjs");
+    const sc = `<p>Solução de Consulta nº 99 - Cosit</p><p>Assunto: Contribuição para o PIS/Pasep</p>
+<p>EMENTA: CRÉDITOS. INSUMOS. Os gastos com frete na aquisição de insumos geram crédito.</p>
+<p>Dispositivos Legais: Lei nº 10.637, de 2002, art. 3º.</p><p>Relatório</p><p>O consulente pergunta…</p>`;
+    const { lista } = lerNorma(sc, { modo: "documento" });
+    expect(lista).toHaveLength(1);
+    expect(lista[0].rotulo).toBe("ementa");
+    expect(lista[0].texto).toMatch(/frete na aquisição de insumos/);
+    expect(lista[0].texto).not.toMatch(/Dispositivos Legais|consulente/);
+  });
+
+  it("reconhece o nome dos arquivos de soluções de consulta", async () => {
+    // @ts-expect-error módulo .mjs sem tipos
+    const { metaDaSolucao } = await import("../../../scripts/carregar-base.mjs");
+    expect(metaDaSolucao("sc-cosit-99-2023.html")).toMatchObject({ tipo: "SOLUCAO_CONSULTA", numero: "COSIT-99", ano: "2023", modo: "documento", apelido: "Solução de Consulta COSIT 99/2023" });
+    expect(metaDaSolucao("qualquer.html")).toBeNull();
+  });
+
+  it("o catálogo tem identificação única e fonte para cada norma", async () => {
+    // @ts-expect-error módulo .mjs sem tipos
+    const { CATALOGO, GRUPOS } = await import("../../../scripts/catalogo-normas.mjs");
+    const chaves = CATALOGO.map((n: any) => `${n.tipo}|${n.numero}|${n.ano}|${n.ente ?? "BR"}`);
+    expect(new Set(chaves).size).toBe(chaves.length);
+    expect(new Set(CATALOGO.map((n: any) => n.arquivo)).size).toBe(CATALOGO.length);
+    for (const n of CATALOGO) {
+      expect(GRUPOS[n.grupo]).toBeTruthy();
+      expect(n.url || n.portal).toBeTruthy();
+      expect(n.publicada).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    }
+  });
+});

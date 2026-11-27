@@ -5,7 +5,7 @@ Cinco frentes antes de abrir o AdvFin ao público. O código das cinco está pro
 | # | Frente | O que já está no código | O que falta |
 |---|---|---|---|
 | 1 | App no ar | Vercel em São Paulo, banco com isolamento por escritório | Criar as contas, colar o SQL, configurar as variáveis |
-| 2 | Base normativa real | `scripts/carregar-reforma.mjs` lê EC 132 e LC 214 do Planalto, rotula CF e ADCT, põe tudo na fila do curador | Rodar o comando do seu computador; o curador revisar |
+| 2 | Base normativa real | `scripts/carregar-base.mjs` lê do Planalto a Reforma e a legislação federal (CF, CTN, PIS/Cofins, IPI, IRPJ/CSLL, regulamentos, LCs 87, 116 e 123); Receita e São Paulo por páginas salvas; tudo na fila do curador | Rodar os comandos do seu computador; o curador revisar |
 | 3 | Avaliação | 100 perguntas em `avaliacao/perguntas.json` e `npm run avaliar` | Rodar com a base real e a IA; o curador conferir os gabaritos |
 | 4 | Termos e privacidade | `/termos`, `/privacidade`, aceite com versão no cadastro, aviso da OAB em toda resposta | Advogado revisar; preencher CNPJ e encarregado |
 | 5 | Limites, erros, relatos | Cotas por pessoa e escritório, registro de erros, botão "Relatar citação errada", abas novas em `/admin` | Só configurar os limites, se quiser outros |
@@ -26,7 +26,8 @@ Cinco frentes antes de abrir o AdvFin ao público. O código das cinco está pro
    2. `db/migrations/002_app.sql`
    3. `db/migrations/003_perfis.sql`
    4. `db/migrations/004_teste_publico.sql`
-   5. `db/seeds/semente_reforma.sql` (textos provisórios; saem sozinhos quando o texto oficial entra no passo 2)
+   5. `db/migrations/005_base_ampliada.sql` (normas estaduais e municipais, apelidos como "CTN")
+   6. `db/seeds/semente_reforma.sql` (textos provisórios; saem sozinhos quando o texto oficial entra no passo 2)
 
    Cada um termina com `Success. No rows returned`. Se algum der erro, pare e me mande a mensagem.
 4. Crie o login da aplicação (troque a senha por uma longa, gerada no gerenciador):
@@ -86,25 +87,44 @@ Os termos comerciais da API não usam os dados enviados para treinar modelos; is
 
 ## 2. Base normativa real **[Eduardo, no seu computador]**
 
-O servidor de testes não alcança o Planalto, então o carregamento sai do seu Mac. Precisa do Node 22 (o mesmo do `npm run pages`).
+O servidor de testes não alcança os sites do governo, então o carregamento sai do seu Mac. Precisa do Node 22 (o mesmo do `npm run pages`). Um só carregador, por grupos; o catálogo completo está em `scripts/catalogo-normas.mjs`.
 
 ```bash
 cd advfin && git pull && npm install
-node scripts/carregar-reforma.mjs --simular          # só lê e mostra; não grava nada
-ADMIN_DATABASE_URL="cole-a-session-pooler-aqui" node scripts/carregar-reforma.mjs
+export ADMIN_DATABASE_URL="cole-a-session-pooler-aqui"
+node scripts/carregar-base.mjs --grupo reforma --simular   # só lê e mostra; não grava nada
+node scripts/carregar-base.mjs --grupo reforma             # EC 132/2023 e LC 214/2025
+node scripts/carregar-base.mjs --grupo federal             # o restante da legislação federal
 ```
 
-O que acontece:
+| Grupo | O que entra | De onde vem |
+|---|---|---|
+| `reforma` | EC 132/2023, LC 214/2025 | Planalto, automático |
+| `federal` | CF (arts. 145 a 162), CTN, PAF (Dec. 70.235), LEF, Leis 9.718, 10.637, 10.833 e 10.865 (PIS/Cofins), Lei 4.502 e RIPI (IPI), Leis 7.689, 9.249 e 9.430 e RIR/2018 (IRPJ/CSLL), LCs 87, 116 e 123 | Planalto, automático |
+| `receita` | INs RFB 2.121/2022 (PIS/Cofins), 1.700/2017 (IRPJ/CSLL), 2.055/2021 (restituição e compensação) | Sijut, página salva |
+| `sp` | Lei 6.374/1989 e RICMS/2000 (ICMS paulista); Lei 13.701/2003 e regulamento do ISS da capital | Portais da Sefaz-SP e da Prefeitura, página salva |
+| `solucoes` | Soluções de consulta da Receita, pela ementa | Sijut, uma página salva por solução |
 
-- baixa do Planalto o texto compilado da **EC 132/2023** e da **LC 214/2025**;
-- separa por artigo e dá o rótulo certo ao que a emenda insere em outras normas: `CF, art. 156-A`, `ADCT, art. 125`, `LC 87/1996, art. 12`;
-- grava tudo como **em revisão**, com a vigência provisória na data de publicação e uma nota para o curador (o artigo de vigência da norma e as notas de alteração do Planalto);
+O que acontece em cada norma:
+
+- separa por artigo (aceita "Art." e "Artigo") e, na CF, guarda só o Sistema Tributário Nacional;
+- dá o rótulo certo ao que uma norma insere em outra: `CF, art. 156-A`, `ADCT, art. 125`, `LC 87/1996, art. 12`;
+- grava tudo como **em revisão**, com a vigência provisória na data de publicação e uma nota para o curador;
 - aposenta as linhas da semente provisória cobertas pelo texto oficial;
-- pode rodar de novo quando o Planalto atualizar a compilação: o que não mudou é ignorado, e redação nova vira uma versão nova na fila.
+- pode rodar de novo quando a fonte atualizar: o que não mudou é ignorado, e redação nova vira versão nova na fila;
+- se uma norma falhar, diz qual e por quê e segue com as outras.
 
-Se o Planalto recusar o download, abra as duas páginas no navegador, *Arquivo → Salvar como → Página HTML*, com os nomes `emc132.htm` e `lcp214.htm`, e rode com `--pasta ~/Downloads`.
+**Páginas salvas.** A Receita e os portais de São Paulo não têm endereço fixo por ato, então o carregador pede o arquivo. Abra o ato no portal, *Arquivo → Salvar como → Página HTML*, com o nome que o carregador indica (o `--simular` lista todos), ponha numa pasta e rode com `--pasta`:
 
-**Curadoria.** O curador entra em `/admin → Curadoria`, confere cada artigo com o Planalto, ajusta a vigência quando a norma der efeitos em datas diferentes e clica *Aprovar e publicar*. Quando a base estiver publicada, apague `BASE_INCLUIR_NAO_REVISADOS` na Vercel: a partir daí só o conferido chega ao advogado.
+```bash
+node scripts/carregar-base.mjs --grupo receita --pasta ~/Downloads/receita
+node scripts/carregar-base.mjs --grupo sp --pasta ~/Downloads/sp
+node scripts/carregar-base.mjs --grupo solucoes --pasta ~/Downloads/solucoes   # sc-cosit-99-2023.html, sc-disit08-12-2024.html…
+```
+
+O mesmo `--pasta` serve para o Planalto, se ele recusar o download: salve a página com o nome do catálogo (ex.: `emc132.htm`, `l5172compilado.htm`).
+
+**Curadoria.** O curador entra em `/admin → Curadoria`, confere cada artigo com a fonte, ajusta a vigência quando a norma der efeitos em datas diferentes e clica *Aprovar e publicar*. A ordem sugerida é a da pesquisa: Reforma, depois CF e CTN, depois o resto. Quando a base estiver publicada, apague `BASE_INCLUIR_NAO_REVISADOS` na Vercel: a partir daí só o conferido chega ao advogado.
 
 ---
 

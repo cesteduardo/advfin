@@ -72,7 +72,8 @@ export function destinoDaAlteracao(texto) {
  * Cada item traz as notas de alteração do Planalto quando o texto veio com manterNotas.
  */
 export function artigos(texto) {
-  const re = /(?:^|\n)\s*(["“]?)\s*Art\.\s*(\d+)\s*([º°o])?(-[A-Z])?\.?\s+/g;
+  // "Art. 1º" (federal) e "Artigo 1º" (leis e decretos de São Paulo).
+  const re = /(?:^|\n)\s*(["“]?)\s*Art(?:igo|\.)\s*(\d+)\s*([º°o])?(-[A-Z])?\s*[.\-–—]?\s+/g;
   const marcas = [...texto.matchAll(re)];
   let destino = null;
   const lista = [];
@@ -94,7 +95,7 @@ export function artigos(texto) {
     const base = `art. ${n}${n < 10 ? "º" : ""}${m[4] ?? ""}`;
     if (!citado) destino = destinoDaAlteracao(corpo);
     const rotulo = citado ? `${destino ?? "alteração"}, ${base}` : base;
-    if (corpo.length > 0) lista.push({ rotulo, texto: corpo, notas, citado, destino: citado ? destino : null, introducao: false });
+    if (corpo.length > 0) lista.push({ rotulo, numero: n, texto: corpo, notas, citado, destino: citado ? destino : null, introducao: false });
   });
   // "A Constituição Federal passa a vigorar com as seguintes alterações:" só anuncia o que vem
   // entre aspas. Não serve de fonte; a ingestão pula.
@@ -132,4 +133,36 @@ export async function baixar(url, tentativas = 3) {
     }
   }
   throw new Error(`não consegui baixar ${url}: ${ultimo?.message}`);
+}
+
+/**
+ * Recorte de uma página grande: só o trecho antes de um marco ("ATO DAS DISPOSIÇÕES
+ * CONSTITUCIONAIS TRANSITÓRIAS" na Constituição) e só os artigos de uma faixa (145 a 162,
+ * o Sistema Tributário Nacional). Artigos entre aspas não entram no recorte por número.
+ */
+export function recortar(texto, { ate, artigos: faixa } = {}) {
+  let t = texto;
+  if (ate) {
+    const i = t.search(new RegExp(ate, "i"));
+    if (i > 0) t = t.slice(0, i);
+  }
+  return { texto: t, faixa: faixa ?? null };
+}
+
+export function dentroDaFaixa(item, faixa) {
+  if (!faixa) return true;
+  return !item.citado && item.numero >= faixa[0] && item.numero <= faixa[1];
+}
+
+/**
+ * Documento sem artigos (solução de consulta, parecer, ato declaratório): um único
+ * dispositivo com a ementa. Procura "Ementa" ou "Assunto:" e para em "Dispositivos Legais".
+ */
+export function ementaDoDocumento(texto) {
+  const t = texto.replace(/\s+/g, " ").trim();
+  const ini = t.search(/\b(EMENTA|Ementa|ASSUNTO|Assunto)\s*:?/);
+  let corpo = ini >= 0 ? t.slice(ini) : t;
+  const fim = corpo.search(/\b(Dispositivos Legais|DISPOSITIVOS LEGAIS|RELATÓRIO|Relatório)\b/);
+  if (fim > 40) corpo = corpo.slice(0, fim);
+  return corpo.replace(/^(EMENTA|Ementa)\s*:?\s*/, "").slice(0, 6000).trim();
 }

@@ -1,0 +1,4 @@
+# Relatórios de cada rodada ficam só na máquina; a linha de base vai para o repositório.
+*
+!.gitignore
+!linha-de-base-*.md

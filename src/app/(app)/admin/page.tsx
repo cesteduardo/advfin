@@ -4,11 +4,21 @@ import { FormAcao } from "@/components/app/FormAcao";
 import { ROTULO_PAPEL_PLATAFORMA } from "@/lib/auth/niveis";
 import { exigirPlataforma } from "@/lib/auth/sessao";
 import { comoUsuario } from "@/lib/db";
-import { decidirCuradoria, definirPapel, verificarOab } from "@/lib/plataforma/acoes";
+import { decidirCuradoria, decidirRelato, definirLimite, definirPapel, verificarOab } from "@/lib/plataforma/acoes";
+import { limitesPadrao } from "@/lib/uso/limites";
 import { ROTULO_PLANO } from "@/lib/stripe";
 
 export const metadata = { title: "Plataforma — AdvFin" };
 
+const hora = (d: Date | string) => new Date(d).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo", dateStyle: "short", timeStyle: "short" });
+const padrao = limitesPadrao();
+const MOTIVO_RELATO: Record<string, string> = {
+  texto_diferente: "Texto não confere com o oficial",
+  dispositivo_errado: "Artigo, parágrafo ou inciso errado",
+  fora_de_vigencia: "Revogado ou fora de vigência",
+  nao_sustenta: "O trecho não sustenta a afirmação",
+  outro: "Outro problema",
+};
 const dia = (d: Date | string | null) => (d ? new Date(d).toLocaleDateString("pt-BR", { timeZone: "UTC" }) : "—");
 
 export default async function Plataforma({ searchParams }: { searchParams: Promise<{ aba?: string }> }) {
@@ -17,8 +27,16 @@ export default async function Plataforma({ searchParams }: { searchParams: Promi
   const suporte = papel === "admin" || papel === "suporte";
   const curador = papel === "admin" || papel === "curador";
   const abas = [
-    ...(curador ? [{ id: "curadoria", nome: "Curadoria" }] : []),
-    ...(suporte ? [{ id: "escritorios", nome: "Escritórios" }, { id: "oab", nome: "OAB" }, { id: "lgpd", nome: "LGPD" }] : []),
+    ...(curador ? [{ id: "curadoria", nome: "Curadoria" }, { id: "relatos", nome: "Relatos" }] : []),
+    ...(suporte
+      ? [
+          { id: "escritorios", nome: "Escritórios" },
+          { id: "limites", nome: "Limites" },
+          { id: "erros", nome: "Erros" },
+          { id: "oab", nome: "OAB" },
+          { id: "lgpd", nome: "LGPD" },
+        ]
+      : []),
     ...(papel === "admin" ? [{ id: "equipe", nome: "Equipe" }] : []),
   ];
   const { aba: pedida } = await searchParams;
@@ -28,7 +46,10 @@ export default async function Plataforma({ searchParams }: { searchParams: Promi
     const q = async (sql: string) => (await c.query(sql)).rows;
     return {
       fila: aba === "curadoria" ? await q(`select * from app.plat_curadoria_fila()`) : [],
-      escritorios: aba === "escritorios" ? await q(`select * from app.plat_escritorios()`) : [],
+      escritorios: aba === "escritorios" || aba === "limites" ? await q(`select * from app.plat_escritorios()`) : [],
+      relatos: curador ? await q(`select * from app.plat_relatos()`) : [],
+      limites: aba === "limites" ? await q(`select * from app.plat_limites()`) : [],
+      erros: aba === "erros" ? await q(`select * from app.plat_erros(14)`) : [],
       oab: aba === "oab" ? await q(`select * from app.plat_oab_pendentes()`) : [],
       pedidos: aba === "lgpd" ? await q(`select * from app.plat_pedidos_exclusao()`) : [],
       equipe: aba === "equipe" ? await q(`select * from app.plat_equipe()`) : [],
@@ -38,7 +59,13 @@ export default async function Plataforma({ searchParams }: { searchParams: Promi
   return (
     <>
       <Cabeca trilha="AdvFin / Plataforma" titulo="Plataforma" descricao={`${ROTULO_PAPEL_PLATAFORMA[papel]}. Nada daqui mostra o conteúdo das consultas dos escritórios.`}>
-        <Abas base="/admin" abas={abas.map((a) => (a.id === "curadoria" ? { ...a, conta: d.fila.length || undefined } : a))} atual={aba} rotulo="Seções da plataforma" />
+        <Abas base="/admin" abas={abas.map((a) =>
+            a.id === "curadoria"
+              ? { ...a, conta: d.fila.length || undefined }
+              : a.id === "relatos"
+                ? { ...a, conta: d.relatos.filter((r: any) => r.status === "aberto").length || undefined }
+                : a,
+          )} atual={aba} rotulo="Seções da plataforma" />
       </Cabeca>
 
       {aba === "curadoria" && (
@@ -85,6 +112,135 @@ export default async function Plataforma({ searchParams }: { searchParams: Promi
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {aba === "relatos" && (
+        <div className="mesa-coluna">
+          <p className="mesa-nota">
+            Relatos de citação errada enviados pelos advogados. Aparecem o dispositivo, o trecho e o motivo; a pergunta não vem
+            junto. Procedente com “tirar da pesquisa” devolve o dispositivo à fila de curadoria até você republicar.
+          </p>
+          {d.relatos.length === 0 && <p className="mesa-vazio-cartao">Nenhum relato. Quando um advogado apontar um erro, ele aparece aqui.</p>}
+          {d.relatos.map((r: any) => (
+            <div key={r.id} className="mesa-cartao">
+              <div className="mesa-topo" style={{ alignItems: "center" }}>
+                <h2>
+                  {r.norma}, {r.rotulo}
+                </h2>
+                <span className={`selo ${r.status === "aberto" ? "em_revisao" : r.status === "procedente" ? "rejeitado" : "publicado"}`}>
+                  {r.status === "aberto" ? (r.repeticoes > 1 ? `Aberto · ${r.repeticoes} relatos` : "Aberto") : r.status === "procedente" ? "Procedente" : "Improcedente"}
+                </span>
+              </div>
+              <p className="mesa-nota">
+                {MOTIVO_RELATO[r.motivo] ?? r.motivo} · {dia(r.criado_em)} · dispositivo {r.status_curadoria.replace("_", " ")} ·{" "}
+                <a href={r.url_oficial} target="_blank" rel="noopener noreferrer">texto oficial no Planalto</a>
+              </p>
+              <div className="curadoria-par">
+                <div>
+                  <p className="mesa-rotulo">Trecho citado</p>
+                  <blockquote>{r.trecho || "—"}</blockquote>
+                </div>
+                <div>
+                  <p className="mesa-rotulo">Dispositivo na base</p>
+                  <blockquote>{r.texto}</blockquote>
+                </div>
+              </div>
+              {r.comentario && <p className="mesa-nota">Comentário de quem relatou: {r.comentario}</p>}
+              {r.status === "aberto" && (
+                <div className="mesa-acoes">
+                  <FormAcao acao={decidirRelato} botao="Procedente" pendente="…" classe="mesa-form-linha">
+                    <input type="hidden" name="id" value={r.id} />
+                    <input type="hidden" name="status" value="procedente" />
+                    <input name="nota" placeholder="O que corrigir" maxLength={500} aria-label="Nota da curadoria" className="mesa-input-linha" />
+                    <label className="mesa-nota" style={{ display: "inline-flex", gap: 6, alignItems: "center", margin: 0 }}>
+                      <input type="checkbox" name="tirar" defaultChecked /> tirar da pesquisa
+                    </label>
+                  </FormAcao>
+                  <FormAcao acao={decidirRelato} botao="Improcedente" pendente="…" classe="mesa-form-linha" secundario>
+                    <input type="hidden" name="id" value={r.id} />
+                    <input type="hidden" name="status" value="improcedente" />
+                  </FormAcao>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {aba === "limites" && (
+        <div className="mesa-grade-2">
+          <div className="mesa-coluna">
+            <p className="mesa-nota">
+              Padrão do servidor: {padrao.minuto} por minuto, {padrao.dia} por dia e {padrao.mes} por mês por pessoa; {padrao.escritorio} por
+              mês por escritório. Mude nas variáveis LIMITE_* da Vercel. Abaixo, só as exceções.
+            </p>
+            {d.limites.length === 0 ? (
+              <p className="mesa-vazio-cartao">Nenhum escritório com limite especial.</p>
+            ) : (
+              <div className="tabela-envolve">
+                <table className="tabela">
+                  <thead>
+                    <tr><th className="esq">Escritório</th><th>Dia/pessoa</th><th>Mês/pessoa</th><th>Mês/escritório</th><th>Usadas no mês</th><th className="esq">Nota</th></tr>
+                  </thead>
+                  <tbody>
+                    {d.limites.map((l: any) => (
+                      <tr key={l.escritorio_id}>
+                        <td className="esq">{l.escritorio}</td>
+                        <td>{l.consultas_dia_pessoa ?? "padrão"}</td>
+                        <td>{l.consultas_mes_pessoa ?? "padrão"}</td>
+                        <td>{l.consultas_mes_escritorio ?? "padrão"}</td>
+                        <td>{l.consultas_mes}</td>
+                        <td className="esq">{l.nota ?? "—"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+          <FormAcao acao={definirLimite} botao="Salvar limite">
+            <h2>Limite especial</h2>
+            <p>Deixe um campo em branco para usar o padrão. Os três em branco apagam a exceção.</p>
+            <div className="campo">
+              <label htmlFor="lim-esc">Escritório</label>
+              <select id="lim-esc" name="escritorio" required>
+                {d.escritorios.map((e: any) => (
+                  <option key={e.id} value={e.id}>{e.nome} · {e.titular ?? "sem titular"}</option>
+                ))}
+              </select>
+            </div>
+            <div className="campo"><label htmlFor="lim-dia">Consultas por dia, por pessoa</label><input id="lim-dia" name="dia" inputMode="numeric" /></div>
+            <div className="campo"><label htmlFor="lim-mes">Consultas por mês, por pessoa</label><input id="lim-mes" name="mes" inputMode="numeric" /></div>
+            <div className="campo"><label htmlFor="lim-esc-mes">Consultas por mês, no escritório</label><input id="lim-esc-mes" name="escritorio_mes" inputMode="numeric" /></div>
+            <div className="campo"><label htmlFor="lim-nota">Nota</label><input id="lim-nota" name="nota" maxLength={300} placeholder="Ex.: programa fundador" /></div>
+          </FormAcao>
+        </div>
+      )}
+
+      {aba === "erros" && (
+        <div className="mesa-coluna">
+          <p className="mesa-nota">Últimos 14 dias, do mais recente. Só o técnico: rota, mensagem e código. O conteúdo das consultas não é registrado.</p>
+          {d.erros.length === 0 ? (
+            <p className="mesa-vazio-cartao">Nenhum erro registrado nos últimos 14 dias.</p>
+          ) : (
+            <div className="tabela-envolve">
+              <table className="tabela">
+                <thead><tr><th className="esq">Quando</th><th>Origem</th><th className="esq">Mensagem</th><th className="esq">Rota</th><th className="esq">Escritório</th></tr></thead>
+                <tbody>
+                  {d.erros.map((e: any) => (
+                    <tr key={e.id}>
+                      <td className="esq">{hora(e.criado_em)}</td>
+                      <td>{e.origem}{e.codigo ? ` · ${e.codigo}` : ""}</td>
+                      <td className="esq" style={{ maxWidth: 520, overflowWrap: "anywhere" }}>{e.mensagem}</td>
+                      <td className="esq">{e.rota ?? "—"}</td>
+                      <td className="esq">{e.escritorio ?? "—"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       )}
 

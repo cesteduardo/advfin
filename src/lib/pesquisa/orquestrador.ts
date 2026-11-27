@@ -2,9 +2,11 @@ import "server-only";
 import { consultar, noEscritorio, type Contexto } from "@/lib/db";
 import { ProvedorExtrativo, provedor } from "@/lib/llm/provedores";
 import { ErroLLM } from "@/lib/llm/tipos";
-import { SISTEMA_PESQUISA, lerResposta, montarMensagem, respostaExtrativa } from "./geracao";
 import type { DesfechoPesquisa, Diagnostico, Trecho } from "./tipos";
-import { verificarCitacoes } from "./verificador";
+import { responder } from "./responder";
+import { expandirPergunta, selecionarFontes } from "./termos";
+import { paraTrecho } from "./trecho";
+import { registrarErro } from "@/lib/registro-erros";
 
 export type { DesfechoPesquisa, Diagnostico } from "./tipos";
 
@@ -15,28 +17,12 @@ export function incluirNaoRevisados(): boolean {
 
 export async function recuperar(pergunta: string, data: string, limite = 8): Promise<Trecho[]> {
   const linhas = await consultar(`select * from pesquisar_dispositivos($1, $2::date, $3, $4)`, [
-    pergunta,
+    expandirPergunta(pergunta),
     data,
     limite,
     incluirNaoRevisados(),
   ]);
-  return linhas.map((l: any, i: number) => ({
-    ref: `D${i + 1}`,
-    id: l.id,
-    norma: `${l.norma_tipo} ${l.norma_numero}/${l.norma_ano}`,
-    ementa: l.norma_ementa,
-    url: l.url_oficial,
-    rotulo: l.rotulo,
-    texto: l.texto,
-    vigenciaInicio: iso(l.vigencia_inicio),
-    vigenciaFim: l.vigencia_fim ? iso(l.vigencia_fim) : null,
-    curadoria: l.status_curadoria,
-    origem: l.origem,
-  }));
-}
-
-function iso(d: Date | string): string {
-  return typeof d === "string" ? d.slice(0, 10) : d.toISOString().slice(0, 10);
+  return selecionarFontes(pergunta, linhas.map(paraTrecho));
 }
 
 /** Recuperar → gerar → verificar → registrar. Cada passo explícito e auditável. */
@@ -73,34 +59,29 @@ export async function pesquisar(
     if (fontes.length === 0) {
       desfecho = { status: "sem_resultado", id, fontes: [] };
     } else {
-      let resposta;
-      t = Date.now();
-      if (llm.redige) {
-        diag.sistema = SISTEMA_PESQUISA;
-        diag.mensagem = montarMensagem(pergunta, data, fontes);
-        const r = await llm.gerar({ tarefa: "pesquisa", sistema: diag.sistema, mensagem: diag.mensagem, json: true, maxTokens: 2048 });
-        tokens = { ent: r.tokensEntrada, sai: r.tokensSaida, custo: r.custoMicroreais, modelo: r.modelo };
-        diag.saidaBruta = r.texto;
-        resposta = lerResposta(r.texto);
-      } else {
-        resposta = respostaExtrativa(fontes);
-      }
-      diag.ms.modelo = Date.now() - t;
-      diag.respostaLida = resposta;
-      t = Date.now();
-      if (!resposta) {
-        desfecho = { status: "bloqueada_citacao", id, motivos: ["A resposta do modelo não veio no formato verificável."], fontes, modelo: tokens.modelo };
-      } else {
-        const v = verificarCitacoes(resposta, fontes);
-        desfecho = v.ok
-          ? { status: "respondida", id, paragrafos: resposta.paragrafos, citacoes: v.citacoes, fontes, redigida: llm.redige, modelo: tokens.modelo }
-          : { status: "bloqueada_citacao", id, motivos: v.motivos, fontes, modelo: tokens.modelo };
-      }
-      diag.ms.verificacao = Date.now() - t;
+      const { resultado, bastidores: b } = await responder(llm, pergunta, data, fontes);
+      tokens = { ent: b.tokens.entrada, sai: b.tokens.saida, custo: b.tokens.custo, modelo: b.tokens.modelo };
+      diag.sistema = b.sistema;
+      diag.mensagem = b.mensagem;
+      diag.saidaBruta = b.saidaBruta;
+      diag.respostaLida = b.respostaLida;
+      diag.ms.modelo = b.ms.modelo;
+      diag.ms.verificacao = b.ms.verificacao;
+      desfecho =
+        resultado.status === "respondida"
+          ? { status: "respondida", id, paragrafos: resultado.paragrafos, citacoes: resultado.citacoes, fontes, redigida: llm.redige, modelo: tokens.modelo }
+          : { status: "bloqueada_citacao", id, motivos: resultado.motivos, fontes, modelo: tokens.modelo };
     }
   } catch (e) {
-    console.error("pesquisa", (e as Error).message);
     diag.erro = (e as Error).message;
+    // Só o técnico: a pergunta do advogado não entra no registro de erros.
+    await registrarErro("pesquisa", e, {
+      rota: "/app/pesquisa",
+      usuarioId: ctx.usuarioId,
+      escritorioId: ctx.escritorioId,
+      codigo: e instanceof ErroLLM ? "llm" : null,
+      detalhes: { consulta: id, provedor: llm.nome },
+    });
     desfecho = {
       status: "erro",
       id,

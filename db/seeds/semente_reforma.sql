@@ -15,7 +15,7 @@ insert into normas (tipo, numero, ano, ementa, url_oficial, publicada_em) values
    'https://www.planalto.gov.br/ccivil_03/constituicao/emendas/emc/emc132.htm', '2023-12-21'),
   ('LC', '214', 2025, 'Institui o IBS, a CBS e o Imposto Seletivo.',
    'https://www.planalto.gov.br/ccivil_03/leis/lcp/lcp214.htm', '2025-01-16')
-on conflict (tipo, numero, ano) do nothing;
+on conflict do nothing;
 
 with ec as (select id from normas where tipo = 'EC' and numero = '132' and ano = 2023),
      lc as (select id from normas where tipo = 'LC' and numero = '214' and ano = 2025),

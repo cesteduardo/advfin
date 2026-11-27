@@ -26,6 +26,8 @@ const MENSAGENS: Record<string, string> = {
   pedido_invalido: "Este pedido já foi decidido.",
   caso_invalido: "Caso não encontrado.",
   consulta_invalida: "Consulta não encontrada.",
+  muitos_relatos: "Você já enviou muitos relatos hoje. Obrigado; a curadoria está analisando.",
+  relato_invalido: "Relato não encontrado.",
   revisao_invalida: "Esta revisão já foi decidida.",
   propria_revisao: "Quem pediu a revisão não pode aprová-la.",
   "2fa_obrigatorio": "O escritório exige a verificação em duas etapas para o seu nível.",

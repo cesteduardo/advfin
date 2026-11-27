@@ -1,7 +1,10 @@
 "use server";
 
 import { z } from "zod";
+import { mensagemDeErro } from "@/lib/auth/erros";
 import { exigirSessao, type Sessao } from "@/lib/auth/sessao";
+import { noEscritorio } from "@/lib/db";
+import { conferirCota, mensagemDeCota } from "@/lib/uso/limites";
 import { pesquisar, type DesfechoPesquisa, type Diagnostico } from "./orquestrador";
 
 const Pedido = z.object({
@@ -15,7 +18,40 @@ export async function acaoPesquisar(pergunta: string, data: string, caso?: strin
   const s = await exigirSessao();
   const r = Pedido.safeParse({ pergunta, data, caso: caso || null });
   if (!r.success) return { status: "invalida", mensagem: r.error.issues[0]?.message ?? "Pergunta inválida." };
-  return pesquisar({ usuarioId: s.usuarioId, escritorioId: s.escritorioId }, r.data.pergunta, r.data.data, r.data.caso ?? null);
+  const ctx = { usuarioId: s.usuarioId, escritorioId: s.escritorioId };
+  const cota = await conferirCota(ctx);
+  if (!cota.permitido) return { status: "invalida", mensagem: mensagemDeCota(cota) };
+  return pesquisar(ctx, r.data.pergunta, r.data.data, r.data.caso ?? null);
+}
+
+const Relato = z.object({
+  consulta: z.string().uuid().nullable(),
+  dispositivo: z.string().uuid(),
+  trecho: z.string().max(2000).default(""),
+  motivo: z.enum(["texto_diferente", "dispositivo_errado", "fora_de_vigencia", "nao_sustenta", "outro"]),
+  comentario: z.string().trim().max(1000).default(""),
+});
+export type MotivoRelato = z.infer<typeof Relato>["motivo"];
+
+/** "Relatar citação errada": vai para a fila do curador em /admin, sem a pergunta. */
+export async function acaoRelatarCitacao(dados: {
+  consulta: string | null;
+  dispositivo: string;
+  trecho: string;
+  motivo: MotivoRelato;
+  comentario: string;
+}): Promise<{ ok: true } | { ok: false; mensagem: string }> {
+  const s = await exigirSessao();
+  const r = Relato.safeParse(dados);
+  if (!r.success) return { ok: false, mensagem: "Escolha o motivo do relato." };
+  try {
+    await noEscritorio(s, (c) =>
+      c.query(`select app.relatar_citacao($1, $2, $3, $4, $5)`, [r.data.consulta, r.data.dispositivo, r.data.trecho, r.data.motivo, r.data.comentario]),
+    );
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, mensagem: mensagemDeErro(e, "Não foi possível enviar o relato agora.") };
+  }
 }
 
 /**

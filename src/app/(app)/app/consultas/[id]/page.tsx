@@ -106,7 +106,8 @@ export default async function Parecer({ params }: { params: Promise<{ id: string
             {d.autor?.cargo ? `, ${d.autor.cargo}` : ""}
             {d.autor?.oab ? ` · OAB ${d.autor.oab}` : ""}
             <br />
-            Preparado com o AdvFin. A IA prepara, o advogado decide.
+            Documento preparado com apoio de inteligência artificial (AdvFin), a partir dos dispositivos citados, sob
+            revisão e responsabilidade do advogado signatário.
           </p>
           <BotaoExportar consulta={id} estadoInicial={estado} />
         </>

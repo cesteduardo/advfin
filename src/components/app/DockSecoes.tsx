@@ -41,7 +41,7 @@ export interface ItemSecao<T extends string = string> {
  * Menu de seções em forma de dock: as mesmas abas em pílula de antes, com ícone pequeno e nome
  * completo, levadas para uma barra flutuante no rodapé. A pílula marinho marca a seção aberta e
  * desliza até a escolhida; um realce claro corre sob o cursor de uma aba para a outra.
- * No celular fica acima da barra principal e se recolhe junto com ela ao rolar.
+ * No celular fica fixa no rodapé, sem se recolher ao rolar.
  * Com `base`, cada seção é um endereço (?aba=); sem ela, `muda` troca a seção na própria página.
  */
 export function DockSecoes<T extends string>({

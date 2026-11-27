@@ -2,10 +2,10 @@
    arredondados), com mais densidade: é uma mesa de trabalho, não uma vitrine.
    Estilos isolados aqui para não colidir com a landing. */
 
-.app-corpo { min-height: 100dvh; background: #f6f5f1; }
+.app-corpo { min-height: 100svh; background: #f6f5f1; }
 
 /* ── Entrada (login e cadastro) ── */
-.acesso { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr); min-height: 100dvh; }
+.acesso { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr); min-height: 100svh; }
 .acesso-lado { position: relative; display: flex; flex-direction: column; justify-content: space-between; gap: 40px; padding: clamp(28px, 5vw, 72px); color: #fff; background: radial-gradient(120% 90% at 0% 0%, #1d4370 0%, transparent 60%), var(--marinho); overflow: hidden; }
 .acesso-lado::before { content: ''; position: absolute; inset: 0; background: var(--trama); pointer-events: none; }
 .acesso-lado > * { position: relative; }
@@ -35,7 +35,7 @@
 /* ── Mesa de trabalho: a mesma linguagem da tela do MacBook na demonstração da landing ──
    Fundo marfim #f6f5f1, contornos marinho translúcidos (--anel), cartões brancos de 18–22px,
    pílulas com o ativo em marinho, rótulos em caixa alta, serifa só no texto normativo. */
-.mesa { display: grid; grid-template-columns: 272px minmax(0, 1fr); min-height: 100dvh; background: #f6f5f1; color: var(--ink); letter-spacing: -.01em; }
+.mesa { display: grid; grid-template-columns: 272px minmax(0, 1fr); min-height: 100svh; background: #f6f5f1; color: var(--ink); letter-spacing: -.01em; }
 .mesa section { padding-block: 0; } /* a landing dá respiro a toda <section>; aqui não */
 .mesa .ico { width: 1.25em; height: 1.25em; flex: none; }
 .app-marca { color: var(--ink); text-decoration: none; }
@@ -269,7 +269,7 @@
 }
 
 /* ── Laboratório estático (/lab) ── */
-.mesa.lab { display: flex; min-height: 100dvh; max-width: 1180px; margin-inline: auto; padding-bottom: 56px; }
+.mesa.lab { display: flex; min-height: 100svh; max-width: 1180px; margin-inline: auto; padding-bottom: 56px; }
 .lab > .app-marca { font-size: 21px; }
 .lab-config { display: grid; gap: 12px; }
 .lab-config .segmentado { justify-self: start; max-width: 100%; }
@@ -546,7 +546,7 @@ body:has(.dock-sec) .mesa-principal { padding-bottom: 112px; }
 @media print { .dock-sec { display: none !important; } }
 
 /* ── Pesquisa: tela inicial como a de um assistente de conversa ── */
-.pesquisa-inicio { display: grid; align-content: center; gap: 18px; width: 100%; max-width: 760px; min-height: calc(100dvh - 170px); margin-inline: auto; padding-block: 24px; }
+.pesquisa-inicio { display: grid; align-content: center; gap: 18px; width: 100%; max-width: 760px; min-height: calc(100svh - 170px); margin-inline: auto; padding-block: 24px; }
 .pesquisa-inicio-cabeca { display: flex; align-items: center; justify-content: center; gap: 16px; margin-bottom: 14px; text-align: center; }
 .pesquisa-inicio-cabeca .simbolo-app { flex: none; width: 42px; height: 42px; border-radius: 13px; box-shadow: 0 10px 24px -12px rgb(15 39 66 / .6); animation: entra .7s var(--mola) backwards; }
 .pesquisa-inicio-cabeca h2 { margin: 0; font-size: clamp(30px, 3.4vw, 44px); font-weight: 600; letter-spacing: -.045em; line-height: 1.1; color: var(--ink); animation: entra .7s var(--mola) .08s backwards; }
@@ -565,7 +565,7 @@ body:has(.dock-sec) .mesa-principal { padding-bottom: 112px; }
 .pesquisa-inicio .demo-origem { margin: 0; }
 .pesquisa-conversa { animation: entra .5s var(--ease) backwards; }
 @media (max-width: 900px) {
-  .pesquisa-inicio { min-height: calc(100dvh - 230px); padding-block: 12px; }
+  .pesquisa-inicio { min-height: calc(100svh - 230px); padding-block: 12px; }
   .pesquisa-inicio-cabeca { gap: 12px; }
   .pesquisa-inicio-cabeca .simbolo-app { width: 34px; height: 34px; border-radius: 11px; }
   .pesquisa-sugestoes { justify-content: flex-start; }
@@ -598,7 +598,7 @@ body:has(.dock-sec) .mesa-principal { padding-bottom: 112px; }
 
 /* ── Pesquisa como conversa: perguntas e respostas em sequência, campo fixo no rodapé ── */
 .pesquisa-chat { align-items: stretch; }
-.pesquisa-chat .mesa-conversa { display: flex; flex-direction: column; gap: 26px; min-height: calc(100dvh - 150px); }
+.pesquisa-chat .mesa-conversa { display: flex; flex-direction: column; gap: 26px; min-height: calc(100svh - 150px); }
 .pesquisa-chat .mesa-fontes { align-self: start; }
 .pesquisa-turno { display: grid; gap: 16px; }
 .pesquisa-bolha { animation: bolha-entra .45s cubic-bezier(.16, 1, .3, 1) backwards; transform-origin: 100% 100%; }
@@ -623,7 +623,7 @@ body:has(.dock-sec) .mesa-principal { padding-bottom: 112px; }
 .mesa-campo { view-transition-name: pesquisa-campo; }
 ::view-transition-group(pesquisa-campo) { animation-duration: .55s; animation-timing-function: cubic-bezier(.2, .9, .25, 1); }
 @media (max-width: 900px) {
-  .pesquisa-chat .mesa-conversa { min-height: calc(100dvh - 230px); }
+  .pesquisa-chat .mesa-conversa { min-height: calc(100svh - 230px); }
   .pesquisa-rodape { bottom: calc(max(12px, env(safe-area-inset-bottom)) + 66px); padding-bottom: 10px; }
   .pesquisa-rodape-nota { display: none; }
   .pesquisa-fim { scroll-margin-bottom: 260px; }
@@ -724,7 +724,7 @@ body:has(.dock-sec) .mesa-principal { padding-bottom: 112px; }
   .demo-faixa { padding: 10px 14px; font-size: 13px; line-height: 1.45; }
 
   /* Pesquisa: tela inicial */
-  .pesquisa-inicio { display: flex; flex-direction: column; gap: 12px; min-height: calc(100dvh - 190px); padding-block: 0; }
+  .pesquisa-inicio { display: flex; flex-direction: column; gap: 12px; min-height: calc(100svh - 190px); padding-block: 0; }
   .pesquisa-inicio-cabeca { flex-direction: column; gap: 14px; margin: auto 0; padding-block: 24px; }
   .pesquisa-inicio-cabeca .simbolo-app { width: 44px; height: 44px; border-radius: 14px; }
   .pesquisa-inicio-cabeca h2 { font-size: 28px; }
@@ -737,7 +737,7 @@ body:has(.dock-sec) .mesa-principal { padding-bottom: 112px; }
   .pesquisa-inicio-nota { display: none; }
 
   /* Pesquisa: conversa */
-  .pesquisa-chat .mesa-conversa { min-height: calc(100dvh - 170px); gap: 22px; }
+  .pesquisa-chat .mesa-conversa { min-height: calc(100svh - 170px); gap: 22px; }
   .pesquisa-rodape, :root[data-dock-recolhida] .pesquisa-rodape { bottom: 0; padding: 14px 0 max(10px, env(safe-area-inset-bottom)); }
   .pesquisa-chat .mesa-pergunta { max-width: 88%; }
   .pesquisa-chat .mesa-resposta { font-size: 16px; }
@@ -823,7 +823,7 @@ body:has(.dock-sec) .mesa-principal { padding-bottom: 112px; }
 .mesa-rodape-legal a { color: inherit; font-weight: 600; }
 
 /* Documentos legais em página própria: sumário na lateral, texto em medida de leitura */
-.legal-pagina { min-height: 100dvh; background: #f6f5f1; }
+.legal-pagina { min-height: 100svh; background: #f6f5f1; }
 .legal-pagina-topo { position: sticky; top: 0; z-index: 5; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px clamp(16px, 4vw, 48px); background: rgb(246 245 241 / .92); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); border-bottom: 1px solid var(--anel); }
 .legal-pagina-abas { display: flex; gap: 4px; padding: 4px; border-radius: 999px; background: #fff; box-shadow: 0 0 0 1px var(--anel); }
 .legal-pagina-abas a { padding: 8px 16px; border-radius: 999px; color: var(--ink-2); font-size: 14px; font-weight: 600; text-decoration: none; white-space: nowrap; }

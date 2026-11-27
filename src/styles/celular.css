@@ -110,3 +110,24 @@
   .inicio-numero strong { font-size: 25px; }
   .dock-sec-item { padding-inline: 12px 14px; }
 }
+
+/* ── Botões de envio: na largura toda do cartão, texto centrado ── */
+@media (max-width: 900px) {
+  .mesa-form-pe:not(:has(> * + *)) { justify-content: stretch; }
+  .mesa-form-pe:not(:has(> * + *)) > .mesa-botao { width: 100%; justify-content: center; text-align: center; }
+  .mesa-form-pe:has(> .mesa-botao + .mesa-botao) { width: 100%; margin-left: 0; }
+}
+@media (min-width: 901px) {
+  .mesa-grade-2 > .mesa-cartao .mesa-form-pe:not(:has(> * + *)) > .mesa-botao,
+  .mesa-grade-2 > form.mesa-cartao .mesa-form-pe:not(:has(> * + *)) > .mesa-botao { width: 100%; justify-content: center; }
+}
+
+/* ── Rolagem estável no celular ──
+   Topo e dock fixos, sem recolher; alturas em svh (não mudam quando a barra do navegador
+   aparece ou some); sem o repique que puxa a página além do fim. */
+@media (max-width: 900px) {
+  html:has(.app-corpo), html:has(.app-corpo) body { overscroll-behavior-y: none; }
+  .mesa-topo-movel, .dock-sec { transform: translateZ(0); backface-visibility: hidden; }
+  .dock-sec, :root[data-dock-recolhida] .dock-sec { transition: none; }
+  .pesquisa-rodape, :root[data-dock-recolhida] .pesquisa-rodape { transition: none; }
+}

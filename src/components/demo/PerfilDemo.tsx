@@ -1,7 +1,7 @@
 "use client";
 
+import { DockSecoes } from "@/components/app/DockSecoes";
 import { useState, type FormEvent } from "react";
-import { Segmentado } from "@/components/Segmentado";
 import { Cabeca } from "@/components/app/Cabeca";
 import { SeletorImagem } from "@/components/app/perfil/Foto";
 import { CampoData } from "@/components/ui/CampoData";
@@ -65,11 +65,11 @@ export function PerfilDemo() {
   return (
     <>
       <Cabeca trilha={`${e.escritorio.nome} / Perfil`} titulo={eu.nome} descricao={`${ROTULO_NIVEL[eu.nivel]}${eu.cargo ? ` · ${eu.cargo}` : ""}${eu.email ? ` · ${eu.email}` : ""}`}>
-        <Segmentado
+        <DockSecoes
           rotulo="Seções do perfil"
-          valor={aba}
+          atual={aba}
           muda={setAba}
-          opcoes={[
+          itens={[
             { id: "dados", nome: "Dados" },
             { id: "preferencias", nome: "Preferências" },
             { id: "demo", nome: "Dados da demonstração" },
@@ -155,14 +155,14 @@ export function PerfilDemo() {
           <div className="mesa-cartao mesa-entra">
             <h2>Baixar os dados</h2>
             <p>Um arquivo JSON com tudo o que você criou na demonstração: perfil, escritório, pessoas, casos, consultas e auditoria.</p>
-            <div className="mesa-form-pe" style={{ justifyContent: "flex-start" }}>
+            <div className="mesa-form-pe inicio">
               <button type="button" className="mesa-botao" onClick={baixar}>Baixar JSON</button>
             </div>
           </div>
           <div className="mesa-cartao mesa-entra" style={{ "--i": 1 } as React.CSSProperties}>
             <h2>Recomeçar</h2>
             <p>Apaga o escritório da demonstração deste navegador e volta para o cadastro.</p>
-            <div className="mesa-form-pe" style={{ justifyContent: "flex-start" }}>
+            <div className="mesa-form-pe inicio">
               {confirmando ? (
                 <>
                   <button type="button" className="mesa-botao perigo" onClick={apagarDemo}>Sim, apagar tudo</button>

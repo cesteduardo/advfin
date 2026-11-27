@@ -248,7 +248,7 @@ export default async function Perfil({ searchParams }: { searchParams: Promise<{
             <div className="mesa-cartao">
               <h2>Meus dados</h2>
               <p>Um arquivo JSON com perfil, vínculos, sessões e o registro das suas ações. Senha e segredo do 2FA não saem.</p>
-              <div className="mesa-form-pe" style={{ justifyContent: "flex-start" }}>
+              <div className="mesa-form-pe inicio">
                 <a className="mesa-botao" href="/app/perfil/meus-dados" download>Baixar meus dados</a>
               </div>
             </div>

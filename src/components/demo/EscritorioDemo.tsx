@@ -1,7 +1,7 @@
 "use client";
 
+import { DockSecoes } from "@/components/app/DockSecoes";
 import { useState, type CSSProperties, type FormEvent } from "react";
-import { Segmentado } from "@/components/Segmentado";
 import { Cabeca } from "@/components/app/Cabeca";
 import { Avatar } from "@/components/app/NavegacaoMesa";
 import { SeletorImagem } from "@/components/app/perfil/Foto";
@@ -27,11 +27,11 @@ export function EscritorioDemo() {
   return (
     <>
       <Cabeca trilha={`${e.escritorio.nome} / Escritório`} titulo="Administração do escritório" descricao={`${ativos.length} ${ativos.length === 1 ? "pessoa ativa" : "pessoas ativas"} · você é ${ROTULO_NIVEL[eu.nivel]}`}>
-        <Segmentado
+        <DockSecoes
           rotulo="Seções da administração"
-          valor={aba}
+          atual={aba}
           muda={setAba}
-          opcoes={[
+          itens={[
             { id: "pessoas", nome: "Pessoas" },
             { id: "convidar", nome: "Convidar" },
             { id: "configuracoes", nome: "Configurações" },

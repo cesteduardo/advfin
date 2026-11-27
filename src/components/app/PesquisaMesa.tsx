@@ -157,6 +157,9 @@ export function PesquisaMesa({
   casos,
   casoInicial = "",
   exportar,
+  nome,
+  opcoesCampo,
+  abaixoDoCampo,
 }: {
   executar: (pergunta: string, data: string, caso?: string | null) => Promise<Desfecho>;
   aoConcluir?: () => void;
@@ -168,6 +171,12 @@ export function PesquisaMesa({
   casoInicial?: string;
   /** No app, a resposta vira parecer em página própria; na demonstração, imprime direto. */
   exportar?: (id: string) => ReactNode;
+  /** Primeiro nome para a saudação da tela inicial. */
+  nome?: string;
+  /** Controles extras no pé do campo (ex.: quem redige a resposta, na demonstração). */
+  opcoesCampo?: ReactNode;
+  /** Algo logo abaixo do campo (ex.: a chave da Anthropic, quando escolhida). */
+  abaixoDoCampo?: ReactNode;
 }) {
   const [pergunta, setPergunta] = useState("");
   const [enviada, setEnviada] = useState<{ texto: string; data: string; hora: string } | null>(null);
@@ -179,6 +188,12 @@ export function PesquisaMesa({
   const [concluindo, setConcluindo] = useState(false);
   const [rodada, setRodada] = useState(0);
   const campo = useRef<HTMLTextAreaElement>(null);
+  // A saudação depende da hora local; calculada só no navegador para não divergir do HTML estático.
+  const [saudacao, setSaudacao] = useState("Olá");
+  useEffect(() => {
+    const h = Number(new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", hour12: false, timeZone: "America/Sao_Paulo" }).slice(0, 2));
+    setSaudacao(h >= 5 && h < 12 ? "Bom dia" : h >= 12 && h < 18 ? "Boa tarde" : "Boa noite");
+  }, []);
   const bolha = useRef<HTMLParagraphElement>(null);
   // A pergunta entra deslizando a cada envio. Sem trocar a key do elemento: trocar no meio da
   // pesquisa deixava cópias da bolha na tela quando outro estado mudava junto.
@@ -232,27 +247,88 @@ export function PesquisaMesa({
   const foco = exibidas.find((f) => f.ref === ativa) ?? exibidas[0];
   const provisorio = exibidas.some((f) => f.origem === "semente" || f.curadoria !== "publicado");
 
+  const formulario = (
+    <form
+      className="mesa-campo"
+      onSubmit={(e) => {
+        e.preventDefault();
+        enviar();
+      }}
+    >
+      <label htmlFor="pergunta" className="so-leitor">
+        Pergunta
+      </label>
+      <textarea
+        id="pergunta"
+        ref={campo}
+        rows={2}
+        value={pergunta}
+        onChange={(e) => setPergunta(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault();
+            enviar();
+          }
+        }}
+        placeholder="Pergunte sobre a transição…"
+        maxLength={2000}
+      />
+      <div className="mesa-campo-pe">
+        <span className="mesa-campo-opcoes">
+          <span className="app-data">
+            <span className="app-data-rotulo">Vigência em</span>
+            <CampoData value={data} onChange={setData} min="2023-12-21" rotulo="Vigência em" compacto />
+          </span>
+          {casos && casos.length > 0 && (
+            <span className="app-data">
+              <span className="app-data-rotulo">Caso</span>
+              <Seletor
+                value={caso}
+                onChange={setCaso}
+                rotulo="Caso"
+                compacto
+                opcoes={[{ valor: "", rotulo: "Nenhum" }, ...casos.map((c) => ({ valor: c.id, rotulo: c.titulo }))]}
+              />
+            </span>
+          )}
+          {opcoesCampo}
+        </span>
+        <button className="app-enviar" disabled={pendente || pergunta.trim().length < 8} aria-label="Pesquisar">
+          <Icone nome="enviar" />
+        </button>
+      </div>
+    </form>
+  );
+
+  // Tela inicial: saudação, campo grande no centro e sugestões logo abaixo. A conversa só ocupa a tela depois do primeiro envio.
+  if (!enviada) {
+    return (
+      <div className="pesquisa-inicio">
+        <div className="pesquisa-inicio-cabeca">
+          <Simbolo />
+          <h2>
+            {saudacao}
+            {nome ? `, ${nome}` : ""}.
+          </h2>
+        </div>
+        {formulario}
+        {abaixoDoCampo}
+        <div className="pesquisa-sugestoes" role="list" aria-label="Sugestões de pergunta">
+          {SUGESTOES.map((sug, i) => (
+            <button type="button" role="listitem" key={sug} className="pesquisa-sugestao" style={{ "--i": i } as CSSProperties} onClick={() => enviar(sug)}>
+              <Icone nome="pesquisa" />
+              <span>{sug}</span>
+            </button>
+          ))}
+        </div>
+        <p className="pesquisa-inicio-nota">Só dispositivos vigentes na data escolhida, com o trecho original ao lado. Se uma citação não existir na base, a resposta é bloqueada.</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="mesa-grade">
+    <div className="mesa-grade pesquisa-conversa">
       <section className="mesa-conversa" aria-live="polite">
-        {!enviada && (
-          <div className="mesa-resposta mesa-boas-vindas">
-            <p className="mesa-autor">
-              <Simbolo /> AdvFin · pesquisa fundamentada
-            </p>
-            <p>
-              Pergunte em linguagem natural. A resposta usa só dispositivos vigentes na data escolhida, com o trecho ao lado. Se
-              alguma citação não existir na base, a resposta é bloqueada.
-            </p>
-            <div className="mesa-acoes">
-              {SUGESTOES.map((s) => (
-                <button type="button" key={s} onClick={() => enviar(s)}>
-                  {s}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
 
         {enviada && (
           <p ref={bolha} className="mesa-pergunta">
@@ -363,55 +439,8 @@ export function PesquisaMesa({
           </p>
         )}
 
-        <form
-          className="mesa-campo"
-          onSubmit={(e) => {
-            e.preventDefault();
-            enviar();
-          }}
-        >
-          <label htmlFor="pergunta" className="so-leitor">
-            Pergunta
-          </label>
-          <textarea
-            id="pergunta"
-            ref={campo}
-            rows={2}
-            value={pergunta}
-            onChange={(e) => setPergunta(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                enviar();
-              }
-            }}
-            placeholder="Pergunte sobre a transição…"
-            maxLength={2000}
-          />
-          <div className="mesa-campo-pe">
-            <span className="mesa-campo-opcoes">
-              <span className="app-data">
-                Vigência em
-                <CampoData value={data} onChange={setData} min="2023-12-21" rotulo="Vigência em" compacto />
-              </span>
-              {casos && casos.length > 0 && (
-                <span className="app-data">
-                  Caso
-                  <Seletor
-                    value={caso}
-                    onChange={setCaso}
-                    rotulo="Caso"
-                    compacto
-                    opcoes={[{ valor: "", rotulo: "Nenhum" }, ...casos.map((c) => ({ valor: c.id, rotulo: c.titulo }))]}
-                  />
-                </span>
-              )}
-            </span>
-            <button className="app-enviar" disabled={pendente || pergunta.trim().length < 8} aria-label="Pesquisar">
-              <Icone nome="enviar" />
-            </button>
-          </div>
-        </form>
+        {formulario}
+        {abaixoDoCampo}
       </section>
 
       <aside className="mesa-fontes" aria-label="Fontes">

@@ -498,3 +498,114 @@
 .demo-cadastro > form { width: min(640px, 100%); }
 .demo-cadastro h2 { font-size: clamp(22px, 2vw, 28px); letter-spacing: -.03em; }
 .demo-cadastro .mesa-rotulo { margin-top: 6px; }
+
+/* ── Lado a lado, do mesmo tamanho ──
+   Cartões vizinhos na mesma linha têm a mesma altura, com as ações alinhadas no pé;
+   botões vizinhos têm a mesma largura (a do maior). */
+.mesa-grade-2 { align-items: stretch; }
+.mesa-grade-2 > .mesa-cartao { display: flex; flex-direction: column; gap: 14px; }
+.mesa-grade-2 > .mesa-cartao > .mesa-form-pe:last-child { margin-top: auto; padding-top: 4px; }
+.mesa-form-pe.inicio, .mesa-sub .mesa-form-pe, .mesa-pessoa-acoes .mesa-form-pe { justify-content: flex-start; }
+.mesa-form-pe:has(> .mesa-botao + .mesa-botao) { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); width: fit-content; max-width: 100%; margin-left: auto; }
+.mesa-form-pe.inicio:has(> .mesa-botao + .mesa-botao), .mesa-sub .mesa-form-pe:has(> .mesa-botao + .mesa-botao), .mesa-pessoa-acoes .mesa-form-pe:has(> .mesa-botao + .mesa-botao) { margin-left: 0; }
+.mesa-form-pe:has(> .mesa-botao + .mesa-botao) > .mesa-botao { width: 100%; }
+.atalhos { align-items: stretch; }
+
+/* ── Dock de seções, no estilo do macOS ── */
+.dock-mac { --lateral: 272px; --tile: 46px; position: fixed; z-index: 45; bottom: 18px; left: calc(var(--lateral) + (100vw - var(--lateral)) / 2); translate: -50% 0; max-width: calc(100vw - var(--lateral) - 32px); pointer-events: none; animation: dock-mac-entra .7s var(--mola) .1s backwards; }
+.dock-mac-trilha { display: flex; align-items: flex-end; gap: 6px; padding: 7px 9px 9px; border-radius: 24px; background: rgb(255 255 255 / .62); -webkit-backdrop-filter: blur(22px) saturate(1.6); backdrop-filter: blur(22px) saturate(1.6); box-shadow: 0 0 0 1px rgb(15 39 66 / .08), inset 0 1px 0 rgb(255 255 255 / .9), 0 18px 40px -18px rgb(15 39 66 / .45), 0 2px 6px -2px rgb(15 39 66 / .12); pointer-events: auto; }
+.dock-mac-item { --z: 1; position: relative; display: grid; justify-items: center; padding: 0; border: 0; background: none; color: var(--azul-forte); text-decoration: none; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.dock-mac-tile { position: relative; display: grid; place-items: center; width: calc(var(--tile) * var(--z)); height: calc(var(--tile) * var(--z)); border-radius: calc(13px * var(--z)); background: linear-gradient(180deg, #fff, #f1f0eb); box-shadow: 0 0 0 1px rgb(15 39 66 / .07), 0 4px 10px -6px rgb(15 39 66 / .4), inset 0 -1px 0 rgb(15 39 66 / .05); transition: width .2s var(--ease), height .2s var(--ease), border-radius .2s var(--ease), background .3s var(--ease), color .3s var(--ease), transform .25s var(--mola); }
+.dock-mac-tile .ico { width: calc(22px * var(--z)); height: calc(22px * var(--z)); transition: width .2s var(--ease), height .2s var(--ease); }
+.dock-mac-item:hover .dock-mac-tile { color: var(--marinho); }
+.dock-mac-item:active .dock-mac-tile { transform: scale(.9); transition-duration: .08s; }
+.dock-mac-item.ativo .dock-mac-tile { background: linear-gradient(180deg, #1d3a5f, var(--marinho)); color: var(--ouro-claro); box-shadow: 0 6px 14px -6px rgb(15 39 66 / .6), inset 0 1px 0 rgb(255 255 255 / .14); }
+.dock-mac-item.ativo .dock-mac-tile .ico { animation: dock-salta .6s var(--mola) backwards; }
+.dock-mac-conta { position: absolute; top: -5px; right: -5px; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px; background: var(--bordo, #8d2b2b); color: #fff; font-size: 11px; font-weight: 700; line-height: 18px; text-align: center; box-shadow: 0 0 0 2px #fff; }
+/* Balão com o nome, como na dock do Mac */
+.dock-mac-nome { position: absolute; bottom: calc(100% + 12px); left: 50%; padding: 5px 11px; border-radius: 9px; background: rgb(15 39 66 / .92); color: #fff; font-size: 12.5px; font-weight: 600; letter-spacing: -.01em; white-space: nowrap; opacity: 0; translate: -50% 4px; pointer-events: none; transition: opacity .15s var(--ease), translate .2s var(--ease); }
+.dock-mac-nome::after { content: ""; position: absolute; top: 100%; left: 50%; translate: -50% 0; border: 5px solid transparent; border-top-color: rgb(15 39 66 / .92); }
+.dock-mac-item:hover .dock-mac-nome, .dock-mac-item:focus-visible .dock-mac-nome { opacity: 1; translate: -50% 0; }
+/* Ponto de "aberto" sob a seção ativa */
+.dock-mac-ponto { width: 4px; height: 4px; margin-top: 4px; border-radius: 50%; background: transparent; transition: background .3s var(--ease); }
+.dock-mac-item.ativo .dock-mac-ponto { background: var(--marinho); }
+.dock-mac-item:focus-visible { outline: none; }
+.dock-mac-item:focus-visible .dock-mac-tile { box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--azul); }
+body:has(.dock-mac) .mesa-principal { padding-bottom: 128px; }
+@keyframes dock-mac-entra { from { opacity: 0; transform: translateY(24px) scale(.94); filter: blur(6px); } to { opacity: 1; transform: none; filter: none; } }
+
+@media (max-width: 900px) {
+  .dock-mac { --lateral: 0px; --tile: 38px; left: 50%; bottom: calc(max(12px, env(safe-area-inset-bottom)) + 74px); max-width: calc(100vw - 24px); animation-delay: .25s; transition: transform .5s var(--mola), opacity .3s var(--ease); }
+  :root[data-dock-recolhida] .dock-mac { transform: translateY(calc(100% + 100px)) scale(.92); opacity: 0; transition: transform .4s var(--ease), opacity .25s var(--ease); }
+  :root[data-dock-recolhida] .dock-mac-trilha { pointer-events: none; }
+  .dock-mac-trilha { gap: 2px; padding: 6px; border-radius: 22px; overflow-x: auto; scrollbar-width: none; overscroll-behavior-x: contain; }
+  .dock-mac-trilha::-webkit-scrollbar { display: none; }
+  .dock-mac-item { flex: none; min-width: 64px; gap: 3px; padding: 2px 4px 0; }
+  .dock-mac-tile { border-radius: 11px; }
+  .dock-mac-tile .ico { width: 19px; height: 19px; }
+  .dock-mac-conta { top: -4px; right: -4px; }
+  .dock-mac-nome { position: static; padding: 0; background: none; color: var(--muted); font-size: 10.5px; opacity: 1; translate: none; transition: color .3s var(--ease); }
+  .dock-mac-nome::after { display: none; }
+  .dock-mac-item.ativo .dock-mac-nome { color: var(--marinho); }
+  .dock-mac-ponto { display: none; }
+  body:has(.dock-mac) .mesa { padding-bottom: 176px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dock-mac, .dock-mac-item.ativo .dock-mac-tile .ico { animation: none !important; }
+  .dock-mac-tile, .dock-mac-tile .ico, .dock-mac { transition: background .2s, color .2s, opacity .2s; }
+  :root[data-dock-recolhida] .dock-mac { transform: none; }
+}
+@media print { .dock-mac { display: none !important; } }
+
+/* ── Pesquisa: tela inicial como a de um assistente de conversa ── */
+.pesquisa-inicio { display: grid; align-content: center; gap: 18px; width: 100%; max-width: 760px; min-height: calc(100dvh - 170px); margin-inline: auto; padding-block: 24px; }
+.pesquisa-inicio-cabeca { display: flex; align-items: center; justify-content: center; gap: 16px; margin-bottom: 14px; text-align: center; }
+.pesquisa-inicio-cabeca .simbolo-app { flex: none; width: 42px; height: 42px; border-radius: 13px; box-shadow: 0 10px 24px -12px rgb(15 39 66 / .6); animation: entra .7s var(--mola) backwards; }
+.pesquisa-inicio-cabeca h2 { margin: 0; font-size: clamp(30px, 3.4vw, 44px); font-weight: 600; letter-spacing: -.045em; line-height: 1.1; color: var(--ink); animation: entra .7s var(--mola) .08s backwards; }
+.pesquisa-inicio-cabeca p { margin: 0; color: var(--ink-2); font-size: clamp(16px, 1.3vw, 18px); animation: entra .7s var(--mola) .16s backwards; }
+.pesquisa-inicio .mesa-campo { gap: 14px; padding: 18px 16px 14px 24px; border-radius: 28px; box-shadow: 0 0 0 1px var(--anel), 0 22px 48px -26px rgb(15 39 66 / .5), 0 2px 6px -3px rgb(15 39 66 / .12); animation: entra .7s var(--mola) .22s backwards; }
+.pesquisa-inicio .mesa-campo:focus-within { box-shadow: 0 0 0 1.5px rgb(15 39 66 / .38), 0 22px 48px -26px rgb(15 39 66 / .5); }
+.pesquisa-inicio .mesa-campo textarea { min-height: 58px; font-size: 17.5px; }
+.pesquisa-inicio .mesa-campo .app-enviar { width: 44px; height: 44px; }
+.pesquisa-sugestoes { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+.pesquisa-sugestao { display: inline-flex; max-width: 100%; align-items: center; gap: 8px; padding: 9px 15px 9px 12px; border: 0; border-radius: 999px; background: rgb(255 255 255 / .55); color: var(--ink-2); font-size: 14.5px; font-weight: 550; line-height: 1.4; text-align: left; cursor: pointer; box-shadow: 0 0 0 1px var(--anel); animation: entra .6s var(--mola) calc(.3s + var(--i, 0) * .06s) backwards; transition: background .2s var(--ease), color .2s var(--ease), transform .25s var(--mola), box-shadow .2s var(--ease); }
+.pesquisa-sugestao .ico { flex: none; width: 16px; height: 16px; color: var(--ouro); }
+.pesquisa-sugestao:hover { background: #fff; color: var(--ink); transform: translateY(-1px); box-shadow: 0 0 0 1px var(--anel), 0 10px 22px -16px rgb(15 39 66 / .5); }
+.pesquisa-sugestao:active { transform: scale(.98); }
+.pesquisa-sugestao:focus-visible { outline: 2px solid var(--azul); outline-offset: 2px; }
+.pesquisa-inicio-nota { margin: 4px 0 0; color: var(--muted); font-size: 13px; text-align: center; animation: entra .6s var(--ease) .55s backwards; }
+.pesquisa-inicio .demo-origem { margin: 0; }
+.pesquisa-conversa { animation: entra .5s var(--ease) backwards; }
+@media (max-width: 900px) {
+  .pesquisa-inicio { min-height: calc(100dvh - 230px); padding-block: 12px; }
+  .pesquisa-inicio-cabeca { gap: 12px; }
+  .pesquisa-inicio-cabeca .simbolo-app { width: 34px; height: 34px; border-radius: 11px; }
+  .pesquisa-sugestoes { justify-content: flex-start; }
+  .pesquisa-sugestao { font-size: 13.5px; }
+  .pesquisa-sugestao:nth-child(n + 4) { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pesquisa-inicio *, .pesquisa-conversa { animation: none !important; }
+}
+/* Cartão de foto ao lado de um formulário: em vez de sobrar vazio, centraliza a foto em tamanho maior. */
+@media (min-width: 901px) {
+  .mesa-grade-2 > .mesa-cartao > .mesa-perfil-topo:last-child { flex: 1; flex-direction: column; justify-content: center; gap: 16px; text-align: center; }
+  .mesa-grade-2 > .mesa-cartao > .mesa-perfil-topo:last-child .avatar-grande { width: 132px; height: 132px; font-size: 44px; box-shadow: 0 18px 36px -20px rgb(15 39 66 / .6); }
+  .mesa-grade-2 > .mesa-cartao > .mesa-perfil-topo:last-child .mesa-acoes { justify-content: center; }
+}
+/* Pé do campo sempre numa linha: opções rolam por dentro, o botão de enviar fica à direita. */
+.mesa-campo-pe { flex-wrap: nowrap; }
+.mesa-campo-opcoes { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; padding: 1px; }
+.mesa-campo-opcoes::-webkit-scrollbar { display: none; }
+.mesa-campo-opcoes > .app-data { flex: none; }
+@media (max-width: 640px) {
+  .mesa-campo-opcoes .app-data-rotulo { display: none; }
+  .mesa .mesa-campo-opcoes .app-data { padding-left: 6px; }
+  .pesquisa-inicio .mesa-campo { padding: 14px 12px 12px 18px; border-radius: 24px; }
+  .pesquisa-inicio .mesa-campo textarea { min-height: 48px; font-size: 16.5px; }
+  .pesquisa-inicio-cabeca h2 { font-size: 30px; }
+}
+@media (max-width: 900px) {
+  .dock-mac-item { flex: 1 0 72px; max-width: 96px; }
+  .dock-mac-nome { max-width: 100%; white-space: normal; text-align: center; line-height: 1.15; }
+}

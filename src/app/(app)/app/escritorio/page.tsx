@@ -183,7 +183,7 @@ export default async function Escritorio({ searchParams }: { searchParams: Promi
               ) : (
                 <p>Sem domínio configurado. Com ele, quem se cadastra com o e-mail do escritório pede para entrar sem precisar de convite.</p>
               )}
-              <div className="mesa-form-pe" style={{ justifyContent: "flex-start" }}>
+              <div className="mesa-form-pe inicio">
                 <Link className="mesa-botao secundario" href="/app/escritorio?aba=configuracoes">Configurar domínio</Link>
               </div>
             </div>
@@ -500,7 +500,7 @@ async function Plano({ cobranca, plano, convites, ok }: { cobranca: any; plano: 
         <div className="mesa-cartao">
           <h2>Cartão, faturas e plano</h2>
           <p>O cartão fica guardado só no Stripe. Trocar de plano, mudar o cartão e cancelar acontecem no portal do Stripe.</p>
-          <form action={abrirPortal} className="mesa-form-pe" style={{ justifyContent: "flex-start" }}>
+          <form action={abrirPortal} className="mesa-form-pe inicio">
             <button className="mesa-botao">Abrir o portal de cobrança</button>
           </form>
         </div>

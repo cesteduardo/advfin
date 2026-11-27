@@ -1,4 +1,3 @@
-import { CabecaDemo } from "@/components/demo/ComEscritorio";
 import { PesquisaDemo } from "@/components/demo/PesquisaDemo";
 
 export const metadata = { title: "Pesquisa — demonstração AdvFin" };
@@ -6,7 +5,7 @@ export const metadata = { title: "Pesquisa — demonstração AdvFin" };
 export default function PesquisaPaginaDemo() {
   return (
     <>
-      <CabecaDemo secao="Pesquisa" titulo="Pesquisa fundamentada" />
+      <h1 className="so-leitor">Pesquisa fundamentada</h1>
       <PesquisaDemo />
     </>
   );

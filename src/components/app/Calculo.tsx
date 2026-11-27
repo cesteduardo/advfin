@@ -1,5 +1,6 @@
 "use client";
 
+import { DockSecoes } from "@/components/app/DockSecoes";
 import { useId, useMemo, useState } from "react";
 import { Segmentado } from "@/components/Segmentado";
 import { Cabeca } from "./Cabeca";
@@ -213,14 +214,14 @@ export function Calculo({ trilha }: { trilha: string }) {
   return (
     <>
       <Cabeca trilha={trilha} titulo="Cálculo da transição" descricao="Motor determinístico, em centavos exatos. Cada número diz se vem de norma, estimativa ou premissa.">
-        <Segmentado
+        <DockSecoes
           rotulo="Ferramenta de cálculo"
-          opcoes={[
+          itens={[
             { id: "tempo", nome: "Linha do tempo" },
             { id: "comparador", nome: "Comparador de regimes" },
             { id: "apuracao", nome: "Apuração com créditos" },
           ]}
-          valor={aba}
+          atual={aba}
           muda={setAba}
         />
       </Cabeca>

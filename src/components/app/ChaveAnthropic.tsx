@@ -1,10 +1,21 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { MODELOS_LAB } from "@/lib/pesquisa/laboratorio";
+import { MODELOS_GROQ, MODELOS_LAB } from "@/lib/pesquisa/laboratorio";
 import { Seletor } from "@/components/ui/Seletor";
 
-const GUARDA = "advfin-lab-chave";
+export type ProvedorChave = "anthropic" | "groq";
+const GUARDA: Record<ProvedorChave, string> = { anthropic: "advfin-lab-chave", groq: "advfin-lab-chave-groq" };
+const MODELOS: Record<ProvedorChave, readonly { id: string; nome: string; entrada: number; saida: number }[]> = { anthropic: MODELOS_LAB, groq: MODELOS_GROQ };
+
+/** Chave do Groq guardada neste navegador (para a transcrição de voz fora do Chrome). */
+export function chaveGroqGuardada(): string {
+  try {
+    return localStorage.getItem(GUARDA.groq) ?? "";
+  } catch {
+    return "";
+  }
+}
 
 /**
  * Chave da Anthropic do próprio desenvolvedor, para o laboratório e a demonstração estáticos.
@@ -12,13 +23,18 @@ const GUARDA = "advfin-lab-chave";
  * compartilham a mesma chave guardada.
  */
 export function useChaveAnthropic() {
+  return useChave("anthropic");
+}
+
+export function useChave(provedor: ProvedorChave) {
   const [chave, setChave] = useState("");
   const [lembrar, setLembrar] = useState(false);
-  const [modelo, setModelo] = useState<string>(MODELOS_LAB[0].id);
+  const [modelo, setModelo] = useState<string>(MODELOS[provedor][0].id);
+  const guarda = GUARDA[provedor];
 
   useEffect(() => {
     try {
-      const g = localStorage.getItem(GUARDA);
+      const g = localStorage.getItem(guarda);
       if (g) {
         setChave(g);
         setLembrar(true);
@@ -26,19 +42,20 @@ export function useChaveAnthropic() {
     } catch {
       /* sem armazenamento: segue só na memória */
     }
-  }, []);
+  }, [guarda]);
 
   const guardar = (sim: boolean, valor: string) => {
     setLembrar(sim);
     try {
-      if (sim && valor) localStorage.setItem(GUARDA, valor);
-      else localStorage.removeItem(GUARDA);
+      if (sim && valor) localStorage.setItem(guarda, valor);
+      else localStorage.removeItem(guarda);
     } catch {
       /* navegador sem armazenamento: a chave fica só na memória da aba */
     }
   };
 
   return {
+    provedor,
     chave,
     modelo,
     lembrar,
@@ -51,19 +68,25 @@ export function useChaveAnthropic() {
   };
 }
 
-export type EstadoChave = ReturnType<typeof useChaveAnthropic>;
+export type EstadoChave = ReturnType<typeof useChave>;
+
+const TEXTO: Record<ProvedorChave, { rotulo: string; dica: string; destino: string }> = {
+  anthropic: { rotulo: "Chave da API da Anthropic", dica: "sk-ant-…", destino: "a Anthropic" },
+  groq: { rotulo: "Chave grátis do Groq", dica: "gsk_…", destino: "o Groq" },
+};
 
 export function CamposChave({ c }: { c: EstadoChave }) {
+  const t = TEXTO[c.provedor];
   return (
     <div className="lab-chave">
       <div className="campo">
-        <label htmlFor="lab-chave-input">Chave da API da Anthropic</label>
+        <label htmlFor="lab-chave-input">{t.rotulo}</label>
         <input
           id="lab-chave-input"
           type="password"
           autoComplete="off"
           spellCheck={false}
-          placeholder="sk-ant-…"
+          placeholder={t.dica}
           value={c.chave}
           onChange={(e) => c.setChave(e.target.value)}
         />
@@ -74,18 +97,21 @@ export function CamposChave({ c }: { c: EstadoChave }) {
           id="lab-modelo"
           value={c.modelo}
           onChange={c.setModelo}
-          opcoes={MODELOS_LAB.map((m) => ({
+          opcoes={MODELOS[c.provedor].map((m) => ({
             valor: m.id,
             rotulo: m.nome,
-            descricao: `US$ ${m.entrada.toLocaleString("pt-BR")} / ${m.saida.toLocaleString("pt-BR")} por milhão de tokens`,
+            descricao:
+              m.entrada === 0
+                ? "Grátis no plano gratuito do Groq, com limite diário de uso"
+                : `US$ ${m.entrada.toLocaleString("pt-BR")} / ${m.saida.toLocaleString("pt-BR")} por milhão de tokens`,
           }))}
         />
       </div>
       <label className="caixa-aceite">
         <input type="checkbox" checked={c.lembrar} onChange={(e) => c.setLembrar(e.target.checked)} />
         <span>
-          Lembrar a chave neste navegador. Sem marcar, ela some ao fechar a aba. A chave só vai para a Anthropic; nenhum servidor
-          do AdvFin a recebe.
+          Lembrar a chave neste navegador. Sem marcar, ela some ao fechar a aba. A chave só vai para {t.destino}; nenhum
+          servidor do AdvFin a recebe.
         </span>
       </label>
     </div>

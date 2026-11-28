@@ -12,7 +12,7 @@ import { SISTEMA_PESQUISA, lerResposta, montarMensagem, respostaExtrativa, type 
 import type { DesfechoPesquisa, Diagnostico, RespostaModelo, Trecho } from "./tipos";
 import { verificarCitacoes } from "./verificador";
 
-export type ModoLab = "extrativo" | "simulado-inventado" | "anthropic";
+export type ModoLab = "extrativo" | "simulado-inventado" | "anthropic" | "groq";
 
 /** Preço da Anthropic em US$ por milhão de tokens (entrada, saída). */
 export const MODELOS_LAB = [
@@ -20,6 +20,54 @@ export const MODELOS_LAB = [
   { id: "claude-sonnet-5-5", nome: "Claude Sonnet 5.5", entrada: 2, saida: 10 },
   { id: "claude-haiku-5-5", nome: "Claude Haiku 5.5", entrada: 0.1, saida: 0.5 },
 ] as const;
+
+/**
+ * Groq: plano gratuito, API no formato da OpenAI, modelos abertos. Serve para testar sem custo;
+ * a Anthropic continua o padrão para uso real. Os limites do plano grátis são por minuto e por dia.
+ */
+export const URL_GROQ = "https://api.groq.com/openai/v1";
+export const MODELOS_GROQ = [
+  { id: "llama-3.3-70b-versatile", nome: "Llama 3.3 70B", entrada: 0, saida: 0 },
+  { id: "openai/gpt-oss-120b", nome: "GPT-OSS 120B", entrada: 0, saida: 0 },
+  { id: "qwen/qwen3-32b", nome: "Qwen 3 32B", entrada: 0, saida: 0 },
+] as const;
+
+/** Modo que usa modelo de verdade (chave do próprio usuário). */
+export const usaModelo = (m: ModoLab) => m === "anthropic" || m === "groq";
+
+export class ErroGroq extends Error {
+  constructor(
+    mensagem: string,
+    readonly status: number,
+  ) {
+    super(mensagem);
+  }
+}
+
+async function chamarGroq(chave: string, modelo: string, sistema: string, mensagem: string) {
+  const r = await fetch(`${URL_GROQ}/chat/completions`, {
+    method: "POST",
+    headers: { "content-type": "application/json", authorization: `Bearer ${chave}` },
+    body: JSON.stringify({
+      model: modelo,
+      max_tokens: 4096,
+      temperature: 0.2,
+      response_format: { type: "json_object" },
+      messages: [
+        { role: "system", content: sistema + "\n\nResponda somente com um objeto JSON válido, sem texto antes ou depois." },
+        { role: "user", content: mensagem },
+      ],
+    }),
+  });
+  if (!r.ok) throw new ErroGroq(((await r.text().catch(() => "")) || r.statusText).slice(0, 300), r.status);
+  const j = await r.json();
+  return {
+    modelo: (j.model as string) ?? modelo,
+    texto: (j.choices?.[0]?.message?.content as string) ?? "",
+    entrada: (j.usage?.prompt_tokens as number) ?? 0,
+    saida: (j.usage?.completion_tokens as number) ?? 0,
+  };
+}
 
 export interface PedidoLab {
   pergunta: string;
@@ -60,10 +108,11 @@ async function chamarAnthropic(chave: string, modelo: string, sistema: string, m
 export async function rodarLab(p: PedidoLab): Promise<{ desfecho: DesfechoPesquisa; diagnostico: Diagnostico }> {
   const inicio = performance.now();
   const id = `lab-${Date.now()}`;
-  const nomeProvedor = p.modo === "anthropic" ? "anthropic (navegador)" : p.modo === "extrativo" ? "extrativo" : "simulado";
+  const nomeProvedor =
+    p.modo === "anthropic" ? "anthropic (navegador)" : p.modo === "groq" ? "groq (navegador, grátis)" : p.modo === "extrativo" ? "extrativo" : "simulado";
   const diag: Diagnostico = {
     provedor: nomeProvedor,
-    modelo: p.modo === "anthropic" ? (p.modelo ?? "") : nomeProvedor,
+    modelo: usaModelo(p.modo) ? (p.modelo ?? "") : nomeProvedor,
     sistema: null,
     mensagem: null,
     saidaBruta: null,
@@ -102,15 +151,34 @@ export async function rodarLab(p: PedidoLab): Promise<{ desfecho: DesfechoPesqui
         return fim({ status: "erro", id, mensagem: "O modelo recusou a pergunta (stop_reason: refusal).", fontes });
       }
       resposta = lerResposta(texto);
+    } else if (p.modo === "groq") {
+      if (!p.chave) throw new Error("Cole sua chave grátis do Groq para usar o modelo.");
+      const modelo = p.modelo && !p.modelo.startsWith("claude") ? p.modelo : MODELOS_GROQ[0].id;
+      diag.sistema = SISTEMA_PESQUISA;
+      diag.mensagem = montarMensagem(p.pergunta, p.data, fontes, p.documentos ?? []);
+      const g = await chamarGroq(p.chave, modelo, diag.sistema, diag.mensagem);
+      diag.modelo = g.modelo;
+      diag.saidaBruta = g.texto || "(sem texto)";
+      diag.tokens = { entrada: g.entrada, saida: g.saida };
+      diag.custoUsd = 0;
+      resposta = lerResposta(g.texto);
     } else {
       resposta = p.modo === "extrativo" ? respostaExtrativa(fontes) : respostaInventada(fontes);
       diag.custoUsd = 0;
     }
   } catch (e) {
     diag.ms.modelo = Math.round(performance.now() - t);
-    diag.erro = e instanceof Anthropic.APIError ? `${e.status ?? ""} ${e.message}`.trim() : (e as Error).message;
+    diag.erro = e instanceof ErroGroq ? `${e.status} ${e.message}` : e instanceof Anthropic.APIError ? `${e.status ?? ""} ${e.message}`.trim() : (e as Error).message;
     const mensagem =
-      e instanceof Anthropic.AuthenticationError
+      e instanceof ErroGroq
+        ? e.status === 401
+          ? "A chave do Groq foi recusada. Confira se colou a chave inteira (começa com gsk_)."
+          : e.status === 429
+            ? "Limite do plano grátis do Groq atingido. Espere um minuto e tente de novo."
+            : "O Groq não respondeu. Veja o erro técnico abaixo."
+        : e instanceof TypeError
+          ? "Não foi possível falar com o fornecedor do modelo. Confira a conexão ou um bloqueador de anúncios."
+          : e instanceof Anthropic.AuthenticationError
         ? "A chave da Anthropic foi recusada. Confira se colou a chave inteira."
         : e instanceof Anthropic.RateLimitError
           ? "Limite de uso da conta Anthropic atingido. Tente de novo em instantes."
@@ -128,7 +196,7 @@ export async function rodarLab(p: PedidoLab): Promise<{ desfecho: DesfechoPesqui
   } else {
     const v = verificarCitacoes(resposta, fontes);
     desfecho = v.ok
-      ? { status: "respondida", id, paragrafos: resposta.paragrafos, citacoes: v.citacoes, fontes, redigida: p.modo === "anthropic", modelo }
+      ? { status: "respondida", id, paragrafos: resposta.paragrafos, citacoes: v.citacoes, fontes, redigida: usaModelo(p.modo), modelo }
       : { status: "bloqueada_citacao", id, motivos: v.motivos, fontes, modelo };
   }
   diag.ms.verificacao = Math.round(performance.now() - t);

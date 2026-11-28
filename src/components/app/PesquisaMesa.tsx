@@ -12,7 +12,7 @@ import { RelatarCitacao, type EnviarRelato } from "./RelatarCitacao";
 import { Seletor } from "@/components/ui/Seletor";
 import { CampoData } from "@/components/ui/CampoData";
 import { lerAnexo, TIPOS_ACEITOS } from "@/lib/anexos/ler";
-import { calar, falar, falaSuportada, useDitado } from "@/lib/anexos/voz";
+import { calar, falar, falaSuportada, useDitado, type Transcrever } from "@/lib/anexos/voz";
 import type { DocumentoAnexo } from "@/lib/pesquisa/geracao";
 
 const MAX_ANEXOS = 3;
@@ -164,6 +164,7 @@ export function PesquisaMesa({
   opcoesCampo,
   abaixoDoCampo,
   notaAnexos,
+  transcrever,
 }: {
   executar: (pergunta: string, data: string, caso?: string | null, documentos?: DocumentoAnexo[]) => Promise<Desfecho>;
   aoConcluir?: () => void;
@@ -185,6 +186,8 @@ export function PesquisaMesa({
   abaixoDoCampo?: ReactNode;
   /** Aviso curto sobre o uso dos anexos (ex.: no modo sem IA, eles não entram na resposta). */
   notaAnexos?: string;
+  /** Transcrição da fala gravada, para navegadores sem ditado próprio (Whisper do Groq). */
+  transcrever?: Transcrever;
 }) {
   const [pergunta, setPergunta] = useState("");
   const [anexos, setAnexos] = useState<Anexo[]>([]);
@@ -200,6 +203,7 @@ export function PesquisaMesa({
       if (modoVoz.current && t.trim().length >= 8) enviarRef.current(t);
       else modoVoz.current = false;
     },
+    transcrever,
   });
   const [podeFalar, setPodeFalar] = useState(false);
   useEffect(() => setPodeFalar(falaSuportada()), []);
@@ -411,7 +415,7 @@ export function PesquisaMesa({
             anexar(imgs);
           }
         }}
-        placeholder={ditado.ouvindo ? "Pode falar, estou ouvindo…" : turnos.length ? "Responder ou perguntar outra coisa…" : "Pergunte sobre a transição…"}
+        placeholder={ditado.transcrevendo ? "Transcrevendo o que você disse…" : ditado.ouvindo ? "Pode falar, estou ouvindo…" : turnos.length ? "Responder ou perguntar outra coisa…" : "Pergunte sobre a transição…"}
         maxLength={2000}
       />
       <div className="mesa-campo-pe">
@@ -445,6 +449,8 @@ export function PesquisaMesa({
               className="compositor-botao"
               data-ligado={ditado.ouvindo && !modoVoz.current ? "" : undefined}
               aria-pressed={ditado.ouvindo && !modoVoz.current}
+              aria-busy={ditado.transcrevendo || undefined}
+              disabled={ditado.transcrevendo}
               onClick={() => {
                 if (ditado.ouvindo) return ditado.parar();
                 modoVoz.current = false;

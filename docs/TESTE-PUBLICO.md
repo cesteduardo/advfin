@@ -61,6 +61,7 @@ Os termos comerciais da API não usam os dados enviados para treinar modelos; is
    | `DATABASE_URL` | Transaction pooler com `advfin_web` (1.1, item 7) |
    | `LLM_PROVEDOR` | `anthropic` |
    | `LLM_CHAVE` | a chave da Anthropic (marque *Sensitive*) |
+   | | Para testar sem custo, use `LLM_PROVEDOR` = `groq` e a chave grátis do Groq (`gsk_…`, em console.groq.com/keys) |
    | `BASE_INCLUIR_NAO_REVISADOS` | `1` enquanto o curador não publicar a base; depois, apague |
    | `APP_URL` | o endereço do app, ex.: `https://app.advfin.com.br` |
    | `CHAVE_CIFRA` | 32 bytes aleatórios em base64. No Terminal do Mac: `openssl rand -base64 32` |

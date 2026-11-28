@@ -3,7 +3,8 @@ import { ErroLLM, type PedidoLLM, type ProvedorLLM, type RespostaLLM, type Taref
 
 /**
  * Configuração por ambiente:
- *   LLM_PROVEDOR      anthropic | openai | extrativo (padrão: extrativo, sem rede)
+ *   LLM_PROVEDOR      anthropic | groq | openai | extrativo (padrão: extrativo, sem rede)
+ *                     groq: plano gratuito, para testes (chave grátis em console.groq.com/keys)
  *   LLM_CHAVE         chave de API do fornecedor
  *   LLM_URL_BASE      só para "openai": qualquer API compatível (OpenAI, Azure, Maritaca…)
  *   LLM_MODELO_PESQUISA, LLM_MODELO_CLASSIFICACAO   modelo por tarefa
@@ -69,12 +70,13 @@ export class ProvedorCompativelOpenAI implements ProvedorLLM {
   constructor(
     private chave: string,
     private urlBase = "https://api.openai.com/v1",
+    private padrao: Record<Tarefa, string> = { pesquisa: "gpt-5", classificacao: "gpt-5-mini" },
   ) {
     this.nome = `openai-compativel(${new URL(urlBase).host})`;
   }
 
   async gerar(p: PedidoLLM): Promise<RespostaLLM> {
-    const modelo = modeloPara(p.tarefa, { pesquisa: "gpt-5", classificacao: "gpt-5-mini" });
+    const modelo = modeloPara(p.tarefa, this.padrao);
     const j = await postar(
       `${this.urlBase.replace(/\/$/, "")}/chat/completions`,
       { authorization: `Bearer ${this.chave}` },
@@ -109,6 +111,8 @@ export class ProvedorExtrativo implements ProvedorLLM {
   }
 }
 
+export const URL_GROQ = "https://api.groq.com/openai/v1";
+
 let cache: ProvedorLLM | null = null;
 
 export function provedor(): ProvedorLLM {
@@ -122,6 +126,8 @@ export function provedor(): ProvedorLLM {
   switch (nome) {
     case "anthropic":
       return (cache = new ProvedorAnthropic(chave));
+    case "groq":
+      return (cache = new ProvedorCompativelOpenAI(chave, URL_GROQ, { pesquisa: "llama-3.3-70b-versatile", classificacao: "llama-3.1-8b-instant" }));
     case "openai":
       return (cache = new ProvedorCompativelOpenAI(chave, process.env.LLM_URL_BASE || undefined));
     default:

@@ -1,6 +1,7 @@
 import { Pesquisa } from "@/components/app/Pesquisa";
 import { exigirSessao, vigenciaPadrao } from "@/lib/auth/sessao";
 import { noEscritorio } from "@/lib/db";
+import { chaveVozServidor } from "@/lib/anexos/voz-servidor";
 
 export const metadata = { title: "Pesquisa — AdvFin" };
 
@@ -12,7 +13,7 @@ export default async function PaginaPesquisa({ searchParams }: { searchParams: P
   return (
     <>
       <h1 className="so-leitor">Pesquisa fundamentada</h1>
-      <Pesquisa nome={s.nome.split(" ")[0]} dataInicial={vigenciaPadrao(s.preferencias)} casos={casos} casoInicial={casos.some((c) => c.id === caso) ? caso : undefined} />
+      <Pesquisa nome={s.nome.split(" ")[0]} dataInicial={vigenciaPadrao(s.preferencias)} casos={casos} casoInicial={casos.some((c) => c.id === caso) ? caso : undefined} voz={!!chaveVozServidor()} />
     </>
   );
 }

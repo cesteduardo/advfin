@@ -7,7 +7,7 @@ import { acaoTranscrever } from "@/lib/anexos/acao-voz";
 import { PesquisaMesa } from "./PesquisaMesa";
 
 /** Pesquisa do app: a resposta vem do servidor, e o menu de consultas recentes se atualiza. */
-export function Pesquisa({ nome, dataInicial, casos, casoInicial, voz }: { nome?: string; dataInicial: string; casos: { id: string; titulo: string }[]; casoInicial?: string; voz?: boolean }) {
+export function Pesquisa({ nome, dataInicial, casos, casoInicial, voz, perguntaInicial }: { nome?: string; dataInicial: string; casos: { id: string; titulo: string }[]; casoInicial?: string; voz?: boolean; perguntaInicial?: string }) {
   const router = useRouter();
   return (
     <PesquisaMesa
@@ -17,6 +17,7 @@ export function Pesquisa({ nome, dataInicial, casos, casoInicial, voz }: { nome?
       dataInicial={dataInicial}
       casos={casos}
       casoInicial={casoInicial}
+      perguntaInicial={perguntaInicial}
       transcrever={
         voz
           ? async (audio) => {

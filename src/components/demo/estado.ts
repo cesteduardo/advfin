@@ -25,6 +25,14 @@ export interface CasoDemo {
   autor: string;
   criadoEm: string;
   incluidos: string[];
+  /** Notas da equipe no caso (sem documentos: só texto, por sigilo). */
+  notas?: NotaDemo[];
+}
+export interface NotaDemo {
+  id: string;
+  autor: string;
+  texto: string;
+  criadoEm: string;
 }
 export interface ConsultaDemo {
   id: string;

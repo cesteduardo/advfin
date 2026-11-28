@@ -6,13 +6,15 @@ import { Avatar } from "@/components/app/NavegacaoMesa";
 import { Revisoes } from "@/components/app/casos/Revisoes";
 import { ROTULO_NIVEL, acimaOuIgual, type Nivel } from "@/lib/auth/niveis";
 import { exigirSessao } from "@/lib/auth/sessao";
-import { incluirNoCaso, retirarDoCaso } from "@/lib/casos/acoes";
+import { anotarCaso, apagarNotaCaso, incluirNoCaso, retirarDoCaso } from "@/lib/casos/acoes";
+import { PerguntaCaso } from "@/components/app/casos/PerguntaCaso";
 import { lerRevisoes, visibilidade } from "@/lib/casos/consultas";
 import { noEscritorio } from "@/lib/db";
 import { Seletor } from "@/components/ui/Seletor";
 
 export const metadata = { title: "Caso — AdvFin" };
 
+const quando = (d: string) => new Date(d).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short", timeZone: "America/Sao_Paulo" });
 const dia = (d: string) => new Date(d).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" });
 const STATUS: Record<string, string> = { respondida: "Respondida", bloqueada_citacao: "Bloqueada pelo verificador", erro: "Erro", pendente: "Em andamento" };
 
@@ -26,10 +28,11 @@ export default async function Caso({ params }: { params: Promise<{ id: string }>
     if (!caso) return null;
     const incluidos = (await c.query(`select usuario_id, incluido_em from casos_membros where caso_id = $1 order by incluido_em`, [id])).rows;
     const consultas = (await c.query(`select id, pergunta, status, usuario_id, criado_em from consultas where caso_id = $1 order by criado_em desc`, [id])).rows;
+    const notas = (await c.query(`select id, autor_id, texto, criado_em from casos_notas where caso_id = $1 order by criado_em`, [id])).rows;
     const pessoas = (await c.query(`select usuario_id, nome, cargo, nivel, foto_url from app.pessoas() where suspenso_em is null`)).rows;
-    const ids = [...new Set([caso.criado_por, ...consultas.map((x) => x.usuario_id)].filter(Boolean))];
+    const ids = [...new Set([caso.criado_por, ...consultas.map((x) => x.usuario_id), ...notas.map((x) => x.autor_id)].filter(Boolean))];
     const nomes = new Map<string, string>((await c.query(`select * from app.autores($1)`, [ids])).rows.map((x) => [x.usuario_id, x.nome]));
-    return { caso, incluidos, consultas, pessoas, nomes, revisoes: await lerRevisoes(c, { caso: id }) };
+    return { caso, incluidos, consultas, notas, pessoas, nomes, revisoes: await lerRevisoes(c, { caso: id }) };
   });
   if (!d) notFound();
 
@@ -44,17 +47,20 @@ export default async function Caso({ params }: { params: Promise<{ id: string }>
 
   return (
     <>
+      <Link className="mesa-voltar" href="/app/casos">
+        <span aria-hidden="true">←</span> Todos os casos
+      </Link>
       <Cabeca
         trilha={`${s.escritorio} / Casos / ${d.caso.titulo}`}
         titulo={d.caso.titulo}
         descricao={`${d.caso.cliente ? `${d.caso.cliente} · ` : ""}criado por ${d.caso.criado_por === s.usuarioId ? "você" : (d.nomes.get(d.caso.criado_por) ?? "—")} em ${dia(d.caso.criado_em)} · ${visibilidade(d.caso.nivel_minimo)}`}
-      >
-        <Link className="mesa-botao" href={`/app/pesquisa?caso=${id}`}>Pesquisar neste caso</Link>
-      </Cabeca>
+      />
+      <PerguntaCaso caso={id} />
 
       <Revisoes linhas={d.revisoes} decide={acimaOuIgual(s.nivel, "membro")} euId={s.usuarioId} />
 
       <div className="mesa-grade-2 lado-largo">
+        <div className="caso-coluna">
         <section className="bloco" aria-labelledby="consultas-caso">
           <p className="mesa-rotulo" id="consultas-caso">Consultas do caso</p>
           {d.consultas.length === 0 ? (
@@ -72,6 +78,44 @@ export default async function Caso({ params }: { params: Promise<{ id: string }>
             </ul>
           )}
         </section>
+
+        <section className="bloco" aria-labelledby="notas-titulo">
+          <p className="mesa-rotulo" id="notas-titulo">Notas da equipe</p>
+          {d.notas.length === 0 ? (
+            <p className="mesa-vazio-cartao">Nenhuma nota ainda. Conte à equipe o que você fez ou o que falta no caso.</p>
+          ) : (
+            <ol className="caso-notas">
+              {d.notas.map((n: any) => {
+                const nome = n.autor_id === s.usuarioId ? "Você" : (d.nomes.get(n.autor_id) ?? "Ex-membro");
+                const pode = n.autor_id === s.usuarioId || acimaOuIgual(s.nivel, "admin");
+                return (
+                  <li key={n.id} className="caso-nota">
+                    <Avatar nome={nome} foto={(pessoa.get(n.autor_id) as any)?.foto_url} />
+                    <div>
+                      <p className="caso-nota-topo">
+                        <strong>{nome}</strong>
+                        <time dateTime={new Date(n.criado_em).toISOString()}>{quando(n.criado_em)}</time>
+                        {pode && (
+                          <form action={apagarNotaCaso} style={{ marginLeft: "auto" }}>
+                            <input type="hidden" name="id" value={n.id} />
+                            <button className="caso-nota-apagar">Apagar</button>
+                          </form>
+                        )}
+                      </p>
+                      <p className="caso-nota-texto">{n.texto}</p>
+                    </div>
+                  </li>
+                );
+              })}
+            </ol>
+          )}
+          <FormAcao acao={anotarCaso} botao="Salvar nota" pendente="Salvando…" classe="caso-nota-nova">
+            <input type="hidden" name="caso" value={id} />
+            <label htmlFor="nota" className="so-leitor">Nova nota</label>
+            <textarea id="nota" name="texto" rows={2} maxLength={4000} placeholder="Escreva uma nota para a equipe… (só texto; documentos ficam fora, por sigilo)" />
+          </FormAcao>
+        </section>
+        </div>
 
         <div className="mesa-coluna">
           <div className="mesa-cartao">

@@ -69,3 +69,31 @@ export async function pedirExportacao(consulta: string, formato: "pdf" | "docx")
     return { erro: mensagemDeErro(e) };
   }
 }
+
+const Nota = z.object({
+  caso: z.string().uuid(),
+  texto: z.string().trim().min(1, "Escreva a nota antes de salvar.").max(4000, "A nota passou de 4 mil caracteres."),
+});
+
+/** Nota da equipe no caso: só texto. A RLS confere se a pessoa vê o caso. */
+export async function anotarCaso(_: Resultado, form: FormData): Promise<Resultado> {
+  const s = await exigirSessao();
+  const r = Nota.safeParse({ caso: form.get("caso"), texto: form.get("texto") });
+  if (!r.success) return { erro: r.error.issues[0]?.message };
+  try {
+    await noEscritorio(s, (c) => c.query(`insert into casos_notas (caso_id, texto) values ($1, $2)`, [r.data.caso, r.data.texto]));
+    refresh();
+    return { ok: "Nota salva." };
+  } catch (e) {
+    return { erro: mensagemDeErro(e) };
+  }
+}
+
+/** Apagar: o próprio autor, ou Administrador para cima (a RLS decide; o que ela barra não volta). */
+export async function apagarNotaCaso(form: FormData): Promise<void> {
+  const s = await exigirSessao();
+  const id = z.string().uuid().safeParse(form.get("id"));
+  if (!id.success) return;
+  await noEscritorio(s, (c) => c.query(`delete from casos_notas where id = $1`, [id.data]));
+  refresh();
+}

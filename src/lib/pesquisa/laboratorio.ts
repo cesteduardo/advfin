@@ -8,7 +8,7 @@
  */
 import Anthropic from "@anthropic-ai/sdk";
 import { recuperarLocal } from "./base-local";
-import { SISTEMA_PESQUISA, lerResposta, montarMensagem, respostaExtrativa, type DocumentoAnexo, type TurnoAnterior } from "./geracao";
+import { SISTEMA_CONVERSA, SISTEMA_PESQUISA, lerResposta, montarMensagem, respostaExtrativa, type DocumentoAnexo, type TurnoAnterior } from "./geracao";
 import type { DesfechoPesquisa, Diagnostico, RespostaModelo, Trecho } from "./tipos";
 import { verificarCitacoes } from "./verificador";
 
@@ -167,7 +167,11 @@ export async function rodarLab(p: PedidoLab): Promise<{ desfecho: DesfechoPesqui
     if (juntas.length > fontes.length) fontes = juntas;
   }
   diag.ms.recuperacao = Math.round(performance.now() - t);
-  if (fontes.length === 0) return fim({ status: "sem_resultado", id, fontes: [] });
+  // Sem dispositivo na base: com IA conectada, ela conversa (avisando que não há fonte conferida).
+  if (fontes.length === 0) {
+    if (usaModelo(p.modo) && p.chave) return fim(await conversar(p, diag, id, []));
+    return fim({ status: "sem_resultado", id, fontes: [] });
+  }
 
   let resposta: RespostaModelo | null;
   t = performance.now();
@@ -223,6 +227,7 @@ export async function rodarLab(p: PedidoLab): Promise<{ desfecho: DesfechoPesqui
   }
   diag.ms.modelo = Math.round(performance.now() - t);
   diag.respostaLida = resposta;
+  if (resposta?.semBase && usaModelo(p.modo) && p.chave) return fim(await conversar(p, diag, id, fontes));
 
   t = performance.now();
   const modelo = diag.modelo;
@@ -237,6 +242,49 @@ export async function rodarLab(p: PedidoLab): Promise<{ desfecho: DesfechoPesqui
   }
   diag.ms.verificacao = Math.round(performance.now() - t);
   return fim(desfecho);
+}
+
+/** Conversa livre: o modelo responde com o próprio conhecimento, sem marcas de fonte. */
+async function conversar(p: PedidoLab, diag: Diagnostico, id: string, fontes: Trecho[]): Promise<DesfechoPesquisa> {
+  const t = performance.now();
+  diag.sistema = SISTEMA_CONVERSA;
+  diag.mensagem = montarMensagem(p.pergunta, p.data, [], p.documentos ?? [], p.historico ?? []);
+  try {
+    let texto: string;
+    if (p.modo === "anthropic") {
+      const r = await chamarAnthropic(p.chave!, p.modelo ?? MODELOS_LAB[0].id, diag.sistema, diag.mensagem);
+      texto = r.texto;
+      diag.modelo = r.r.model;
+    } else {
+      const quem = p.modo === "groq" ? "groq" : "openrouter";
+      const lista: readonly { id: string }[] = quem === "groq" ? MODELOS_GROQ : MODELOS_OPENROUTER;
+      const modelo = p.modelo && lista.some((m) => m.id === p.modelo) ? p.modelo : lista[0].id;
+      const g = await chamarGroq(p.chave!, modelo, diag.sistema, diag.mensagem, quem);
+      texto = g.texto;
+      diag.modelo = g.modelo;
+    }
+    diag.saidaBruta = texto;
+    let paragrafos: string[] = [];
+    try {
+      const j = JSON.parse(texto.slice(texto.indexOf("{"), texto.lastIndexOf("}") + 1));
+      if (Array.isArray(j.paragrafos)) paragrafos = j.paragrafos.filter((x: unknown) => typeof x === "string");
+    } catch {
+      paragrafos = texto.split(/\n{2,}/);
+    }
+    // Garantia: nada sem conferência leva número de fonte.
+    paragrafos = paragrafos.map((x) => x.replace(/\[D\d{1,2}\]/g, "").trim()).filter(Boolean);
+    diag.ms.modelo += Math.round(performance.now() - t);
+    if (!paragrafos.length) return { status: "erro", id, mensagem: "O modelo não respondeu desta vez. Tente de novo.", fontes };
+    return { status: "conversa", id, paragrafos, fontes, modelo: diag.modelo };
+  } catch (e) {
+    diag.erro = (e as Error).message;
+    return {
+      status: "erro",
+      id,
+      mensagem: e instanceof ErroGroq ? mensagemErroGratis(e.status, e.quem) : "O modelo não respondeu. Confira a chave em Resposta e tente de novo.",
+      fontes,
+    };
+  }
 }
 
 export type ProvedorNavegador = "anthropic" | "groq" | "openrouter";

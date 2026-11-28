@@ -165,6 +165,10 @@ export function PesquisaMesa({
   abaixoDoCampo,
   notaAnexos,
   transcrever,
+  minimo = 8,
+  turnosIniciais,
+  aoMudar,
+  perguntaInicial,
 }: {
   executar: (pergunta: string, data: string, caso?: string | null, documentos?: DocumentoAnexo[], historico?: TurnoAnterior[]) => Promise<Desfecho>;
   aoConcluir?: () => void;
@@ -188,6 +192,14 @@ export function PesquisaMesa({
   notaAnexos?: string;
   /** Transcrição da fala gravada, para navegadores sem ditado próprio (Whisper do Groq). */
   transcrever?: Transcrever;
+  /** Menor pergunta aceita. Com IA conectada, até um "oi" vale. */
+  minimo?: number;
+  /** Conversa salva que reabre na tela (da demonstração, a partir do caso). */
+  turnosIniciais?: TurnoSalvo[];
+  /** Chamado a cada resposta, com a conversa inteira, para quem quiser guardar. */
+  aoMudar?: (turnos: TurnoSalvo[]) => void;
+  /** Pergunta que já vai sozinha ao abrir (ex.: a barra do caso). */
+  perguntaInicial?: string;
 }) {
   const [pergunta, setPergunta] = useState("");
   const [anexos, setAnexos] = useState<Anexo[]>([]);
@@ -200,7 +212,7 @@ export function PesquisaMesa({
   const ditado = useDitado({
     aoParcial: (t) => setPergunta(t),
     aoFim: (t) => {
-      if (modoVoz.current && t.trim().length >= 8) enviarRef.current(t);
+      if (modoVoz.current && t.trim().length >= minimo) enviarRef.current(t);
       else modoVoz.current = false;
     },
     transcrever,
@@ -222,7 +234,13 @@ export function PesquisaMesa({
     });
   };
   const lendo = anexos.some((a) => a.estado === "lendo");
-  const [turnos, setTurnos] = useState<Turno[]>([]);
+  const [turnos, setTurnos] = useState<Turno[]>(() => (turnosIniciais ?? []).map((t) => ({ ...t, documentos: [] })));
+  const mudou = useRef(aoMudar);
+  mudou.current = aoMudar;
+  useEffect(() => {
+    const prontos = turnos.filter((t) => t.desfecho);
+    if (prontos.length) mudou.current?.(prontos.map(({ documentos: _d, ...t }) => t));
+  }, [turnos]);
   const [data, setData] = useState(dataInicial ?? hoje);
   const [caso, setCaso] = useState(casoInicial);
   const [ativa, setAtiva] = useState<{ turno: string; ref: string } | null>(null);
@@ -277,8 +295,12 @@ export function PesquisaMesa({
   const enviar = (q = pergunta) => {
     if (pendente) return;
     if (lendo) return setAviso("Espere o anexo terminar de ser lido e envie de novo.");
-    if (q.trim().length < 8) {
-      setAviso(q.trim() ? "Escreva um pouco mais: a pergunta precisa de pelo menos 8 letras para a busca nas normas." : "Escreva a pergunta antes de enviar.");
+    if (q.trim().length < minimo) {
+      setAviso(
+        q.trim()
+          ? `Escreva um pouco mais: sem IA conectada, a busca nas normas precisa de pelo menos ${minimo} letras.${opcoesCampo ? " Para conversar livremente, escolha uma IA em Resposta." : ""}`
+          : "Escreva a pergunta antes de enviar.",
+      );
       campo.current?.focus();
       return;
     }
@@ -340,10 +362,21 @@ export function PesquisaMesa({
     });
   };
   enviarRef.current = enviar;
+  // A pergunta que veio de fora (barra do caso) vai uma vez só, depois de montar.
+  const inicialFoi = useRef(false);
+  useEffect(() => {
+    if (!perguntaInicial || inicialFoi.current) return;
+    const t = setTimeout(() => {
+      if (inicialFoi.current) return;
+      inicialFoi.current = true;
+      enviarRef.current(perguntaInicial);
+    }, 60);
+    return () => clearTimeout(t);
+  }, [perguntaInicial]);
 
   /** Editar uma pergunta substitui ela e tudo o que veio depois, como nos chats de IA. */
   const reenviar = (id: string, texto: string, editada: boolean) => {
-    if (pendente || texto.trim().length < 8) return;
+    if (pendente || texto.trim().length < minimo) return;
     calar();
     setFalando(false);
     const i = turnos.findIndex((x) => x.id === id);
@@ -583,6 +616,7 @@ export function PesquisaMesa({
             novaPergunta={() => campo.current?.focus()}
             ultimo={t.id === turnos[turnos.length - 1].id}
             dicaSemIa={!!opcoesCampo}
+            minimo={minimo}
             ocupado={pendente}
             reenviar={(texto, editada) => reenviar(t.id, texto, editada)}
             verFontes={() => {
@@ -627,6 +661,8 @@ export function PesquisaMesa({
     </div>
   );
 }
+
+export type TurnoSalvo = Omit<Turno, "documentos">;
 
 interface Turno {
   id: string;
@@ -694,6 +730,7 @@ function TurnoChat({
   ocupado,
   reenviar,
   dicaSemIa,
+  minimo,
 }: {
   t: Turno;
   etapa: number;
@@ -707,6 +744,7 @@ function TurnoChat({
   verFontes: () => void;
   ultimo: boolean;
   dicaSemIa: boolean;
+  minimo: number;
   ocupado: boolean;
   reenviar: (texto: string, editada: boolean) => void;
 }) {
@@ -764,8 +802,10 @@ function TurnoChat({
             return `[${ref.slice(1)}] ${f ? `${f.norma}, ${f.rotulo}` : ref}`;
           }),
         ].join("\n")
-      : d && "mensagem" in d
-        ? d.mensagem
+      : d?.status === "conversa"
+        ? [...d.paragrafos, "", "(Sem fonte verificada na base; conferir no texto oficial.)"].join("\n")
+        : d && "mensagem" in d
+          ? d.mensagem
         : "";
   const acoesResposta = d && (d.status !== "respondida" || terminou) && (
     <div className="pesquisa-msg-acoes pesquisa-surge">
@@ -797,7 +837,7 @@ function TurnoChat({
           className="pesquisa-editar"
           onSubmit={(e) => {
             e.preventDefault();
-            if (rascunho.trim().length < 8 || ocupado) return;
+            if (rascunho.trim().length < minimo || ocupado) return;
             setEditando(false);
             reenviar(rascunho, rascunho.trim() !== t.texto);
           }}
@@ -834,7 +874,7 @@ function TurnoChat({
             >
               Cancelar
             </button>
-            <button type="submit" className="mesa-botao" disabled={rascunho.trim().length < 8 || ocupado}>
+            <button type="submit" className="mesa-botao" disabled={rascunho.trim().length < minimo || ocupado}>
               Enviar
             </button>
           </div>
@@ -954,14 +994,33 @@ function TurnoChat({
         </>
       )}
 
+      {d?.status === "conversa" && (
+        <article className="mesa-resposta pesquisa-resposta pesquisa-surge">
+          <p className="mesa-autor">
+            <Simbolo /> AdvFin · conversa
+          </p>
+          <p className="pesquisa-sem-fonte">
+            <span aria-hidden="true">!</span> Sem fonte verificada na base. Resposta do conhecimento geral da IA: confira no texto oficial antes de usar.
+          </p>
+          {d.paragrafos.map((p, i) => (
+            <p key={i}>{p}</p>
+          ))}
+        </article>
+      )}
+
       {d?.status === "sem_resultado" && (
         <article className="mesa-resposta pesquisa-resposta pesquisa-surge">
           <p className="mesa-autor">
-            <Simbolo /> AdvFin · sem dispositivos
+            <Simbolo /> AdvFin
           </p>
           <p>
-            Nenhum dispositivo vigente em {dataBR(t.data)} trata disso na base atual, que ainda cobre só o núcleo da Reforma (EC 132/2023 e LC
-            214/2025).
+            Não achei, na base verificada, um dispositivo vigente em {dataBR(t.data)} sobre isso. Por enquanto ela cobre o núcleo da Reforma: EC
+            132/2023 e LC 214/2025.
+          </p>
+          <p>
+            {dicaSemIa
+              ? "Para uma resposta conversada, mesmo sem fonte na base, escolha uma IA em Resposta, logo abaixo do campo. Ou tente com termos das normas, como “alíquota da CBS”, “split payment” ou “crédito de IBS”."
+              : "Tente com termos das normas, como “alíquota da CBS”, “split payment” ou “crédito de IBS”, ou troque a data de vigência."}
           </p>
         </article>
       )}

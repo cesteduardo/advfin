@@ -104,6 +104,9 @@
   [data-tema="escuro"] .mesa-cartao, [data-tema="escuro"] .mesa-resposta:not(.pesquisa-resposta), [data-tema="escuro"] .atalho, [data-tema="escuro"] .inicio-numero, [data-tema="escuro"] .mesa-caso, [data-tema="escuro"] .regime-cartao { box-shadow: 0 0 0 1px var(--anel), 0 14px 34px -22px rgb(0 0 0 / .7); }
   /* Logo sem contorno no escuro: o marinho do símbolo já se destaca do fundo. */
   [data-tema="escuro"] .simbolo-app { box-shadow: none; }
+  /* No escuro, o símbolo inverte: quadro dourado e traço marinho (a mesma versão da tela de acesso). */
+  [data-tema="escuro"] .simbolo-app rect { fill: var(--ouro-claro); }
+  [data-tema="escuro"] .simbolo-app path { stroke: var(--marinho); }
   [data-tema="escuro"] .fontes-veu { background: rgb(3 8 16 / .6); }
   [data-tema="escuro"] .demo-faixa { background: rgb(217 191 134 / .1); }
 }

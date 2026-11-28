@@ -277,7 +277,14 @@ export async function rodarLab(p: PedidoLab): Promise<{ desfecho: DesfechoPesqui
   if (resposta?.semBase && usaModelo(p.modo) && p.chave) return fim(await conversar(p, diag, id, fontes));
   // Modelo grátis que respondeu em prosa, fora do formato: vale como conversa, sem número de fonte.
   if (!resposta && usaModelo(p.modo) && diag.saidaBruta && !diag.saidaBruta.startsWith("(sem texto")) {
-    const paragrafos = diag.saidaBruta.split(/\n{2,}/).map((x) => x.replace(/\[D\d{1,2}\]/g, "").trim()).filter(Boolean);
+    let partes: string[] = [];
+    try {
+      const j = JSON.parse(diag.saidaBruta.slice(diag.saidaBruta.indexOf("{"), diag.saidaBruta.lastIndexOf("}") + 1));
+      if (Array.isArray(j.paragrafos)) partes = j.paragrafos.filter((x: unknown) => typeof x === "string");
+    } catch {
+      partes = diag.saidaBruta.trim().startsWith("{") ? [] : diag.saidaBruta.split(/\n{2,}/);
+    }
+    const paragrafos = partes.map((x) => x.replace(/\[D\d{1,2}\]/g, "").trim()).filter(Boolean);
     if (paragrafos.length) return fim({ status: "conversa", id, paragrafos, fontes: [], modelo: diag.modelo });
   }
 

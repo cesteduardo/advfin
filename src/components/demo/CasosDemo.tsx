@@ -96,7 +96,7 @@ export function CasosDemo() {
                 {conversas.map((v) => {
                   const ultimo = v.turnos[v.turnos.length - 1];
                   const d = ultimo?.desfecho;
-                  const trecho = d && "paragrafos" in d ? d.paragrafos.join(" ").replace(/\[D\d{1,2}\]/g, "").slice(0, 180) : d && "mensagem" in d ? d.mensagem : "";
+                  const trecho = d && "paragrafos" in d ? d.paragrafos.join(" ").replace(/\s*\[D\d{1,2}\]/g, "").slice(0, 180) : d && "mensagem" in d ? d.mensagem : "";
                   return (
                     <li key={v.id}>
                       <Link href={`/app/pesquisa/?conversa=${encodeURIComponent(v.id)}`} className="caso-conversa">

@@ -13,6 +13,7 @@ import { Seletor } from "@/components/ui/Seletor";
 import { CampoData } from "@/components/ui/CampoData";
 import { lerAnexo, TIPOS_ACEITOS } from "@/lib/anexos/ler";
 import { calar, falar, falaSuportada, useDitado, type Transcrever } from "@/lib/anexos/voz";
+import { pontuarLocal, prepararCorretor, revisarLocal } from "@/lib/anexos/ortografia";
 import type { DocumentoAnexo, TurnoAnterior } from "@/lib/pesquisa/geracao";
 
 const MAX_ANEXOS = 3;
@@ -165,7 +166,17 @@ export function PesquisaMesa({
   abaixoDoCampo,
   notaAnexos,
   transcrever,
+  minimo = 8,
+  turnosIniciais,
+  aoMudar,
+  perguntaInicial,
+  conectarIa,
+  revisarDitado,
 }: {
+  /** Sem IA ligada: liga a IA grátis (na demonstração). Mostra o convite em destaque. */
+  conectarIa?: () => void;
+  /** Revisão do texto ditado (ortografia e pontuação), antes de ir ao campo e à conversa. */
+  revisarDitado?: (texto: string) => Promise<string>;
   executar: (pergunta: string, data: string, caso?: string | null, documentos?: DocumentoAnexo[], historico?: TurnoAnterior[]) => Promise<Desfecho>;
   aoConcluir?: () => void;
   falhaRede?: string;
@@ -188,6 +199,14 @@ export function PesquisaMesa({
   notaAnexos?: string;
   /** Transcrição da fala gravada, para navegadores sem ditado próprio (Whisper do Groq). */
   transcrever?: Transcrever;
+  /** Menor pergunta aceita. Com IA conectada, até um "oi" vale. */
+  minimo?: number;
+  /** Conversa salva que reabre na tela (da demonstração, a partir do caso). */
+  turnosIniciais?: TurnoSalvo[];
+  /** Chamado a cada resposta, com a conversa inteira, para quem quiser guardar. */
+  aoMudar?: (turnos: TurnoSalvo[]) => void;
+  /** Pergunta que já vai sozinha ao abrir (ex.: a barra do caso). */
+  perguntaInicial?: string;
 }) {
   const [pergunta, setPergunta] = useState("");
   const [anexos, setAnexos] = useState<Anexo[]>([]);
@@ -196,12 +215,31 @@ export function PesquisaMesa({
   // Modo voz: a pergunta falada vai sozinha ao terminar, e a resposta é lida em voz alta.
   const modoVoz = useRef(false);
   const [falando, setFalando] = useState(false);
-  const enviarRef = useRef<(q?: string) => void>(() => {});
+  const enviarRef = useRef<(q?: string) => string | undefined>(() => undefined);
+  // Texto que veio do ditado e ainda não foi revisado (ortografia e pontuação).
+  const cru = useRef<string | null>(null);
+  const [revisando, setRevisando] = useState(false);
+  const revisar = async (t: string) => {
+    const local = await revisarLocal(t);
+    return revisarDitado ? revisarDitado(local) : local;
+  };
   const ditado = useDitado({
-    aoParcial: (t) => setPergunta(t),
+    aoParcial: (t) => {
+      cru.current = t;
+      setPergunta(t);
+    },
     aoFim: (t) => {
-      if (modoVoz.current && t.trim().length >= 8) enviarRef.current(t);
-      else modoVoz.current = false;
+      modoVoz.current = false;
+      if (!t.trim() || cru.current !== t) return;
+      setRevisando(true);
+      revisar(t)
+        .then((r) => {
+          // Só troca se ninguém mexeu no campo nem enviou enquanto revisava.
+          if (cru.current !== t) return;
+          cru.current = null;
+          setPergunta(r);
+        })
+        .finally(() => setRevisando(false));
     },
     transcrever,
   });
@@ -222,7 +260,13 @@ export function PesquisaMesa({
     });
   };
   const lendo = anexos.some((a) => a.estado === "lendo");
-  const [turnos, setTurnos] = useState<Turno[]>([]);
+  const [turnos, setTurnos] = useState<Turno[]>(() => (turnosIniciais ?? []).map((t) => ({ ...t, documentos: [] })));
+  const mudou = useRef(aoMudar);
+  mudou.current = aoMudar;
+  useEffect(() => {
+    const prontos = turnos.filter((t) => t.desfecho);
+    if (prontos.length) mudou.current?.(prontos.map(({ documentos: _d, ...t }) => t));
+  }, [turnos]);
   const [data, setData] = useState(dataInicial ?? hoje);
   const [caso, setCaso] = useState(casoInicial);
   const [ativa, setAtiva] = useState<{ turno: string; ref: string } | null>(null);
@@ -274,16 +318,37 @@ export function PesquisaMesa({
   const rolarAoFim = (suave = true) => fim.current?.scrollIntoView({ behavior: suave && !movimentoReduzido() ? "smooth" : "auto", block: "end" });
 
   const [aviso, setAviso] = useState<string | null>(null);
-  const enviar = (q = pergunta) => {
+  const enviar = (q = pergunta): string | undefined => {
     if (pendente) return;
-    if (lendo) return setAviso("Espere o anexo terminar de ser lido e envie de novo.");
-    if (q.trim().length < 8) {
-      setAviso(q.trim() ? "Escreva um pouco mais: a pergunta precisa de pelo menos 8 letras para a busca nas normas." : "Escreva a pergunta antes de enviar.");
+    // Enviou falando (ou antes de a revisão terminar): para o microfone, descarta o que ainda
+    // chegaria, limpa o campo e manda o texto já revisado para a conversa.
+    if (cru.current && q === cru.current && q.trim()) {
+      cru.current = null;
+      ditado.descartar();
+      const id = enviar(pontuarLocal(q));
+      // A mensagem entra na hora, já pontuada; a revisão completa (acentos e modelo) corrige o balão logo depois.
+      if (id)
+        void revisar(q)
+          .then((r) => setTurnos((ts) => ts.map((x) => (x.id === id && r.trim() ? { ...x, texto: r.trim() } : x))))
+          .catch(() => {});
+      return id;
+    }
+    if (lendo) {
+      setAviso("Espere o anexo terminar de ser lido e envie de novo.");
+      return;
+    }
+    if (q.trim().length < minimo) {
+      setAviso(
+        q.trim()
+          ? `Escreva um pouco mais: sem IA conectada, a busca nas normas precisa de pelo menos ${minimo} letras.${opcoesCampo ? " Para conversar livremente, escolha uma IA em Resposta." : ""}`
+          : "Escreva a pergunta antes de enviar.",
+      );
       campo.current?.focus();
       return;
     }
     setAviso(null);
-    ditado.parar();
+    cru.current = null;
+    ditado.descartar();
     calar();
     setFalando(false);
     const prontos = anexos.filter((a) => a.estado === "pronto" && a.texto);
@@ -308,6 +373,7 @@ export function PesquisaMesa({
     } else aplicar();
     requestAnimationFrame(() => rolarAoFim());
     rodar(turno, historicoDe(turnos), lerEmVoz);
+    return turno.id;
   };
 
   /** Perguntas e respostas anteriores a um turno, para o modelo entender o seguimento. */
@@ -340,10 +406,21 @@ export function PesquisaMesa({
     });
   };
   enviarRef.current = enviar;
+  // A pergunta que veio de fora (barra do caso) vai uma vez só, depois de montar.
+  const inicialFoi = useRef(false);
+  useEffect(() => {
+    if (!perguntaInicial || inicialFoi.current) return;
+    const t = setTimeout(() => {
+      if (inicialFoi.current) return;
+      inicialFoi.current = true;
+      enviarRef.current(perguntaInicial);
+    }, 60);
+    return () => clearTimeout(t);
+  }, [perguntaInicial]);
 
   /** Editar uma pergunta substitui ela e tudo o que veio depois, como nos chats de IA. */
   const reenviar = (id: string, texto: string, editada: boolean) => {
-    if (pendente || texto.trim().length < 8) return;
+    if (pendente || texto.trim().length < minimo) return;
     calar();
     setFalando(false);
     const i = turnos.findIndex((x) => x.id === id);
@@ -426,6 +503,7 @@ export function PesquisaMesa({
         rows={turnos.length ? 1 : 2}
         value={pergunta}
         onChange={(e) => {
+          cru.current = null;
           setPergunta(e.target.value);
           if (aviso) setAviso(null);
         }}
@@ -442,7 +520,7 @@ export function PesquisaMesa({
             anexar(imgs);
           }
         }}
-        placeholder={ditado.transcrevendo ? "Transcrevendo o que você disse…" : ditado.ouvindo ? "Pode falar, estou ouvindo…" : turnos.length ? "Responder ou perguntar outra coisa…" : "Pergunte sobre a transição…"}
+        placeholder={revisando ? "Revisando a ortografia…" : ditado.transcrevendo ? "Transcrevendo o que você disse…" : ditado.ouvindo ? "Pode falar, estou ouvindo…" : turnos.length ? "Responder ou perguntar outra coisa…" : "Pergunte sobre a transição…"}
         maxLength={2000}
       />
       <div className="mesa-campo-pe">
@@ -481,6 +559,7 @@ export function PesquisaMesa({
               onClick={() => {
                 if (ditado.ouvindo) return ditado.parar();
                 modoVoz.current = false;
+                prepararCorretor();
                 ditado.iniciar(pergunta);
               }}
               aria-label={ditado.transcrevendo ? "Transcrevendo" : ditado.ouvindo ? "Parar a gravação" : "Ditar a pergunta"}
@@ -583,6 +662,8 @@ export function PesquisaMesa({
             novaPergunta={() => campo.current?.focus()}
             ultimo={t.id === turnos[turnos.length - 1].id}
             dicaSemIa={!!opcoesCampo}
+            conectarIa={conectarIa}
+            minimo={minimo}
             ocupado={pendente}
             reenviar={(texto, editada) => reenviar(t.id, texto, editada)}
             verFontes={() => {
@@ -627,6 +708,8 @@ export function PesquisaMesa({
     </div>
   );
 }
+
+export type TurnoSalvo = Omit<Turno, "documentos">;
 
 interface Turno {
   id: string;
@@ -694,7 +777,10 @@ function TurnoChat({
   ocupado,
   reenviar,
   dicaSemIa,
+  conectarIa,
+  minimo,
 }: {
+  conectarIa?: () => void;
   t: Turno;
   etapa: number;
   digitar: boolean;
@@ -707,6 +793,7 @@ function TurnoChat({
   verFontes: () => void;
   ultimo: boolean;
   dicaSemIa: boolean;
+  minimo: number;
   ocupado: boolean;
   reenviar: (texto: string, editada: boolean) => void;
 }) {
@@ -764,8 +851,10 @@ function TurnoChat({
             return `[${ref.slice(1)}] ${f ? `${f.norma}, ${f.rotulo}` : ref}`;
           }),
         ].join("\n")
-      : d && "mensagem" in d
-        ? d.mensagem
+      : d?.status === "conversa"
+        ? [...d.paragrafos, "", "(Sem fonte verificada na base; conferir no texto oficial.)"].join("\n")
+        : d && "mensagem" in d
+          ? d.mensagem
         : "";
   const acoesResposta = d && (d.status !== "respondida" || terminou) && (
     <div className="pesquisa-msg-acoes pesquisa-surge">
@@ -797,7 +886,7 @@ function TurnoChat({
           className="pesquisa-editar"
           onSubmit={(e) => {
             e.preventDefault();
-            if (rascunho.trim().length < 8 || ocupado) return;
+            if (rascunho.trim().length < minimo || ocupado) return;
             setEditando(false);
             reenviar(rascunho, rascunho.trim() !== t.texto);
           }}
@@ -834,7 +923,7 @@ function TurnoChat({
             >
               Cancelar
             </button>
-            <button type="submit" className="mesa-botao" disabled={rascunho.trim().length < 8 || ocupado}>
+            <button type="submit" className="mesa-botao" disabled={rascunho.trim().length < minimo || ocupado}>
               Enviar
             </button>
           </div>
@@ -954,14 +1043,51 @@ function TurnoChat({
         </>
       )}
 
-      {d?.status === "sem_resultado" && (
+      {d?.status === "conversa" && (
         <article className="mesa-resposta pesquisa-resposta pesquisa-surge">
           <p className="mesa-autor">
-            <Simbolo /> AdvFin · sem dispositivos
+            <Simbolo /> AdvFin · conversa
+          </p>
+          <p className="pesquisa-sem-fonte">
+            <span aria-hidden="true">!</span> Sem fonte verificada na base. Resposta do conhecimento geral da IA: confira no texto oficial antes de usar.
+          </p>
+          {d.paragrafos.map((p, i) => (
+            <p key={i}>{p}</p>
+          ))}
+        </article>
+      )}
+
+      {d?.status === "sem_resultado" && conectarIa && (
+        <article className="mesa-resposta pesquisa-resposta pesquisa-surge">
+          <p className="mesa-autor">
+            <Simbolo /> AdvFin
+          </p>
+          <div className="pesquisa-ligar-ia" role="note">
+            <strong>A IA está desligada.</strong>
+            <p>
+              Sem IA, eu só procuro trechos nas normas da Reforma, e para “{t.texto.length > 60 ? `${t.texto.slice(0, 60)}…` : t.texto}” não achei nenhum. Ligada,
+              a IA conversa sobre qualquer assunto: um cumprimento, uma conta, uma dúvida fora do tributário.
+            </p>
+            <button type="button" className="mesa-botao" onClick={conectarIa}>
+              Ligar a IA grátis
+            </button>
+          </div>
+        </article>
+      )}
+
+      {d?.status === "sem_resultado" && !conectarIa && (
+        <article className="mesa-resposta pesquisa-resposta pesquisa-surge">
+          <p className="mesa-autor">
+            <Simbolo /> AdvFin
           </p>
           <p>
-            Nenhum dispositivo vigente em {dataBR(t.data)} trata disso na base atual, que ainda cobre só o núcleo da Reforma (EC 132/2023 e LC
-            214/2025).
+            Não achei, na base verificada, um dispositivo vigente em {dataBR(t.data)} sobre isso. Por enquanto ela cobre o núcleo da Reforma: EC
+            132/2023 e LC 214/2025.
+          </p>
+          <p>
+            {dicaSemIa
+              ? "Para uma resposta conversada, mesmo sem fonte na base, escolha uma IA em Resposta, logo abaixo do campo. Ou tente com termos das normas, como “alíquota da CBS”, “split payment” ou “crédito de IBS”."
+              : "Tente com termos das normas, como “alíquota da CBS”, “split payment” ou “crédito de IBS”, ou troque a data de vigência."}
           </p>
         </article>
       )}

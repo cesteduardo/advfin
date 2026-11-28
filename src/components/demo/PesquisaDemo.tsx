@@ -1,14 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Seletor } from "@/components/ui/Seletor";
 import { CamposChave, useChave } from "@/components/app/ChaveAnthropic";
-import { PesquisaMesa } from "@/components/app/PesquisaMesa";
-import { rodarLab } from "@/lib/pesquisa/laboratorio";
+import { PesquisaMesa, type TurnoSalvo } from "@/components/app/PesquisaMesa";
+import { guardarConversa, lerConversa } from "./conversas";
+import { revisarComModelo, rodarLab } from "@/lib/pesquisa/laboratorio";
 import type { DocumentoAnexo, TurnoAnterior } from "@/lib/pesquisa/geracao";
 import { agora, alterar, euDe, novoId, useDemo } from "./estado";
 
-const STATUS: Record<string, string> = { respondida: "Respondida", bloqueada_citacao: "Bloqueada pelo verificador", sem_resultado: "Sem dispositivos", erro: "Erro" };
+const STATUS: Record<string, string> = { respondida: "Respondida", conversa: "Conversa sem fonte", bloqueada_citacao: "Bloqueada pelo verificador", sem_resultado: "Sem dispositivos", erro: "Erro" };
 
 type Modo = "extrativo" | "anthropic" | "groq" | "openrouter";
 const MODOS: { id: Modo; nome: string }[] = [
@@ -18,6 +19,8 @@ const MODOS: { id: Modo; nome: string }[] = [
   { id: "groq", nome: "Groq (só no app com servidor)" },
 ];
 
+const GUARDA_MODO = "advfin-demo-resposta";
+
 /** Pesquisa da demonstração: mesma mesa do app, com a resposta montada no navegador. */
 export function PesquisaDemo() {
   const [modo, setModo] = useState<Modo>("extrativo");
@@ -25,25 +28,64 @@ export function PesquisaDemo() {
   const groq = useChave("groq");
   const livre = useChave("openrouter");
   const c = modo === "groq" ? groq : modo === "openrouter" ? livre : claude;
-  // Com uma chave já salva, a resposta vem redigida pela IA desde o início.
+  // A escolha de quem responde fica guardada; sem escolha guardada, uma chave salva já liga a IA.
   const [escolheu, setEscolheu] = useState(false);
+  useEffect(() => {
+    try {
+      const g = localStorage.getItem(GUARDA_MODO) as Modo | null;
+      if (g && MODOS.some((m) => m.id === g)) {
+        setModo(g);
+        setEscolheu(true);
+      }
+    } catch {}
+  }, []);
   useEffect(() => {
     if (escolheu) return;
     if (livre.lembrar) setModo("openrouter");
     else if (claude.lembrar) setModo("anthropic");
   }, [escolheu, livre.lembrar, claude.lembrar]);
+  // Salvou e a chave passou no teste: este passa a ser o modo guardado.
+  useEffect(() => {
+    if (c.teste?.estado !== "ok") return;
+    try {
+      localStorage.setItem(GUARDA_MODO, modo);
+    } catch {}
+  }, [c.teste, modo]);
+  const escolher = (m: Modo) => {
+    setEscolheu(true);
+    setModo(m);
+    try {
+      localStorage.setItem(GUARDA_MODO, m);
+    } catch {}
+  };
+
+  // Liga a IA grátis: com chave salva, já conversa; sem chave, abre o quadro para colar a chave.
+  const ligarIa = () => {
+    const m: Modo = claude.lembrar && !livre.lembrar ? "anthropic" : "openrouter";
+    escolher(m);
+    requestAnimationFrame(() => document.querySelector<HTMLElement>(".lab-config input, .lab-config .mesa-botao")?.focus());
+  };
 
   const e = useDemo();
   const eu = e ? euDe(e) : null;
   // O caso vem pelo endereço (?caso=...) quando a pessoa clica em "Pesquisar neste caso".
+  // Pela barra do caso vem também a pergunta (?q=...); por uma conversa salva, ?conversa=...
   const [casoInicial, setCasoInicial] = useState<string | undefined>(undefined);
-  useEffect(() => setCasoInicial(new URLSearchParams(location.search).get("caso") ?? undefined), []);
+  const [endereco, setEndereco] = useState<{ conversa: string; turnos?: TurnoSalvo[]; q?: string } | null>(null);
+  useEffect(() => {
+    const u = new URLSearchParams(location.search);
+    const salva = u.get("conversa") ? lerConversa(u.get("conversa")!) : undefined;
+    setCasoInicial(salva?.caso ?? u.get("caso") ?? undefined);
+    setEndereco({ conversa: salva?.id ?? novoId(), turnos: salva?.turnos, q: salva ? undefined : (u.get("q") ?? undefined) });
+  }, []);
+  const casoDaConversa = useRef<string | null>(null);
 
   const executar = async (pergunta: string, data: string, caso?: string | null, documentos: DocumentoAnexo[] = [], historico: TurnoAnterior[] = []) => {
     if (modo !== "extrativo" && !c.chave.trim()) {
       const quem = modo === "anthropic" ? "sua chave da Anthropic" : modo === "groq" ? "sua chave do Groq" : "sua chave grátis do OpenRouter";
       return { status: "invalida" as const, mensagem: `Cole ${quem} no quadro abaixo do campo, ou volte ao modo sem IA.` };
     }
+    casoDaConversa.current = caso ?? null;
     const desfecho = (await rodarLab({ pergunta, data, modo, chave: c.chave.trim(), modelo: c.modelo, documentos, historico })).desfecho;
     {
       alterar(
@@ -58,26 +100,39 @@ export function PesquisaDemo() {
 
   return (
     <>
-      <PesquisaMesa
-        key={casoInicial ?? "sem-caso"}
+      {endereco && <PesquisaMesa
+        key={endereco.conversa}
+        turnosIniciais={endereco.turnos}
+        perguntaInicial={endereco.q}
+        aoMudar={(turnos) => guardarConversa({ id: endereco.conversa, caso: casoDaConversa.current ?? casoInicial ?? null, turnos })}
         executar={executar}
         falhaRede="Não foi possível montar a resposta neste navegador."
         dataInicial={vigencia}
         casos={e?.casos.map((x) => ({ id: x.id, titulo: x.titulo }))}
         casoInicial={casoInicial && e?.casos.some((x) => x.id === casoInicial) ? casoInicial : ""}
         nome={eu?.nome.split(" ")[0]}
+        minimo={modo === "extrativo" ? 8 : 2}
+        conectarIa={modo === "extrativo" ? ligarIa : undefined}
+        revisarDitado={modo !== "extrativo" && modo !== "groq" && c.lembrar && c.chave.trim() ? (t) => revisarComModelo(modo, c.chave.trim(), c.modelo, t) : undefined}
         notaAnexos={modo === "extrativo" ? "Sem IA, o texto do anexo é lido mas não entra na resposta. Escolha um modelo em Resposta para ele ser considerado." : undefined}
         opcoesCampo={
           <span className="app-data">
             <span className="app-data-rotulo">Resposta</span>
-            <Seletor value={modo} onChange={(v) => {
-              setEscolheu(true);
-              setModo(v as Modo);
-            }} rotulo="Quem redige a resposta" compacto opcoes={MODOS.map((m) => ({ valor: m.id, rotulo: m.nome }))} />
+            <Seletor value={modo} onChange={(v) => escolher(v as Modo)} rotulo="Quem redige a resposta" compacto opcoes={MODOS.map((m) => ({ valor: m.id, rotulo: m.nome }))} />
           </span>
         }
         abaixoDoCampo={
-          modo !== "extrativo" ? (
+          modo === "extrativo" ? (
+            <div className="demo-ia-desligada" role="note">
+              <span aria-hidden="true" />
+              <p>
+                <strong>IA desligada.</strong> Agora eu só busco trechos das normas da Reforma: não converso nem respondo a outros assuntos.
+              </p>
+              <button type="button" className="mesa-botao" onClick={ligarIa}>
+                Ligar a IA grátis
+              </button>
+            </div>
+          ) : (
             <div className="mesa-cartao lab-config demo-origem mesa-entra" data-conectado={c.lembrar ? "" : undefined} key={modo}>
               {!c.lembrar && <p className="mesa-nota">
                 {modo === "openrouter" ? (
@@ -92,14 +147,11 @@ export function PesquisaDemo() {
                   "O Claude é chamado direto deste navegador, com a sua chave. O custo sai da sua conta, e cada pergunta custa centavos."
                 )}
               </p>}
-              <CamposChave c={c} trocar={(p) => {
-                setEscolheu(true);
-                setModo(p);
-              }} />
+              <CamposChave c={c} trocar={(p) => escolher(p)} />
             </div>
-          ) : null
+          )
         }
-      />
+      />}
     </>
   );
 }

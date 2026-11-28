@@ -45,10 +45,12 @@ export function useChave(provedor: ProvedorChave) {
         setChave(g);
         setLembrar(true);
       }
+      const m = localStorage.getItem(`${guarda}-modelo`);
+      if (m && MODELOS[provedor].some((x) => x.id === m)) setModelo(m);
     } catch {
       /* sem armazenamento: segue só na memória */
     }
-  }, [guarda]);
+  }, [guarda, provedor]);
 
   const gravar = (sim: boolean, valor: string) => {
     setLembrar(sim);
@@ -66,7 +68,12 @@ export function useChave(provedor: ProvedorChave) {
     modelo,
     lembrar,
     teste,
-    setModelo,
+    setModelo: (m: string) => {
+      setModelo(m);
+      try {
+        localStorage.setItem(`${guarda}-modelo`, m);
+      } catch {}
+    },
     setChave: (v: string) => {
       setChave(v);
       setTeste(null);
@@ -77,7 +84,12 @@ export function useChave(provedor: ProvedorChave) {
       const v = chave.trim();
       setTeste({ estado: "testando" });
       const r = await testarChave(provedor, v);
-      if (r.ok) gravar(true, v);
+      if (r.ok) {
+        gravar(true, v);
+        try {
+          localStorage.setItem(`${guarda}-modelo`, modelo);
+        } catch {}
+      }
       setTeste({ estado: r.ok ? "ok" : "erro", mensagem: r.ok ? `${r.mensagem} Guardada neste navegador.` : r.mensagem });
     },
     esquecer: () => {

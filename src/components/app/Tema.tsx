@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 import { Icone, type NomeIcone } from "./Icone";
 
 /**
@@ -24,17 +25,33 @@ function ler(): Preferencia {
   }
 }
 
-/** Troca de tema feita pela pessoa: as cores atravessam em ~280 ms, sem piscar. */
-function suavizar() {
-  if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+type Transicao = { ready: Promise<void>; finished: Promise<void>; updateCallbackDone: Promise<void> };
+type DocVT = Document & { startViewTransition?: (f: () => void) => Transicao };
+
+/**
+ * Troca de tema feita pela pessoa: um crossfade único da página, em que tudo muda junto
+ * (nenhum pedaço antes do resto, sem forma nenhuma). Sem View Transitions, as cores
+ * atravessam juntas; com movimento reduzido, troca na hora.
+ */
+function trocarSuave(mudar: () => void) {
+  const doc = document as DocVT;
   const h = document.documentElement;
-  h.classList.add("tema-trocando");
-  clearTimeout((window as unknown as { __temaT?: number }).__temaT);
-  (window as unknown as { __temaT?: number }).__temaT = window.setTimeout(() => h.classList.remove("tema-trocando"), 340);
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) return mudar();
+  if (!doc.startViewTransition) {
+    h.classList.add("tema-trocando");
+    mudar();
+    window.setTimeout(() => h.classList.remove("tema-trocando"), 420);
+    return;
+  }
+  // Crossfade da página inteira: a foto do tema antigo se dissolve na do novo, tudo no mesmo compasso.
+  h.classList.add("vt-tema");
+  const vt = doc.startViewTransition(() => flushSync(mudar));
+  vt.finished.finally(() => h.classList.remove("vt-tema")).catch(() => {});
+  vt.ready.catch(() => {});
+  vt.updateCallbackDone.catch(() => {});
 }
 
-function aplicar(p: Preferencia, suave = false) {
-  if (suave) suavizar();
+function aplicar(p: Preferencia) {
   const escuro = p === "escuro" || (p === "sistema" && sistemaEscuro());
   document.documentElement.dataset.tema = escuro ? "escuro" : "claro";
   document.querySelector('meta[name="theme-color"]')?.setAttribute("content", escuro ? "#080b11" : "#0f2742");
@@ -68,12 +85,14 @@ export function ChaveTema() {
   const [pref, setPref] = useState<Preferencia>("sistema");
   useEffect(() => setPref(ler()), []);
   const escolher = (p: Preferencia) => {
-    setPref(p);
     try {
       if (p === "sistema") localStorage.removeItem(CHAVE);
       else localStorage.setItem(CHAVE, p);
     } catch {}
-    aplicar(p, true);
+    trocarSuave(() => {
+      setPref(p);
+      aplicar(p);
+    });
   };
   // A pílula desliza até a opção escolhida, como nas abas e na dock.
   const trilha = useRef<HTMLSpanElement>(null);

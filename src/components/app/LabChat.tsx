@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Segmentado } from "@/components/Segmentado";
 import { rodarLab, type ModoLab } from "@/lib/pesquisa/laboratorio";
 import { BASE_LOCAL } from "@/lib/pesquisa/base-local";
@@ -22,7 +22,19 @@ const MODOS: { id: ModoLab; nome: string }[] = [
  * A chave só vive na memória da aba; fica no navegador apenas se o desenvolvedor pedir.
  */
 export function LabChat() {
-  const [modo, setModo] = useState<ModoLab>("extrativo");
+  const [modo, setModoBruto] = useState<ModoLab>("extrativo");
+  useEffect(() => {
+    try {
+      const g = localStorage.getItem("advfin-lab-modo") as ModoLab | null;
+      if (g && MODOS.some((m) => m.id === g)) setModoBruto(g);
+    } catch {}
+  }, []);
+  const setModo = (m: ModoLab) => {
+    setModoBruto(m);
+    try {
+      localStorage.setItem("advfin-lab-modo", m);
+    } catch {}
+  };
   const claude = useChave("anthropic");
   const groq = useChave("groq");
   const livre = useChave("openrouter");

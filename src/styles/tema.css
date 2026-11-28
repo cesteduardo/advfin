@@ -29,8 +29,10 @@
     --ink-2: #c9c2b2;
     --muted: #98a1b0;
     --titulo-2: #808a9a;
-    --line: rgb(241 234 219 / .07);
-    --anel: transparent;
+    /* Os mesmos contornos do claro, na versão escura: marfim translúcido, fino. */
+    --line: rgb(241 234 219 / .1);
+    --anel: rgb(241 234 219 / .1);
+    --anel-forte: rgb(241 234 219 / .22);
     --azul: #9bb8e0;
     --azul-forte: #c3d4ec;
     --azul-50: #182031;
@@ -70,7 +72,7 @@
   [data-tema="escuro"] .dock-sec .dock-sec-pilula, [data-tema="escuro"] .mesa-abas.dock .dock-pilula { background: var(--enfase); box-shadow: 0 6px 14px -8px rgb(0 0 0 / .8); }
   [data-tema="escuro"] .mesa-abas.dock a.ativo, [data-tema="escuro"] .mesa-abas a.ativo { color: var(--sobre-enfase); }
   [data-tema="escuro"] .dock-sec-item.ativo .mesa-conta { background: var(--marinho); color: var(--ouro-claro); }
-  [data-tema="escuro"] .mesa-lateral { border-right-color: transparent; background: var(--m-fundo-2); }
+  [data-tema="escuro"] .mesa-lateral { background: var(--m-fundo-2); }
   @media (max-width: 1000px) { [data-tema="escuro"] .mesa-lateral { background: var(--m-fundo-2); } }
   [data-tema="escuro"] .pesquisa-sugestao { background: var(--m-cartao); }
   [data-tema="escuro"] .pesquisa-sugestao:hover { background: var(--m-pilula); box-shadow: none; }
@@ -104,6 +106,7 @@
   [data-tema="escuro"] .cit button[aria-pressed="true"] { background: var(--ouro); color: var(--marinho); }
   [data-tema="escuro"] mark { background: rgb(217 191 134 / .26); color: var(--ink); }
   [data-tema="escuro"] .mesa-cartao, [data-tema="escuro"] .mesa-resposta:not(.pesquisa-resposta), [data-tema="escuro"] .atalho, [data-tema="escuro"] .inicio-numero, [data-tema="escuro"] .mesa-caso, [data-tema="escuro"] .regime-cartao { box-shadow: 0 0 0 1px var(--anel), 0 14px 34px -22px rgb(0 0 0 / .7); }
+  [data-tema="escuro"] .app-data { background: var(--m-cartao); }
   /* Logo sem contorno no escuro: o marinho do símbolo já se destaca do fundo. */
   [data-tema="escuro"] .simbolo-app { box-shadow: none; }
   /* No escuro, o símbolo inverte: quadro dourado e traço marinho (a mesma versão da tela de acesso). */
@@ -113,30 +116,30 @@
   [data-tema="escuro"] .demo-faixa { background: rgb(217 191 134 / .1); }
 }
 
-/* Escuro sem contornos: as áreas se separam só pelo tom da superfície. */
+/* Escuro = o claro mais escuro: onde o claro tem contorno, o escuro tem o mesmo contorno (via --anel,
+   aqui em marfim translúcido). Só se trocam os valores fixos em marinho, que sumiriam no fundo escuro. */
 @media screen {
-  [data-tema="escuro"] .mesa-cartao, [data-tema="escuro"] .mesa-resposta:not(.pesquisa-resposta), [data-tema="escuro"] .atalho, [data-tema="escuro"] .inicio-numero, [data-tema="escuro"] .mesa-caso, [data-tema="escuro"] .regime-cartao,
-  [data-tema="escuro"] .mesa-campo, [data-tema="escuro"] .pesquisa-rodape .mesa-campo, [data-tema="escuro"] .pesquisa-inicio .mesa-campo, [data-tema="escuro"] .mesa-campo:focus-within,
-  [data-tema="escuro"] .pesquisa-inicio .mesa-campo:focus-within, [data-tema="escuro"] .mesa-auditoria, [data-tema="escuro"] .mesa-lista, [data-tema="escuro"] .mesa-usuario { box-shadow: none; }
-  [data-tema="escuro"] .mesa-campo:focus-within { background: #141b29; }
-  [data-tema="escuro"] .compositor-botao { background: var(--m-pilula); box-shadow: none; }
+  [data-tema="escuro"] .mesa-campo:focus-within { box-shadow: 0 0 0 1.5px var(--anel-forte), 0 6px 16px -10px rgb(0 0 0 / .6); }
+  [data-tema="escuro"] .mesa-campo { box-shadow: 0 0 0 1px var(--anel), 0 6px 16px -10px rgb(0 0 0 / .6); }
   [data-tema="escuro"] .compositor-botao:hover:not(:disabled) { background: var(--m-pilula-2); }
-  [data-tema="escuro"] .pesquisa-sugestao { box-shadow: none; }
-  [data-tema="escuro"] .mesa-acoes > a, [data-tema="escuro"] .mesa-acoes > button { box-shadow: none; }
-  [data-tema="escuro"] .alerta { box-shadow: none; border: 0; }
+  [data-tema="escuro"] .pesquisa-sugestao { background: var(--m-cartao); box-shadow: 0 0 0 1px var(--anel); }
+  [data-tema="escuro"] .pesquisa-sugestao:hover { background: var(--m-pilula); box-shadow: 0 0 0 1px var(--anel-forte); }
   [data-tema="escuro"] .alerta.aviso { background: rgb(217 191 134 / .1); }
-  [data-tema="escuro"] .mesa-topo-movel { box-shadow: none; }
-  [data-tema="escuro"] .cartao-fonte { box-shadow: none; }
-  [data-tema="escuro"] .mesa .cartao-fonte[data-ativa] { box-shadow: inset 3px 0 0 var(--ouro); }
-  [data-tema="escuro"] .tema-chave, [data-tema="escuro"] .tema-chave button[aria-pressed="true"] { box-shadow: none; }
-  [data-tema="escuro"] .tema-chave button[aria-pressed="true"] { background: var(--m-pilula-2); }
-  [data-tema="escuro"] .anexo, [data-tema="escuro"] .pesquisa-bolha-anexos li { box-shadow: none; background: var(--m-pilula); }
+  [data-tema="escuro"] .cartao-fonte { box-shadow: 0 0 0 1px var(--anel), 0 6px 18px -10px rgb(0 0 0 / .6); }
+  [data-tema="escuro"] .mesa .cartao-fonte[data-ativa] { box-shadow: 0 0 0 1px var(--anel-forte), inset 3px 0 0 var(--ouro); }
+  [data-tema="escuro"] .mesa-auditoria li > i:not(.ok, .falha) { box-shadow: inset 0 0 0 2px rgb(241 234 219 / .3); }
+  [data-tema="escuro"] :is(.mesa-cartao .campo .seletor, .mesa-pessoa-acoes .seletor, .mesa-filtros .seletor):hover { box-shadow: inset 0 0 0 1px var(--anel-forte); }
+  [data-tema="escuro"] blockquote { border-left-color: rgb(241 234 219 / .18); }
+  [data-tema="escuro"] .dock-sec-trilha { box-shadow: 0 0 0 1px var(--anel), 0 18px 40px -18px rgb(0 0 0 / .8); }
+  @media (max-width: 900px) { [data-tema="escuro"] .dock-sec { box-shadow: 0 0 0 1px var(--anel), 0 18px 40px -18px rgb(0 0 0 / .8); } }
+  [data-tema="escuro"] .mesa-abas.dock { box-shadow: 0 0 0 1px var(--anel), 0 18px 40px -18px rgb(0 0 0 / .8); }
+  [data-tema="escuro"] .balao { box-shadow: 0 0 0 1px var(--anel), 0 24px 48px -18px rgb(0 0 0 / .9); }
 }
 
 /* Gráfico da calculadora (o mesmo da vitrine da landing) no escuro: cartão em tom de superfície,
    barras de hoje em grafite e as da Reforma em dourado. */
 @media screen {
-  [data-tema="escuro"] .duo-corpo { background: var(--m-cartao); box-shadow: none; }
+  [data-tema="escuro"] .duo-corpo { background: var(--m-cartao); box-shadow: 0 0 0 1px var(--anel), 0 10px 30px -16px rgb(0 0 0 / .6); }
   [data-tema="escuro"] .duo-barra, [data-tema="escuro"] .duo-legenda i { background: #222c40; }
   [data-tema="escuro"] .duo-barra .novo, [data-tema="escuro"] .duo-legenda i.novo { background: var(--ouro-claro); }
   [data-tema="escuro"] .duo-barra.foco { box-shadow: 0 0 0 2px var(--m-cartao), 0 0 0 3.5px var(--ink); }
@@ -305,13 +308,14 @@
 .tema-chave .tema-pilula { position: absolute; z-index: -1; top: 3px; bottom: 3px; left: 0; width: var(--pw, 32px); transform: translateX(var(--px, 3px)); border-radius: 999px; background: var(--m-cartao); box-shadow: 0 0 0 1px var(--anel), 0 2px 6px -3px rgb(15 39 66 / .3); }
 .tema-chave[data-pronta] .tema-pilula { transition: transform .42s var(--mola, cubic-bezier(.34, 1.4, .64, 1)), width .42s var(--mola, cubic-bezier(.34, 1.4, .64, 1)), background-color .28s ease; }
 .tema-chave button[aria-pressed="true"], [data-tema="escuro"] .tema-chave button[aria-pressed="true"] { background: transparent; box-shadow: none; }
-[data-tema="escuro"] .tema-chave .tema-pilula { background: #2e3a52; box-shadow: 0 2px 8px -3px rgb(0 0 0 / .6); }
+[data-tema="escuro"] .tema-chave .tema-pilula { background: #2e3a52; box-shadow: 0 0 0 1px var(--anel), 0 2px 8px -3px rgb(0 0 0 / .6); }
 @media (prefers-reduced-motion: reduce) { .tema-chave[data-pronta] .tema-pilula { transition: none; } }
 
 /* Troca de tema: revelação circular numa só imagem (View Transitions). Sem ela, cores atravessam juntas. */
-html.vt-tema::view-transition-old(root), html.vt-tema::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
-html.vt-tema::view-transition-old(root) { z-index: 1; }
-html.vt-tema::view-transition-new(root) { z-index: 2; }
+/* Troca de tema: um só crossfade, uniforme, sem forma; os grupos nomeados seguem o mesmo compasso. */
+/* Durante o crossfade, nenhuma transição própria dos elementos: a imagem nova chega pronta, toda de uma vez. */
+html.vt-tema *:not(.tema-pilula), html.vt-tema *::before, html.vt-tema *::after { transition: none !important; }
+html.vt-tema::view-transition-group(*), html.vt-tema::view-transition-old(*), html.vt-tema::view-transition-new(*) { animation-duration: .4s; animation-timing-function: cubic-bezier(.4, 0, .2, 1); }
 html.tema-trocando, html.tema-trocando *, html.tema-trocando *::before, html.tema-trocando *::after {
   transition: background-color .38s ease, color .38s ease, border-color .38s ease, fill .38s ease, stroke .38s ease, box-shadow .38s ease !important;
 }
@@ -349,3 +353,29 @@ a.caso-conversa:hover { background: var(--m-pilula); }
 .caso-nota-nova textarea { width: 100%; min-height: 68px; padding: 12px 14px; border: 0; border-radius: 14px; background: var(--m-cartao); color: var(--ink); font: inherit; font-size: 14.5px; line-height: 1.5; resize: vertical; box-shadow: inset 0 0 0 1px var(--anel); }
 .caso-nota-nova textarea:focus { outline: none; box-shadow: inset 0 0 0 1.5px var(--enfase); }
 [data-tema="escuro"] .caso-nota-nova textarea { background: var(--m-fundo-2); }
+
+/* Hover no escuro: o mesmo indício do claro, num marfim translúcido de baixa opacidade (nunca dourado).
+   Vale para a dock, as abas, os seletores e os menus. */
+[data-tema="escuro"] .dock-sec-mira { background: rgb(241 234 219 / .075); box-shadow: inset 0 0 0 1px rgb(241 234 219 / .1); }
+[data-tema="escuro"] .mesa-abas a:not(.ativo):hover { background: rgb(241 234 219 / .07); box-shadow: inset 0 0 0 1px rgb(241 234 219 / .08); color: var(--ink); }
+[data-tema="escuro"] .mesa-lateral nav a:not(.ativo):hover { background: rgb(241 234 219 / .06); }
+[data-tema="escuro"] .segmentado-trilha > :is(button, a):not([aria-checked="true"], [aria-current="page"], [aria-current="true"]):hover { background: rgb(241 234 219 / .07); box-shadow: inset 0 0 0 1px rgb(241 234 219 / .08); }
+[data-tema="escuro"] .tema-chave button:not([aria-pressed="true"]):hover { background: rgb(241 234 219 / .08); }
+[data-tema="escuro"] :is(.mesa-cartao .campo .seletor, .mesa-pessoa-acoes .seletor, .mesa-filtros .seletor, .seletor-compacto):hover { box-shadow: inset 0 0 0 1px rgb(241 234 219 / .16); }
+[data-tema="escuro"] .balao-opcao:hover, [data-tema="escuro"] .balao-opcao[data-ativa] { background: rgb(241 234 219 / .07); }
+@media (hover: none) {
+  [data-tema="escuro"] .segmentado-trilha > :is(button, a):hover, [data-tema="escuro"] .mesa-abas a:hover { background: transparent; box-shadow: none; }
+}
+
+/* IA desligada: convite em destaque para ligar a IA grátis. */
+.demo-ia-desligada { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; margin-top: 10px; padding: 12px 14px 12px 16px; border-radius: 14px; background: var(--ouro-fundo); color: var(--ink-2); font-size: 14px; line-height: 1.45; }
+.demo-ia-desligada > span { flex: none; width: 9px; height: 9px; border-radius: 50%; background: #c2412f; box-shadow: 0 0 0 4px rgb(194 65 47 / .14); }
+.demo-ia-desligada p { flex: 1 1 240px; margin: 0; }
+.demo-ia-desligada strong { color: var(--ink); }
+.demo-ia-desligada .mesa-botao { flex: none; }
+[data-tema="escuro"] .demo-ia-desligada { background: rgb(217 191 134 / .1); color: var(--ink-2); }
+[data-tema="escuro"] .demo-ia-desligada > span { background: #d4553f; box-shadow: 0 0 0 4px rgb(212 85 63 / .18); }
+.pesquisa-ligar-ia { display: grid; gap: 8px; justify-items: start; padding: 14px 16px; border-radius: 14px; background: var(--ouro-fundo); }
+.pesquisa-ligar-ia strong { color: var(--ink); font-size: 15px; }
+.pesquisa-ligar-ia p { margin: 0; }
+[data-tema="escuro"] .pesquisa-ligar-ia { background: rgb(217 191 134 / .1); }

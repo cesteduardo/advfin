@@ -56,7 +56,7 @@ export class ErroGroq extends Error {
   }
 }
 
-async function chamarGroq(chave: string, modelo: string, sistema: string, mensagem: string, quem: "groq" | "openrouter" = "groq") {
+async function pedirCompativel(chave: string, modelo: string, sistema: string, mensagem: string, quem: "groq" | "openrouter", comJson: boolean) {
   const r = await fetch(`${quem === "groq" ? URL_GROQ : URL_OPENROUTER}/chat/completions`, {
     method: "POST",
     headers: {
@@ -67,8 +67,8 @@ async function chamarGroq(chave: string, modelo: string, sistema: string, mensag
     body: JSON.stringify({
       model: modelo,
       max_tokens: 4096,
-      temperature: 0.2,
-      response_format: { type: "json_object" },
+      temperature: 0.3,
+      ...(comJson ? { response_format: { type: "json_object" } } : {}),
       messages: [
         { role: "system", content: sistema + "\n\nResponda somente com um objeto JSON válido, sem texto antes ou depois." },
         { role: "user", content: mensagem },
@@ -77,12 +77,57 @@ async function chamarGroq(chave: string, modelo: string, sistema: string, mensag
   });
   if (!r.ok) throw new ErroGroq(((await r.text().catch(() => "")) || r.statusText).slice(0, 300), r.status, quem);
   const j = await r.json();
+  if (j.error) throw new ErroGroq(String(j.error.message ?? "erro").slice(0, 300), Number(j.error.code) || 502, quem);
   return {
     modelo: (j.model as string) ?? modelo,
     texto: (j.choices?.[0]?.message?.content as string) ?? "",
     entrada: (j.usage?.prompt_tokens as number) ?? 0,
     saida: (j.usage?.completion_tokens as number) ?? 0,
   };
+}
+
+/** Modelos grátis que o OpenRouter oferece agora (a lista muda com frequência). */
+let gratisAgora: Promise<string[]> | null = null;
+function modelosGratis(): Promise<string[]> {
+  gratisAgora ??= fetch(`${URL_OPENROUTER}/models`)
+    .then((r) => (r.ok ? r.json() : { data: [] }))
+    .then((j: { data?: { id: string }[] }) => (j.data ?? []).map((m) => m.id).filter((id) => id.endsWith(":free")))
+    .catch(() => []);
+  return gratisAgora;
+}
+
+/**
+ * Chamada aos fornecedores compatíveis com a API da OpenAI. Os modelos grátis do OpenRouter
+ * vêm e vão, e nem todos aceitam o modo JSON: se o pedido falha por isso, tenta sem o modo
+ * JSON e, se o modelo sumiu ou está sem fila, troca por outro grátis disponível agora.
+ */
+async function chamarGroq(chave: string, modelo: string, sistema: string, mensagem: string, quem: "groq" | "openrouter" = "groq") {
+  const tentar = async (m: string) => {
+    try {
+      return await pedirCompativel(chave, m, sistema, mensagem, quem, true);
+    } catch (e) {
+      if (e instanceof ErroGroq && [400, 404, 422].includes(e.status)) return pedirCompativel(chave, m, sistema, mensagem, quem, false);
+      throw e;
+    }
+  };
+  try {
+    return await tentar(modelo);
+  } catch (e) {
+    if (quem !== "openrouter" || !(e instanceof ErroGroq) || ![400, 404, 429, 502, 503].includes(e.status)) throw e;
+    const conhecidos: string[] = MODELOS_OPENROUTER.map((m) => m.id);
+    const livres = await modelosGratis();
+    const fila = [...conhecidos.filter((x) => livres.includes(x)), ...livres.filter((x) => !conhecidos.includes(x))].filter((x) => x !== modelo).slice(0, 3);
+    let ultimo: unknown = e;
+    for (const m of fila) {
+      try {
+        return await tentar(m);
+      } catch (e2) {
+        ultimo = e2;
+        if (!(e2 instanceof ErroGroq) || e2.status === 401 || e2.status === 402) throw e2;
+      }
+    }
+    throw ultimo;
+  }
 }
 
 export interface PedidoLab {
@@ -162,7 +207,9 @@ export async function rodarLab(p: PedidoLab): Promise<{ desfecho: DesfechoPesqui
   // Pergunta de seguimento ("e o PIS?"): se a busca sozinha acha pouco, soma a pergunta anterior.
   const anterior = p.historico?.at(-1)?.pergunta;
   let fontes = recuperarLocal(p.pergunta, p.data);
-  if (anterior && fontes.length < 3) {
+  // Só para quem continua o assunto ("e o PIS?", "e depois?"); um "olá" depois de uma pergunta da Reforma não vira Reforma.
+  const seguimento = /^\s*(e|mas|então|entao|e se|e quanto|e depois|e antes|e para|e no|e na|e os|e as|e o|e a)\b/i.test(p.pergunta);
+  if (anterior && fontes.length < 3 && (fontes.length > 0 || seguimento)) {
     const juntas = recuperarLocal(`${p.pergunta} ${anterior}`, p.data);
     if (juntas.length > fontes.length) fontes = juntas;
   }
@@ -228,6 +275,11 @@ export async function rodarLab(p: PedidoLab): Promise<{ desfecho: DesfechoPesqui
   diag.ms.modelo = Math.round(performance.now() - t);
   diag.respostaLida = resposta;
   if (resposta?.semBase && usaModelo(p.modo) && p.chave) return fim(await conversar(p, diag, id, fontes));
+  // Modelo grátis que respondeu em prosa, fora do formato: vale como conversa, sem número de fonte.
+  if (!resposta && usaModelo(p.modo) && diag.saidaBruta && !diag.saidaBruta.startsWith("(sem texto")) {
+    const paragrafos = diag.saidaBruta.split(/\n{2,}/).map((x) => x.replace(/\[D\d{1,2}\]/g, "").trim()).filter(Boolean);
+    if (paragrafos.length) return fim({ status: "conversa", id, paragrafos, fontes: [], modelo: diag.modelo });
+  }
 
   t = performance.now();
   const modelo = diag.modelo;
@@ -322,4 +374,39 @@ export async function testarChave(provedor: ProvedorNavegador, chave: string): P
     if (provedor === "groq") return { ok: false, mensagem: MSG_GROQ_NAVEGADOR };
     return { ok: false, mensagem: `O navegador não conseguiu falar com o ${nome}. Confira a conexão e desligue bloqueadores (o escudo do Brave, por exemplo) para este site.` };
   }
+}
+
+const SISTEMA_REVISAO = `Você revisa textos ditados por voz, em português do Brasil. Corrija ortografia, acentuação, pontuação, maiúsculas e siglas (IBS, CBS, ICMS, ISS, PIS, Cofins, LC, EC), como um bom revisor faria.
+Não mude o sentido, não acrescente nem tire informações, não responda à pergunta, não comente. Mantenha a pessoa e o tom de quem falou. Pergunta termina com ponto de interrogação.
+Formato da resposta (JSON): {"texto": "..."}`;
+
+/**
+ * Revisão rápida do texto ditado pelo modelo conectado. Devolve o texto revisado, ou o original
+ * se o modelo demorar, falhar ou devolver algo que não parece o mesmo texto.
+ */
+export async function revisarComModelo(modo: ModoLab, chave: string, modelo: string | undefined, texto: string, limiteMs = 4000): Promise<string> {
+  if (!usaModelo(modo) || !chave || texto.trim().length < 3) return texto;
+  const tarefa = (async () => {
+    const mensagem = `<ditado>${texto}</ditado>`;
+    let bruto: string;
+    if (modo === "anthropic") {
+      // Revisão é tarefa curta: vai ao modelo mais rápido da família.
+      bruto = (await chamarAnthropic(chave, MODELOS_LAB[2].id, SISTEMA_REVISAO, mensagem)).texto;
+    } else {
+      const quem = modo === "groq" ? "groq" : "openrouter";
+      const lista: readonly { id: string }[] = quem === "groq" ? MODELOS_GROQ : MODELOS_OPENROUTER;
+      bruto = (await chamarGroq(chave, modelo && lista.some((m) => m.id === modelo) ? modelo : lista[0].id, SISTEMA_REVISAO, mensagem, quem)).texto;
+    }
+    let novo = "";
+    try {
+      novo = String(JSON.parse(bruto.slice(bruto.indexOf("{"), bruto.lastIndexOf("}") + 1)).texto ?? "");
+    } catch {
+      novo = bruto;
+    }
+    novo = novo.replace(/<\/?ditado>/g, "").trim();
+    // Guarda: revisão não reescreve. Tamanho muito diferente é sinal de que o modelo respondeu em vez de revisar.
+    const razao = novo.length / Math.max(1, texto.length);
+    return novo && razao > 0.7 && razao < 1.4 ? novo : texto;
+  })();
+  return Promise.race([tarefa.catch(() => texto), new Promise<string>((r) => setTimeout(() => r(texto), limiteMs))]);
 }

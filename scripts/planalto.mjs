@@ -73,14 +73,15 @@ export function destinoDaAlteracao(texto) {
  */
 export function artigos(texto) {
   // "Art. 1º" (federal) e "Artigo 1º" (leis e decretos de São Paulo).
-  const re = /(?:^|\n)\s*(["“]?)\s*Art(?:igo|\.)\s*(\d+)\s*([º°o])?(-[A-Z])?\s*[.\-–—]?\s+/g;
+  // Números com ponto de milhar ("Art. 2.046" no Código Civil, "Art. 1.072" no CPC).
+  const re = /(?:^|\n)\s*(["“]?)\s*Art(?:igo|\.)\s*(\d{1,3}(?:\.\d{3})+|\d+)\s*([º°o])?(-[A-Z])?\s*[.\-–—]?\s+/g;
   const marcas = [...texto.matchAll(re)];
   let destino = null;
   const lista = [];
   marcas.forEach((m, i) => {
     const ini = m.index + m[0].length;
     const fim = i + 1 < marcas.length ? marcas[i + 1].index : texto.length;
-    const n = Number(m[2]);
+    const n = Number(m[2].replace(/\./g, ""));
     const citado = Boolean(m[1]);
     const bruto = texto.slice(ini, fim);
     const notas = [...bruto.matchAll(NOTA)].map((x) => x[0].replace(/\s+/g, " ").trim());
@@ -92,7 +93,7 @@ export function artigos(texto) {
       .replace(/\s*\(NR\)\s*$/, "")
       .replace(/["”]\s*$/, "")
       .trim();
-    const base = `art. ${n}${n < 10 ? "º" : ""}${m[4] ?? ""}`;
+    const base = `art. ${String(n).replace(/\B(?=(\d{3})+$)/g, ".")}${n < 10 ? "º" : ""}${m[4] ?? ""}`;
     if (!citado) destino = destinoDaAlteracao(corpo);
     const rotulo = citado ? `${destino ?? "alteração"}, ${base}` : base;
     if (corpo.length > 0) lista.push({ rotulo, numero: n, texto: corpo, notas, citado, destino: citado ? destino : null, introducao: false });
@@ -136,14 +137,21 @@ export async function baixar(url, tentativas = 3) {
 }
 
 /**
- * Recorte de uma página grande: só o trecho antes de um marco ("ATO DAS DISPOSIÇÕES
+ * Recorte de uma página grande: só o trecho depois de um marco ("desde", para o ADCT) ou antes de um marco ("ATO DAS DISPOSIÇÕES
  * CONSTITUCIONAIS TRANSITÓRIAS" na Constituição) e só os artigos de uma faixa (145 a 162,
  * o Sistema Tributário Nacional). Artigos entre aspas não entram no recorte por número.
  */
-export function recortar(texto, { ate, artigos: faixa } = {}) {
+export function recortar(texto, { desde, ate, artigos: faixa } = {}) {
   let t = texto;
+  // Marcos são títulos em caixa alta: a busca diferencia maiúsculas para não parar numa
+  // menção corrida ("...do Ato das Disposições Constitucionais Transitórias") no meio do texto.
+  if (desde) {
+    const achados = [...t.matchAll(new RegExp(desde, "g"))];
+    const ultimo = achados.at(-1);
+    if (ultimo) t = t.slice(ultimo.index + ultimo[0].length);
+  }
   if (ate) {
-    const i = t.search(new RegExp(ate, "i"));
+    const i = t.search(new RegExp(ate));
     if (i > 0) t = t.slice(0, i);
   }
   return { texto: t, faixa: faixa ?? null };

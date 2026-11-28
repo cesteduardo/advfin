@@ -15,7 +15,8 @@
     "carregar-reforma": "node scripts/carregar-base.mjs --grupo reforma",
     "carregar-base": "node scripts/carregar-base.mjs",
     "predev": "node scripts/copiar-ocr.mjs",
-    "prebuild": "node scripts/copiar-ocr.mjs"
+    "prebuild": "node scripts/copiar-ocr.mjs",
+    "base-estatica": "node scripts/gerar-base-estatica.mjs"
   },
   "author": "",
   "license": "ISC",

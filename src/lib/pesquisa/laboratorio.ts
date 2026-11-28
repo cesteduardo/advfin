@@ -2,12 +2,12 @@
  * Laboratório do chat que roda inteiro no navegador (GitHub Pages, sem servidor).
  *
  * Mesmo fluxo da pesquisa do app: recuperar → gerar → verificar. Muda só a origem:
- * a base é a semente embutida e o modelo é chamado direto do navegador, com a chave
+ * a base é a semente embutida somada à base ampliada (public/base, baixada sob demanda) e o modelo é chamado direto do navegador, com a chave
  * que o próprio desenvolvedor cola (guardada só no navegador dele). Nada é registrado.
  * Uso exclusivo para teste: chave no navegador é aceitável só para quem é dono dela.
  */
 import Anthropic from "@anthropic-ai/sdk";
-import { recuperarLocal } from "./base-local";
+import { recuperarAmpliada } from "./base-ampliada";
 import { SISTEMA_PESQUISA, lerResposta, montarMensagem, respostaExtrativa, type DocumentoAnexo, type TurnoAnterior } from "./geracao";
 import type { DesfechoPesquisa, Diagnostico, RespostaModelo, Trecho } from "./tipos";
 import { verificarCitacoes } from "./verificador";
@@ -161,9 +161,9 @@ export async function rodarLab(p: PedidoLab): Promise<{ desfecho: DesfechoPesqui
   let t = performance.now();
   // Pergunta de seguimento ("e o PIS?"): se a busca sozinha acha pouco, soma a pergunta anterior.
   const anterior = p.historico?.at(-1)?.pergunta;
-  let fontes = recuperarLocal(p.pergunta, p.data);
+  let fontes = await recuperarAmpliada(p.pergunta, p.data);
   if (anterior && fontes.length < 3) {
-    const juntas = recuperarLocal(`${p.pergunta} ${anterior}`, p.data);
+    const juntas = await recuperarAmpliada(`${p.pergunta} ${anterior}`, p.data);
     if (juntas.length > fontes.length) fontes = juntas;
   }
   diag.ms.recuperacao = Math.round(performance.now() - t);

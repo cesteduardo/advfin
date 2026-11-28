@@ -21,10 +21,10 @@
 @media screen {
   :root[data-tema="escuro"] {
     color-scheme: dark;
-    --bg: #0c0c0d;
-    --branco: #18181a;
-    --superficie: #202022;
-    --superficie-2: #2a2a2d;
+    --bg: #080b11;
+    --branco: #111723;
+    --superficie: #182031;
+    --superficie-2: #212b3e;
     --ink: #f1eadb;
     --ink-2: #c9c2b2;
     --muted: #98a1b0;
@@ -33,7 +33,7 @@
     --anel: transparent;
     --azul: #9bb8e0;
     --azul-forte: #c3d4ec;
-    --azul-50: #202022;
+    --azul-50: #182031;
     --ouro: #d9bf86;
     --ouro-fundo: rgb(217 191 134 / .13);
     --verde: #86cfa8;
@@ -45,15 +45,15 @@
 
     --enfase: #efe7d4;
     --sobre-enfase: #0f2742;
-    --m-fundo: #0c0c0d;
-    --m-fundo-0: rgb(12 12 13 / 0);
-    --m-fundo-2: #121214;
-    --m-cartao: #18181a;
-    --m-pilula: #232326;
-    --m-pilula-2: #2e2e32;
-    --m-azul-claro: #2e2e32;
-    --m-vidro: rgb(24 24 26 / .82);
-    --m-topo: rgb(12 12 13 / .9);
+    --m-fundo: #080b11;
+    --m-fundo-0: rgb(8 11 17 / 0);
+    --m-fundo-2: #0c1018;
+    --m-cartao: #111723;
+    --m-pilula: #1a2232;
+    --m-pilula-2: #243047;
+    --m-azul-claro: #243047;
+    --m-vidro: rgb(17 23 35 / .86);
+    --m-topo: rgb(8 11 17 / .9);
   }
 
   [data-tema="escuro"] body { background: var(--bg); }
@@ -61,7 +61,9 @@
 
   /* Superfícies translúcidas: topo, dock e sugestões */
   [data-tema="escuro"] .mesa-topo-movel { background: var(--m-topo); }
-  [data-tema="escuro"] .mesa-abas, [data-tema="escuro"] .dock-sec, [data-tema="escuro"] .dock-sec-trilha { background: var(--m-vidro); }
+  [data-tema="escuro"] .mesa-abas, [data-tema="escuro"] .dock-sec-trilha { background: var(--m-vidro); }
+  [data-tema="escuro"] .dock-sec { background: transparent; box-shadow: none; }
+  @media (max-width: 900px) { [data-tema="escuro"] .dock-sec { background: var(--m-vidro); box-shadow: 0 18px 40px -18px rgb(0 0 0 / .8); } }
   [data-tema="escuro"] .dock-sec { box-shadow: 0 18px 40px -18px rgb(0 0 0 / .8); }
   [data-tema="escuro"] .dock-sec-trilha { box-shadow: 0 18px 40px -18px rgb(0 0 0 / .8); }
   @media (max-width: 900px) { [data-tema="escuro"] .dock-sec-trilha { background: none; box-shadow: none; } }
@@ -82,7 +84,7 @@
   [data-tema="escuro"] .seletor > svg { stroke: var(--ink-2); }
   [data-tema="escuro"] .seletor:focus-visible, [data-tema="escuro"] .seletor[aria-expanded="true"],
   [data-tema="escuro"] input:focus-visible, [data-tema="escuro"] select:focus-visible { box-shadow: 0 0 0 3px rgb(217 191 134 / .28); border-color: var(--ouro); }
-  [data-tema="escuro"] .balao { background: #1e1e21; box-shadow: 0 24px 48px -18px rgb(0 0 0 / .9); }
+  [data-tema="escuro"] .balao { background: #161e2d; box-shadow: 0 24px 48px -18px rgb(0 0 0 / .9); }
   [data-tema="escuro"] .balao-opcao[aria-selected="true"] { color: var(--ouro); }
   [data-tema="escuro"] .balao-opcao > svg { stroke: var(--ouro); }
   [data-tema="escuro"] .cal-dia[aria-pressed="true"], [data-tema="escuro"] .cal-dia[aria-pressed="true"]:hover { background: var(--enfase); color: var(--sobre-enfase); }
@@ -116,7 +118,7 @@
   [data-tema="escuro"] .mesa-cartao, [data-tema="escuro"] .mesa-resposta:not(.pesquisa-resposta), [data-tema="escuro"] .atalho, [data-tema="escuro"] .inicio-numero, [data-tema="escuro"] .mesa-caso, [data-tema="escuro"] .regime-cartao,
   [data-tema="escuro"] .mesa-campo, [data-tema="escuro"] .pesquisa-rodape .mesa-campo, [data-tema="escuro"] .pesquisa-inicio .mesa-campo, [data-tema="escuro"] .mesa-campo:focus-within,
   [data-tema="escuro"] .pesquisa-inicio .mesa-campo:focus-within, [data-tema="escuro"] .mesa-auditoria, [data-tema="escuro"] .mesa-lista, [data-tema="escuro"] .mesa-usuario { box-shadow: none; }
-  [data-tema="escuro"] .mesa-campo:focus-within { background: #1c1c1f; }
+  [data-tema="escuro"] .mesa-campo:focus-within { background: #141b29; }
   [data-tema="escuro"] .compositor-botao { background: var(--m-pilula); box-shadow: none; }
   [data-tema="escuro"] .compositor-botao:hover:not(:disabled) { background: var(--m-pilula-2); }
   [data-tema="escuro"] .pesquisa-sugestao { box-shadow: none; }
@@ -135,13 +137,27 @@
    barras de hoje em grafite e as da Reforma em dourado. */
 @media screen {
   [data-tema="escuro"] .duo-corpo { background: var(--m-cartao); box-shadow: none; }
-  [data-tema="escuro"] .duo-barra, [data-tema="escuro"] .duo-legenda i { background: #2c2c30; }
+  [data-tema="escuro"] .duo-barra, [data-tema="escuro"] .duo-legenda i { background: #222c40; }
   [data-tema="escuro"] .duo-barra .novo, [data-tema="escuro"] .duo-legenda i.novo { background: var(--ouro-claro); }
   [data-tema="escuro"] .duo-barra.foco { box-shadow: 0 0 0 2px var(--m-cartao), 0 0 0 3.5px var(--ink); }
   [data-tema="escuro"] .duo-hoje, [data-tema="escuro"] .duo-legenda i.linha { border-top-color: rgb(241 234 219 / .5); }
   [data-tema="escuro"] .duo-linhas > div { border-top-color: var(--line); }
   [data-tema="escuro"] .duo-dif .mais, [data-tema="escuro"] .tabela .maior { color: #f2a9a0; }
   [data-tema="escuro"] .tabela .menor { color: var(--verde); }
+}
+
+/* Escuro: nada de faixa ou retângulo atrás de abas e do bloco do perfil; e, sobre o marfim
+   dos botões ativos, texto e ícones em marinho (contraste acima de 10:1). */
+@media screen {
+  [data-tema="escuro"] .mesa-usuario { background: transparent; padding-inline: 8px; }
+  [data-tema="escuro"] .mesa-usuario button, [data-tema="escuro"] .mesa-usuario-acao { background: var(--m-pilula); }
+  @media (min-width: 901px) { [data-tema="escuro"] .mesa-lateral { background: transparent; } }
+  [data-tema="escuro"] .dock-sec-item.ativo, [data-tema="escuro"] .dock-sec-item.ativo .ico,
+  [data-tema="escuro"] .mesa-abas.dock a.ativo .dock-ico .ico,
+  [data-tema="escuro"] .segmentado-trilha > [aria-checked="true"] .ico, [data-tema="escuro"] .segmentado-trilha > [aria-current="true"] .ico, [data-tema="escuro"] .segmentado-trilha > [aria-current="page"] .ico,
+  [data-tema="escuro"] .mesa-botao .ico, [data-tema="escuro"] .inicio-chat .ico, [data-tema="escuro"] .mesa-acoes > .primaria .ico,
+  [data-tema="escuro"] .app-enviar .ico { color: var(--sobre-enfase); }
+  [data-tema="escuro"] .dock-sec-item.ativo .mesa-conta { background: var(--marinho); color: var(--ouro-claro); }
 }
 
 /* ── Chave do tema: três estados (sistema, claro, escuro) ── */
@@ -190,7 +206,7 @@
 @keyframes gira { to { transform: rotate(360deg); } }
 
 .compositor-solte { position: absolute; inset: 0; display: grid; place-items: center; border-radius: inherit; background: rgb(246 245 241 / .92); color: var(--ink); font-weight: 600; box-shadow: inset 0 0 0 2px var(--ouro); pointer-events: none; }
-[data-tema="escuro"] .compositor-solte { background: rgb(12 12 13 / .92); }
+[data-tema="escuro"] .compositor-solte { background: rgb(8 11 17 / .92); }
 .compositor-aviso { margin: -6px 6px 0; color: var(--muted); font-size: 12.5px; line-height: 1.45; }
 .compositor-aviso[role="alert"] { color: var(--bordo); }
 

@@ -21,19 +21,19 @@
 @media screen {
   :root[data-tema="escuro"] {
     color-scheme: dark;
-    --bg: #0a1424;
-    --branco: #111f35;
-    --superficie: #17273f;
-    --superficie-2: #1f314d;
+    --bg: #0c0c0d;
+    --branco: #18181a;
+    --superficie: #202022;
+    --superficie-2: #2a2a2d;
     --ink: #f1eadb;
     --ink-2: #c9c2b2;
     --muted: #98a1b0;
     --titulo-2: #808a9a;
-    --line: rgb(241 234 219 / .12);
-    --anel: rgb(241 234 219 / .09);
+    --line: rgb(241 234 219 / .07);
+    --anel: transparent;
     --azul: #9bb8e0;
     --azul-forte: #c3d4ec;
-    --azul-50: #17273f;
+    --azul-50: #202022;
     --ouro: #d9bf86;
     --ouro-fundo: rgb(217 191 134 / .13);
     --verde: #86cfa8;
@@ -45,15 +45,15 @@
 
     --enfase: #efe7d4;
     --sobre-enfase: #0f2742;
-    --m-fundo: #0a1424;
-    --m-fundo-0: rgb(10 20 36 / 0);
-    --m-fundo-2: #0e1a2e;
-    --m-cartao: #111f35;
-    --m-pilula: #1a2b45;
-    --m-pilula-2: #243858;
-    --m-azul-claro: #243a5c;
-    --m-vidro: rgb(17 31 53 / .8);
-    --m-topo: rgb(10 20 36 / .9);
+    --m-fundo: #0c0c0d;
+    --m-fundo-0: rgb(12 12 13 / 0);
+    --m-fundo-2: #121214;
+    --m-cartao: #18181a;
+    --m-pilula: #232326;
+    --m-pilula-2: #2e2e32;
+    --m-azul-claro: #2e2e32;
+    --m-vidro: rgb(24 24 26 / .82);
+    --m-topo: rgb(12 12 13 / .9);
   }
 
   [data-tema="escuro"] body { background: var(--bg); }
@@ -62,16 +62,16 @@
   /* Superfícies translúcidas: topo, dock e sugestões */
   [data-tema="escuro"] .mesa-topo-movel { background: var(--m-topo); }
   [data-tema="escuro"] .mesa-abas, [data-tema="escuro"] .dock-sec, [data-tema="escuro"] .dock-sec-trilha { background: var(--m-vidro); }
-  [data-tema="escuro"] .dock-sec { box-shadow: 0 0 0 1px var(--anel), inset 0 1px 0 rgb(241 234 219 / .06), 0 18px 40px -18px rgb(0 0 0 / .8); }
-  [data-tema="escuro"] .dock-sec-trilha { box-shadow: 0 0 0 1px var(--anel), 0 18px 40px -18px rgb(0 0 0 / .8); }
+  [data-tema="escuro"] .dock-sec { box-shadow: 0 18px 40px -18px rgb(0 0 0 / .8); }
+  [data-tema="escuro"] .dock-sec-trilha { box-shadow: 0 18px 40px -18px rgb(0 0 0 / .8); }
   @media (max-width: 900px) { [data-tema="escuro"] .dock-sec-trilha { background: none; box-shadow: none; } }
   [data-tema="escuro"] .dock-sec .dock-sec-pilula, [data-tema="escuro"] .mesa-abas.dock .dock-pilula { background: var(--enfase); box-shadow: 0 6px 14px -8px rgb(0 0 0 / .8); }
   [data-tema="escuro"] .mesa-abas.dock a.ativo, [data-tema="escuro"] .mesa-abas a.ativo { color: var(--sobre-enfase); }
   [data-tema="escuro"] .dock-sec-item.ativo .mesa-conta { background: var(--marinho); color: var(--ouro-claro); }
-  [data-tema="escuro"] .mesa-lateral { border-right-color: var(--anel); }
+  [data-tema="escuro"] .mesa-lateral { border-right-color: transparent; background: var(--m-fundo-2); }
   @media (max-width: 1000px) { [data-tema="escuro"] .mesa-lateral { background: var(--m-fundo-2); } }
-  [data-tema="escuro"] .pesquisa-sugestao { background: rgb(17 31 53 / .7); }
-  [data-tema="escuro"] .pesquisa-sugestao:hover { background: var(--m-cartao); box-shadow: 0 0 0 1px var(--line); }
+  [data-tema="escuro"] .pesquisa-sugestao { background: var(--m-cartao); }
+  [data-tema="escuro"] .pesquisa-sugestao:hover { background: var(--m-pilula); box-shadow: none; }
 
   /* Controles compartilhados com a landing */
   [data-tema="escuro"] .segmentado-pilula, [data-tema="escuro"] .nav-trilha .segmentado-pilula { background: var(--enfase); box-shadow: 0 6px 14px -8px rgb(0 0 0 / .7); }
@@ -82,7 +82,7 @@
   [data-tema="escuro"] .seletor > svg { stroke: var(--ink-2); }
   [data-tema="escuro"] .seletor:focus-visible, [data-tema="escuro"] .seletor[aria-expanded="true"],
   [data-tema="escuro"] input:focus-visible, [data-tema="escuro"] select:focus-visible { box-shadow: 0 0 0 3px rgb(217 191 134 / .28); border-color: var(--ouro); }
-  [data-tema="escuro"] .balao { background: #15253e; box-shadow: 0 0 0 1px var(--line), 0 24px 48px -18px rgb(0 0 0 / .8); }
+  [data-tema="escuro"] .balao { background: #1e1e21; box-shadow: 0 24px 48px -18px rgb(0 0 0 / .9); }
   [data-tema="escuro"] .balao-opcao[aria-selected="true"] { color: var(--ouro); }
   [data-tema="escuro"] .balao-opcao > svg { stroke: var(--ouro); }
   [data-tema="escuro"] .cal-dia[aria-pressed="true"], [data-tema="escuro"] .cal-dia[aria-pressed="true"]:hover { background: var(--enfase); color: var(--sobre-enfase); }
@@ -93,7 +93,7 @@
   /* Recados e selos */
   [data-tema="escuro"] .alerta.aviso { color: var(--ouro); }
   [data-tema="escuro"] .alerta.aviso a { color: var(--ouro-claro); }
-  [data-tema="escuro"] .selo.nivel-titular, [data-tema="escuro"] .avatar, [data-tema="escuro"] .atalho .icone { background: #1d3557; }
+  [data-tema="escuro"] .selo.nivel-titular, [data-tema="escuro"] .avatar, [data-tema="escuro"] .atalho .icone { background: var(--m-pilula); }
   [data-tema="escuro"] .mesa-acoes > .primaria:hover, [data-tema="escuro"] .mesa-botao:hover { background: #fff8ea; color: var(--sobre-enfase); }
   [data-tema="escuro"] .mesa-acoes > .pesquisa-ver-fontes:hover { color: var(--ink); }
   [data-tema="escuro"] .pesquisa-ver-fontes::before { box-shadow: 4px -3px 0 -1px var(--m-pilula), 4px -3px 0 0 var(--ouro); }
@@ -104,8 +104,44 @@
   [data-tema="escuro"] .mesa-cartao, [data-tema="escuro"] .mesa-resposta:not(.pesquisa-resposta), [data-tema="escuro"] .atalho, [data-tema="escuro"] .inicio-numero, [data-tema="escuro"] .mesa-caso, [data-tema="escuro"] .regime-cartao { box-shadow: 0 0 0 1px var(--anel), 0 14px 34px -22px rgb(0 0 0 / .7); }
   /* Logo sem contorno no escuro: o marinho do símbolo já se destaca do fundo. */
   [data-tema="escuro"] .simbolo-app { box-shadow: none; }
+  /* No escuro, o símbolo inverte: quadro dourado e traço marinho (a mesma versão da tela de acesso). */
+  [data-tema="escuro"] .simbolo-app rect { fill: var(--ouro-claro); }
+  [data-tema="escuro"] .simbolo-app path { stroke: var(--marinho); }
   [data-tema="escuro"] .fontes-veu { background: rgb(3 8 16 / .6); }
   [data-tema="escuro"] .demo-faixa { background: rgb(217 191 134 / .1); }
+}
+
+/* Escuro sem contornos: as áreas se separam só pelo tom da superfície. */
+@media screen {
+  [data-tema="escuro"] .mesa-cartao, [data-tema="escuro"] .mesa-resposta:not(.pesquisa-resposta), [data-tema="escuro"] .atalho, [data-tema="escuro"] .inicio-numero, [data-tema="escuro"] .mesa-caso, [data-tema="escuro"] .regime-cartao,
+  [data-tema="escuro"] .mesa-campo, [data-tema="escuro"] .pesquisa-rodape .mesa-campo, [data-tema="escuro"] .pesquisa-inicio .mesa-campo, [data-tema="escuro"] .mesa-campo:focus-within,
+  [data-tema="escuro"] .pesquisa-inicio .mesa-campo:focus-within, [data-tema="escuro"] .mesa-auditoria, [data-tema="escuro"] .mesa-lista, [data-tema="escuro"] .mesa-usuario { box-shadow: none; }
+  [data-tema="escuro"] .mesa-campo:focus-within { background: #1c1c1f; }
+  [data-tema="escuro"] .compositor-botao { background: var(--m-pilula); box-shadow: none; }
+  [data-tema="escuro"] .compositor-botao:hover:not(:disabled) { background: var(--m-pilula-2); }
+  [data-tema="escuro"] .pesquisa-sugestao { box-shadow: none; }
+  [data-tema="escuro"] .mesa-acoes > a, [data-tema="escuro"] .mesa-acoes > button { box-shadow: none; }
+  [data-tema="escuro"] .alerta { box-shadow: none; border: 0; }
+  [data-tema="escuro"] .alerta.aviso { background: rgb(217 191 134 / .1); }
+  [data-tema="escuro"] .mesa-topo-movel { box-shadow: none; }
+  [data-tema="escuro"] .cartao-fonte { box-shadow: none; }
+  [data-tema="escuro"] .mesa .cartao-fonte[data-ativa] { box-shadow: inset 3px 0 0 var(--ouro); }
+  [data-tema="escuro"] .tema-chave, [data-tema="escuro"] .tema-chave button[aria-pressed="true"] { box-shadow: none; }
+  [data-tema="escuro"] .tema-chave button[aria-pressed="true"] { background: var(--m-pilula-2); }
+  [data-tema="escuro"] .anexo, [data-tema="escuro"] .pesquisa-bolha-anexos li { box-shadow: none; background: var(--m-pilula); }
+}
+
+/* Gráfico da calculadora (o mesmo da vitrine da landing) no escuro: cartão em tom de superfície,
+   barras de hoje em grafite e as da Reforma em dourado. */
+@media screen {
+  [data-tema="escuro"] .duo-corpo { background: var(--m-cartao); box-shadow: none; }
+  [data-tema="escuro"] .duo-barra, [data-tema="escuro"] .duo-legenda i { background: #2c2c30; }
+  [data-tema="escuro"] .duo-barra .novo, [data-tema="escuro"] .duo-legenda i.novo { background: var(--ouro-claro); }
+  [data-tema="escuro"] .duo-barra.foco { box-shadow: 0 0 0 2px var(--m-cartao), 0 0 0 3.5px var(--ink); }
+  [data-tema="escuro"] .duo-hoje, [data-tema="escuro"] .duo-legenda i.linha { border-top-color: rgb(241 234 219 / .5); }
+  [data-tema="escuro"] .duo-linhas > div { border-top-color: var(--line); }
+  [data-tema="escuro"] .duo-dif .mais, [data-tema="escuro"] .tabela .maior { color: #f2a9a0; }
+  [data-tema="escuro"] .tabela .menor { color: var(--verde); }
 }
 
 /* ── Chave do tema: três estados (sistema, claro, escuro) ── */
@@ -140,7 +176,7 @@
 .compositor-anexos { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 2px; padding: 0; list-style: none; }
 .anexo { display: flex; align-items: center; gap: 10px; max-width: min(100%, 300px); padding: 8px 6px 8px 8px; border-radius: 14px; background: var(--m-fundo); box-shadow: inset 0 0 0 1px var(--anel); animation: entra .4s var(--mola) backwards; }
 .anexo-ico { display: grid; place-items: center; flex: none; width: 34px; height: 34px; border-radius: 10px; background: var(--enfase); color: var(--ouro-claro); }
-[data-tema="escuro"] .anexo-ico { background: #1d3557; }
+[data-tema="escuro"] .anexo-ico { background: var(--m-pilula-2); }
 .anexo-ico .ico { width: 18px; height: 18px; }
 .anexo-texto { display: grid; min-width: 0; line-height: 1.3; }
 .anexo-texto strong { overflow: hidden; color: var(--ink); font-size: 13px; font-weight: 600; white-space: nowrap; text-overflow: ellipsis; }
@@ -154,7 +190,7 @@
 @keyframes gira { to { transform: rotate(360deg); } }
 
 .compositor-solte { position: absolute; inset: 0; display: grid; place-items: center; border-radius: inherit; background: rgb(246 245 241 / .92); color: var(--ink); font-weight: 600; box-shadow: inset 0 0 0 2px var(--ouro); pointer-events: none; }
-[data-tema="escuro"] .compositor-solte { background: rgb(10 20 36 / .92); }
+[data-tema="escuro"] .compositor-solte { background: rgb(12 12 13 / .92); }
 .compositor-aviso { margin: -6px 6px 0; color: var(--muted); font-size: 12.5px; line-height: 1.45; }
 .compositor-aviso[role="alert"] { color: var(--bordo); }
 

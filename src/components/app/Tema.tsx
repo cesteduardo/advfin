@@ -27,7 +27,7 @@ function ler(): Preferencia {
 function aplicar(p: Preferencia) {
   const escuro = p === "escuro" || (p === "sistema" && sistemaEscuro());
   document.documentElement.dataset.tema = escuro ? "escuro" : "claro";
-  document.querySelector('meta[name="theme-color"]')?.setAttribute("content", escuro ? "#0a1424" : "#0f2742");
+  document.querySelector('meta[name="theme-color"]')?.setAttribute("content", escuro ? "#0c0c0d" : "#0f2742");
   window.dispatchEvent(new Event("advfin-tema"));
 }
 

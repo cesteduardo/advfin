@@ -5,7 +5,7 @@ import { Seletor } from "@/components/ui/Seletor";
 import { CamposChave, useChave } from "@/components/app/ChaveAnthropic";
 import { PesquisaMesa, type TurnoSalvo } from "@/components/app/PesquisaMesa";
 import { guardarConversa, lerConversa } from "./conversas";
-import { rodarLab } from "@/lib/pesquisa/laboratorio";
+import { revisarComModelo, rodarLab } from "@/lib/pesquisa/laboratorio";
 import type { DocumentoAnexo, TurnoAnterior } from "@/lib/pesquisa/geracao";
 import { agora, alterar, euDe, novoId, useDemo } from "./estado";
 
@@ -59,6 +59,13 @@ export function PesquisaDemo() {
     } catch {}
   };
 
+  // Liga a IA grátis: com chave salva, já conversa; sem chave, abre o quadro para colar a chave.
+  const ligarIa = () => {
+    const m: Modo = claude.lembrar && !livre.lembrar ? "anthropic" : "openrouter";
+    escolher(m);
+    requestAnimationFrame(() => document.querySelector<HTMLElement>(".lab-config input, .lab-config .mesa-botao")?.focus());
+  };
+
   const e = useDemo();
   const eu = e ? euDe(e) : null;
   // O caso vem pelo endereço (?caso=...) quando a pessoa clica em "Pesquisar neste caso".
@@ -105,6 +112,8 @@ export function PesquisaDemo() {
         casoInicial={casoInicial && e?.casos.some((x) => x.id === casoInicial) ? casoInicial : ""}
         nome={eu?.nome.split(" ")[0]}
         minimo={modo === "extrativo" ? 8 : 2}
+        conectarIa={modo === "extrativo" ? ligarIa : undefined}
+        revisarDitado={modo !== "extrativo" && modo !== "groq" && c.lembrar && c.chave.trim() ? (t) => revisarComModelo(modo, c.chave.trim(), c.modelo, t) : undefined}
         notaAnexos={modo === "extrativo" ? "Sem IA, o texto do anexo é lido mas não entra na resposta. Escolha um modelo em Resposta para ele ser considerado." : undefined}
         opcoesCampo={
           <span className="app-data">
@@ -113,7 +122,17 @@ export function PesquisaDemo() {
           </span>
         }
         abaixoDoCampo={
-          modo !== "extrativo" ? (
+          modo === "extrativo" ? (
+            <div className="demo-ia-desligada" role="note">
+              <span aria-hidden="true" />
+              <p>
+                <strong>IA desligada.</strong> Agora eu só busco trechos das normas da Reforma: não converso nem respondo a outros assuntos.
+              </p>
+              <button type="button" className="mesa-botao" onClick={ligarIa}>
+                Ligar a IA grátis
+              </button>
+            </div>
+          ) : (
             <div className="mesa-cartao lab-config demo-origem mesa-entra" data-conectado={c.lembrar ? "" : undefined} key={modo}>
               {!c.lembrar && <p className="mesa-nota">
                 {modo === "openrouter" ? (
@@ -130,7 +149,7 @@ export function PesquisaDemo() {
               </p>}
               <CamposChave c={c} trocar={(p) => escolher(p)} />
             </div>
-          ) : null
+          )
         }
       />}
     </>

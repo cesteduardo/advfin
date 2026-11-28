@@ -84,6 +84,8 @@ export function useDitado({ aoParcial, aoFim, transcrever }: { aoParcial: (texto
   const [erro, setErro] = useState<string | null>(null);
   const rec = useRef<Reconhecedor | null>(null);
   const grav = useRef<{ m: MediaRecorder; s: MediaStream } | null>(null);
+  // Cada gravação tem um número; ao descartar (mensagem já enviada), o que chegar depois é ignorado.
+  const sessao = useRef(0);
   const cb = useRef({ aoParcial, aoFim, transcrever });
   cb.current = { aoParcial, aoFim, transcrever };
   useEffect(() => {
@@ -110,6 +112,7 @@ export function useDitado({ aoParcial, aoFim, transcrever }: { aoParcial: (texto
       setErro(nome === "NotFoundError" ? ERROS["audio-capture"] : ERROS["not-allowed"]);
       return;
     }
+    const minha = ++sessao.current;
     const tipo = tipoGravacao() || undefined;
     const m = new MediaRecorder(s, tipo ? { mimeType: tipo } : undefined);
     const partes: Blob[] = [];
@@ -118,6 +121,7 @@ export function useDitado({ aoParcial, aoFim, transcrever }: { aoParcial: (texto
       s.getTracks().forEach((t) => t.stop());
       grav.current = null;
       setOuvindo(false);
+      if (minha !== sessao.current) return;
       const audio = new Blob(partes, { type: m.mimeType || tipo || "audio/webm" });
       const t = cb.current.transcrever;
       if (!t || audio.size < 1200) {
@@ -128,6 +132,7 @@ export function useDitado({ aoParcial, aoFim, transcrever }: { aoParcial: (texto
       setTranscrevendo(true);
       try {
         const texto = (await t(audio)).trim();
+        if (minha !== sessao.current) return;
         if (!texto) setErro(ERROS["no-speech"]);
         const tudo = juntar(prefixo, texto);
         cb.current.aoParcial(tudo);
@@ -146,6 +151,7 @@ export function useDitado({ aoParcial, aoFim, transcrever }: { aoParcial: (texto
 
   const reconhecer = (C: Construtor, prefixo: string) => {
     setErro(null);
+    const minha = ++sessao.current;
     const r = new C();
     r.lang = "pt-BR";
     r.continuous = true;
@@ -153,6 +159,7 @@ export function useDitado({ aoParcial, aoFim, transcrever }: { aoParcial: (texto
     let final = "";
     let semServico = false;
     r.onresult = (e) => {
+      if (minha !== sessao.current) return;
       let parcial = "";
       for (let i = e.resultIndex; i < e.results.length; i++) {
         const res = e.results[i];
@@ -172,6 +179,7 @@ export function useDitado({ aoParcial, aoFim, transcrever }: { aoParcial: (texto
     };
     r.onend = () => {
       rec.current = null;
+      if (minha !== sessao.current) return setOuvindo(false);
       if (semServico && cb.current.transcrever && temGravacao) {
         // O serviço do navegador não respondeu: segue gravando, sem a pessoa tocar de novo.
         void gravar(juntar(prefixo, final));
@@ -204,8 +212,16 @@ export function useDitado({ aoParcial, aoFim, transcrever }: { aoParcial: (texto
     if (grav.current) grav.current.m.stop();
     else rec.current?.stop();
   };
+  /** Para tudo e joga fora o que ainda chegaria: a mensagem ditada já foi enviada. */
+  const descartar = () => {
+    sessao.current++;
+    if (grav.current) grav.current.m.stop();
+    rec.current?.abort();
+    rec.current = null;
+    setOuvindo(false);
+  };
   const suportado = temReconhecimento || (!!transcrever && temGravacao);
-  return { suportado, ouvindo, transcrevendo, erro, iniciar, parar, limparErro: () => setErro(null) };
+  return { suportado, ouvindo, transcrevendo, erro, iniciar, parar, descartar, limparErro: () => setErro(null) };
 }
 
 /** Leitura em voz alta, em português, de um texto sem as marcas de citação. */

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Icone, type NomeIcone } from "./Icone";
 
 /**
@@ -24,7 +24,17 @@ function ler(): Preferencia {
   }
 }
 
-function aplicar(p: Preferencia) {
+/** Troca de tema feita pela pessoa: as cores atravessam em ~280 ms, sem piscar. */
+function suavizar() {
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const h = document.documentElement;
+  h.classList.add("tema-trocando");
+  clearTimeout((window as unknown as { __temaT?: number }).__temaT);
+  (window as unknown as { __temaT?: number }).__temaT = window.setTimeout(() => h.classList.remove("tema-trocando"), 340);
+}
+
+function aplicar(p: Preferencia, suave = false) {
+  if (suave) suavizar();
   const escuro = p === "escuro" || (p === "sistema" && sistemaEscuro());
   document.documentElement.dataset.tema = escuro ? "escuro" : "claro";
   document.querySelector('meta[name="theme-color"]')?.setAttribute("content", escuro ? "#080b11" : "#0f2742");
@@ -63,10 +73,22 @@ export function ChaveTema() {
       if (p === "sistema") localStorage.removeItem(CHAVE);
       else localStorage.setItem(CHAVE, p);
     } catch {}
-    aplicar(p);
+    aplicar(p, true);
   };
+  // A pílula desliza até a opção escolhida, como nas abas e na dock.
+  const trilha = useRef<HTMLSpanElement>(null);
+  const [pronta, setPronta] = useState(false);
+  useLayoutEffect(() => {
+    const t = trilha.current;
+    const a = t?.querySelector<HTMLElement>('[aria-pressed="true"]');
+    if (!t || !a) return;
+    t.style.setProperty("--px", `${a.offsetLeft}px`);
+    t.style.setProperty("--pw", `${a.offsetWidth}px`);
+    if (!pronta) requestAnimationFrame(() => setPronta(true));
+  }, [pref, pronta]);
   return (
-    <span className="tema-chave" role="group" aria-label="Tema">
+    <span className="tema-chave" role="group" aria-label="Tema" ref={trilha} data-pronta={pronta ? "" : undefined}>
+      <span className="tema-pilula" aria-hidden="true" />
       {OPCOES.map((o) => (
         <button key={o.p} type="button" aria-pressed={pref === o.p} aria-label={o.rotulo} title={o.rotulo} onClick={() => escolher(o.p)}>
           <Icone nome={o.icone} />

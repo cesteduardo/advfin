@@ -12,29 +12,93 @@ export function decodificar(bytes, contentType = "") {
   const doCabecalho = /charset=([\w-]+)/i.exec(contentType)?.[1];
   const ascii = new TextDecoder("latin1").decode(bytes.slice(0, 2048));
   const doHtml = /<meta[^>]+charset=["']?([\w-]+)/i.exec(ascii)?.[1];
-  const charset = (doCabecalho || doHtml || "utf-8").toLowerCase();
-  return new TextDecoder(charset === "iso-8859-1" ? "windows-1252" : charset).decode(bytes);
+  const declarado = (doCabecalho || doHtml || "").toLowerCase();
+  if (declarado) return new TextDecoder(declarado === "iso-8859-1" ? "windows-1252" : declarado).decode(bytes);
+  // Sem charset declarado (caso de muitas páginas antigas do Planalto, feitas no FrontPage):
+  // UTF-8 se os bytes forem UTF-8 válido; senão Windows-1252, que é o que essas páginas usam.
+  try {
+    return new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+  } catch {
+    return new TextDecoder("windows-1252").decode(bytes);
+  }
 }
 
 const ENTIDADES = { nbsp: " ", ldquo: "“", rdquo: "”", lsquo: "‘", rsquo: "’", hellip: "…", amp: "&", lt: "<", gt: ">", quot: '"', apos: "'", ordm: "º", ordf: "ª", sect: "§", ndash: "–", mdash: "—", laquo: "«", raquo: "»" };
 
 const DIACRITICOS = { acute: "\u0301", grave: "\u0300", circ: "\u0302", tilde: "\u0303", cedil: "\u0327", uml: "\u0308" };
 
+/** "&#150;" no Planalto é o travessão do Windows-1252 (bytes 128 a 159), não um caractere de controle. */
+const CP1252 = new TextDecoder("windows-1252");
+const caractere = (n) => (n >= 128 && n <= 159 ? CP1252.decode(new Uint8Array([n])) : String.fromCodePoint(n));
+
+/**
+ * O que a página traz depois do texto da norma e que não pertence ao último artigo: o fecho
+ * ("Brasília, 10 de janeiro de 2002; 181º da Independência..."), as assinaturas, o aviso do
+ * Planalto e o índice. Corta a partir do fecho.
+ */
+const FECHO = /\s(?:Bras[ií]lia|Rio de Janeiro|S[aã]o Paulo|Pal[aá]cio dos Bandeirantes),?\s+(?:em\s+)?\d{1,2}\s*[º°o]?\s+de\s+[a-zç]+\s+de\s+\d{4}[\s\S]*$|\s*Este texto n[aã]o substitui o publicado[\s\S]*$/;
+
+/**
+ * Títulos da estrutura (CAPÍTULO V, Seção I...) que ficam colados no fim do artigo anterior.
+ * Só sai o que vem depois da última pontuação e começa por um desses títulos.
+ */
+const TITULOS_NO_FIM = /([.;:)])\s+(?:LIVRO|PARTE|T[IÍ]TULO|TITULO|SUBT[IÍ]TULO|CAP[IÍ]TULO|CAPITULO|SE[CÇ][AÃ]O|Se[cç][aã]o|SUBSE[CÇ][AÃ]O|Subse[cç][aã]o)\s+(?:[IVXLC]+\b|[ÚU]NIC[OA]\b|GERAL\b|ESPECIAL\b|COMPLEMENTAR\b)[^.;:]*$/;
+
 /** Notas de alteração do Planalto: "(Redação dada pela Lei Complementar nº 227, de 2026)". */
-export const NOTA = /\((?:Reda[cç][aã]o dada|Inclu[ií]d[oa]|Revogad[oa]|Vide|Regulamento|Vig[eê]ncia|Produ[cç][aã]o de efeitos?)[^)]*\)/gi;
+export const NOTA = /\(\s*(?:Reda[cç][aã]o\s+dada|Inclu[ií]d[oa]|Revogad[oa]|Vide|Regulamento|Vig[eê]ncia|Produ[cç][aã]o\s+de\s+efeitos?)[^)]*\)/gi;
 
 /**
  * HTML do Planalto em texto corrido. Com manterNotas, as notas de alteração ficam no
  * texto para que artigos() as guarde à parte (o curador usa a nota para datar a versão).
  */
+/**
+ * Redação revogada marcada por estilo, e não por <strike>: style="text-decoration:line-through"
+ * no próprio elemento ou numa classe declarada no <style> da página (span.msoDel, do Word).
+ * Sai o elemento inteiro, até o fechamento correspondente.
+ */
+export function tirarTachadoPorEstilo(html) {
+  const classes = new Set();
+  for (const bloco of html.matchAll(/<style[^>]*>([\s\S]*?)<\/style>/gi))
+    for (const regra of bloco[1].matchAll(/([^{}]+)\{([^}]*)\}/g))
+      if (/line-through/i.test(regra[2])) for (const c of regra[1].matchAll(/\.([\w-]+)/g)) classes.add(c[1].toLowerCase());
+  const abre = /<([a-z][a-z0-9]*)\b([^>]*)>/gi;
+  const tachado = (attrs) =>
+    /style\s*=\s*["'][^"']*line-through/i.test(attrs) ||
+    [...(/class\s*=\s*["']?([^"'>]+)/i.exec(attrs)?.[1] ?? "").toLowerCase().split(/\s+/)].some((c) => classes.has(c));
+  let saida = "";
+  let pos = 0;
+  abre.lastIndex = 0;
+  let m;
+  while ((m = abre.exec(html))) {
+    if (/^(style|script)$/i.test(m[1]) || !tachado(m[2]) || m[0].endsWith("/>")) continue;
+    const nome = m[1].toLowerCase();
+    const marca = new RegExp(`<(/?)${nome}\\b[^>]*>`, "gi");
+    marca.lastIndex = m.index + m[0].length;
+    let nivel = 1;
+    let fim = html.length;
+    let k;
+    while ((k = marca.exec(html))) {
+      nivel += k[1] ? -1 : 1;
+      if (nivel === 0) {
+        fim = k.index + k[0].length;
+        break;
+      }
+    }
+    saida += html.slice(pos, m.index) + " ";
+    pos = fim;
+    abre.lastIndex = fim;
+  }
+  return saida + html.slice(pos);
+}
+
 export function textoLimpo(html, { manterNotas = false } = {}) {
-  const t = html
+  const t = tirarTachadoPorEstilo(html)
     .replace(/<(script|style|head)[\s\S]*?<\/\1>/gi, " ")
     .replace(/<(strike|s|del)\b[\s\S]*?<\/\1>/gi, " ") // redação revogada
     .replace(/<br\s*\/?>/gi, "\n")
     .replace(/<\/(p|div|li|tr|h\d)>/gi, "\n")
     .replace(/<[^>]+>/g, " ")
-    .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(Number(n)))
+    .replace(/&#(\d+);/g, (_, n) => caractere(Number(n)))
     .replace(/&([a-zA-Z])(acute|grave|circ|tilde|cedil|uml);/g, (_, l, d) => (l + DIACRITICOS[d]).normalize("NFC"))
     .replace(/&(\w+);/g, (m, n) => ENTIDADES[n.toLowerCase()] ?? m)
   ;
@@ -92,11 +156,15 @@ export function artigos(texto) {
       .replace(/["”]\s*\(NR\)\s*$/, "")
       .replace(/\s*\(NR\)\s*$/, "")
       .replace(/["”]\s*$/, "")
+      .replace(/([;:,.])(?:\s+\.)+(?=\s|$)/g, "$1") // ponto que ficou sozinho quando a nota saiu
+      .replace(FECHO, "")
+      .replace(TITULOS_NO_FIM, "$1")
+      .replace(/\s*\bVig[eê]ncia\s*$/, "") // link "Vigência" que sobra ao lado de uma nota
       .trim();
     const base = `art. ${String(n).replace(/\B(?=(\d{3})+$)/g, ".")}${n < 10 ? "º" : ""}${m[4] ?? ""}`;
     if (!citado) destino = destinoDaAlteracao(corpo);
     const rotulo = citado ? `${destino ?? "alteração"}, ${base}` : base;
-    if (corpo.length > 0) lista.push({ rotulo, numero: n, texto: corpo, notas, citado, destino: citado ? destino : null, introducao: false });
+    if (/[\p{L}\d]/u.test(corpo)) lista.push({ rotulo, numero: n, texto: corpo, notas, citado, destino: citado ? destino : null, introducao: false });
   });
   // "A Constituição Federal passa a vigorar com as seguintes alterações:" só anuncia o que vem
   // entre aspas. Não serve de fonte; a ingestão pula.

@@ -23,6 +23,38 @@ describe("leitura do Planalto", () => {
     const bytes = new Uint8Array([0x3c, 0x6d, 0x65, 0x74, 0x61, 0x20, 0x63, 0x68, 0x61, 0x72, 0x73, 0x65, 0x74, 0x3d, 0x22, 0x77, 0x69, 0x6e, 0x64, 0x6f, 0x77, 0x73, 0x2d, 0x31, 0x32, 0x35, 0x32, 0x22, 0x3e, 0xe7, 0xe3, 0xba]);
     expect(decodificar(bytes)).toMatch(/çãº$/);
   });
+
+  it("tira do último artigo o fecho, o índice e os títulos colados; lê &#150; como travessão", () => {
+    const pagina = `<p>Art. 1º Texto um. § 1º (VETADO). CAPÍTULO V Exclusão de Crédito Tributário Seção I Disposições Gerais</p>
+<p>Art. 2º Fim. Brasília, 10 de janeiro de 2002; 181º da Independência. FHC Este texto não substitui ÍNDICE PARTE GERAL</p>
+<p>Art. 3º <a>(Revogado pela Lei nº 15.040, de 2024)</a> <a>Vigência</a></p><p>Art. 4º I &#150; pelo despacho</p>`;
+    const lista = artigos(textoLimpo(pagina, { manterNotas: true }));
+    expect(lista.map((a: any) => [a.rotulo, a.texto])).toEqual([
+      ["art. 1º", "Texto um. § 1º (VETADO)."],
+      ["art. 2º", "Fim."],
+      ["art. 4º", "I – pelo despacho"],
+    ]);
+  });
+
+  it("tira a redação tachada por estilo (inline ou classe do <style>)", () => {
+    const pagina = `<html><head><style>span.msoDel {text-decoration:line-through}</style></head><body>
+<p>Art. 12. Texto. § 2º Hipóteses: <span style="color:black; text-decoration:line-through"><span>I - redação antiga;</span></span> (Redação dada pela Lei nº 1, de 2011).</p>
+<p>I - redação nova; <span class="msoDel">II - outra antiga;</span> II - outra nova.</p></body></html>`;
+    const [a] = artigos(textoLimpo(pagina));
+    expect(a.texto).toBe("Texto. § 2º Hipóteses: I - redação nova; II - outra nova.");
+  });
+
+  it("reconhece nota quebrada em duas linhas e descarta artigo que só tinha a nota", () => {
+    const pagina = `<p>Art. 1º Texto do credor. (Redação \r\n dada pela Lei nº 12.431, de 2011). § 2º Outro.</p><p>Art. 2º (Revogado pela Lei nº 9.528, de 1997).</p>`;
+    const lista = artigos(textoLimpo(pagina, { manterNotas: true }));
+    expect(lista.map((a: any) => [a.rotulo, a.texto])).toEqual([["art. 1º", "Texto do credor. § 2º Outro."]]);
+  });
+
+  it("sem charset declarado: UTF-8 válido fica UTF-8, o resto é lido como windows-1252", () => {
+    expect(decodificar(new TextEncoder().encode("<p>Art. 1º Fica instituída"))).toBe("<p>Art. 1º Fica instituída");
+    const antigo = new Uint8Array([0x41, 0x72, 0x74, 0x2e, 0x20, 0x31, 0xba, 0x20, 0x69, 0x6e, 0x73, 0x74, 0x69, 0x74, 0x75, 0xed, 0x64, 0x61]);
+    expect(decodificar(antigo)).toBe("Art. 1º instituída");
+  });
 });
 
 // Estrutura da EC 132/2023 no Planalto: art. 1º reescreve a Constituição, art. 2º acrescenta

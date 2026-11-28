@@ -241,6 +241,17 @@ export function PesquisaMesa({
   }, [painel]);
   const campo = useRef<HTMLTextAreaElement>(null);
   const fim = useRef<HTMLDivElement>(null);
+  // A conversa reserva embaixo a altura do campo fixo, que muda com anexos e avisos.
+  const chat = useRef<HTMLDivElement>(null);
+  const rodapeRef = useRef<HTMLDivElement>(null);
+  const emConversa = turnos.length > 0;
+  useEffect(() => {
+    const r = rodapeRef.current;
+    if (!emConversa || !r || typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver(() => chat.current?.style.setProperty("--rodape-h", `${Math.ceil(r.offsetHeight)}px`));
+    ro.observe(r);
+    return () => ro.disconnect();
+  }, [emConversa, destino]);
   // A saudação depende da hora local; calculada só no navegador para não divergir do HTML estático.
   const [saudacao, setSaudacao] = useState("Olá");
   useEffect(() => {
@@ -521,8 +532,18 @@ export function PesquisaMesa({
     );
   }
 
+  const rodape = (
+    <div className="pesquisa-rodape" ref={rodapeRef}>
+      {formulario}
+      {avisos}
+      {opcoes}
+      {abaixoDoCampo}
+      <p className="pesquisa-rodape-nota">Respostas só com dispositivos vigentes em {dataBR(data)}. Toque no número da citação para ver a fonte.</p>
+    </div>
+  );
+
   return (
-    <div className="pesquisa-chat">
+    <div className="pesquisa-chat" ref={chat}>
       <section className="mesa-conversa" aria-live="polite">
         {turnos.map((t) => (
           <TurnoChat
@@ -546,15 +567,10 @@ export function PesquisaMesa({
           />
         ))}
         <div ref={fim} className="pesquisa-fim" aria-hidden="true" />
-        <div className="pesquisa-rodape">
-          {formulario}
-          {avisos}
-          {opcoes}
-          {abaixoDoCampo}
-          <p className="pesquisa-rodape-nota">Respostas só com dispositivos vigentes em {dataBR(data)}. Toque no número da citação para ver a fonte.</p>
-        </div>
       </section>
 
+      {/* O campo fica fixo no pé da tela, fora de qualquer animação que prenderia o position: fixed. */}
+      {destino ? createPortal(rodape, destino) : rodape}
       {destino &&
         createPortal(
           <>

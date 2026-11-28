@@ -101,8 +101,9 @@
   [data-tema="escuro"] .cit button { background: rgb(217 191 134 / .16); color: var(--ouro); }
   [data-tema="escuro"] .cit button[aria-pressed="true"] { background: var(--ouro); color: var(--marinho); }
   [data-tema="escuro"] mark { background: rgb(217 191 134 / .26); color: var(--ink); }
-  [data-tema="escuro"] .mesa-cartao, [data-tema="escuro"] .mesa-resposta, [data-tema="escuro"] .atalho, [data-tema="escuro"] .inicio-numero, [data-tema="escuro"] .mesa-caso, [data-tema="escuro"] .regime-cartao { box-shadow: 0 0 0 1px var(--anel), 0 14px 34px -22px rgb(0 0 0 / .7); }
-  [data-tema="escuro"] .simbolo-app { box-shadow: 0 0 0 1px rgb(217 191 134 / .35), 0 10px 24px -12px rgb(0 0 0 / .8); }
+  [data-tema="escuro"] .mesa-cartao, [data-tema="escuro"] .mesa-resposta:not(.pesquisa-resposta), [data-tema="escuro"] .atalho, [data-tema="escuro"] .inicio-numero, [data-tema="escuro"] .mesa-caso, [data-tema="escuro"] .regime-cartao { box-shadow: 0 0 0 1px var(--anel), 0 14px 34px -22px rgb(0 0 0 / .7); }
+  /* Logo sem contorno no escuro: o marinho do símbolo já se destaca do fundo. */
+  [data-tema="escuro"] .simbolo-app { box-shadow: none; }
   [data-tema="escuro"] .fontes-veu { background: rgb(3 8 16 / .6); }
   [data-tema="escuro"] .demo-faixa { background: rgb(217 191 134 / .1); }
 }
@@ -186,3 +187,17 @@
   .compositor-anexos::-webkit-scrollbar { display: none; }
   .anexo { flex: none; max-width: 220px; }
 }
+
+/* ── Campo do chat sempre fixo no pé da tela ──
+   Fixo (não sticky): no Safari do iPhone o sticky solta durante a rolagem por inércia.
+   A conversa reserva embaixo a altura real do campo (--rodape-h, medida no componente). */
+.pesquisa-rodape, :root[data-dock-recolhida] .pesquisa-rodape { position: fixed; z-index: 30; bottom: 0; left: calc(272px + (100vw - 272px) / 2); width: min(820px, calc(100vw - 272px - 2 * clamp(16px, 3vw, 44px))); margin: 0; padding: 22px 0 16px; transform: translateX(-50%); transition: none; }
+.pesquisa-chat .mesa-conversa { min-height: 0; padding-bottom: calc(var(--rodape-h, 190px) + 8px); }
+.pesquisa-fim { scroll-margin-bottom: calc(var(--rodape-h, 190px) + 16px); }
+@media (max-width: 900px) {
+  .pesquisa-rodape, :root[data-dock-recolhida] .pesquisa-rodape { left: 16px; right: 16px; width: auto; transform: none; padding: 16px 0 max(10px, env(safe-area-inset-bottom)); }
+  .pesquisa-fim { scroll-margin-bottom: calc(var(--rodape-h, 170px) + 12px); }
+}
+/* O véu do campo passa um pouco das bordas da coluna, para nenhum fio do conteúdo aparecer ao lado. */
+.pesquisa-rodape, :root[data-dock-recolhida] .pesquisa-rodape { background: none; }
+.pesquisa-rodape::before { content: ""; position: absolute; z-index: -1; inset: 0 -14px; background: linear-gradient(to bottom, var(--m-fundo-0), var(--m-fundo) 22px); pointer-events: none; }

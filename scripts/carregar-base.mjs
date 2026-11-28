@@ -8,7 +8,7 @@
  *   ADMIN_DATABASE_URL="..." node scripts/carregar-base.mjs --grupo sp --pasta ~/Downloads/sp
  *   ADMIN_DATABASE_URL="..." node scripts/carregar-base.mjs --grupo solucoes --pasta ~/Downloads/solucoes
  *
- * Grupos: reforma, federal, receita, sp, solucoes, todas.
+ * Grupos: reforma, federal, apoio, receita, sp, solucoes, todas.
  * Normas com URL oficial (Planalto) são baixadas; as que só têm portal exigem a página salva
  * em --pasta com o nome do catálogo. Uma norma que falha é relatada e as outras seguem.
  * Pode rodar de novo: o que não mudou é ignorado; redação nova vira versão nova na fila.
@@ -56,12 +56,12 @@ export async function normasDoGrupo(grupo, pasta) {
   return { normas: CATALOGO.filter((n) => n.grupo === grupo), ignorados: [] };
 }
 
-async function abrir(n, pasta) {
+export async function abrir(n, pasta) {
   if (pasta) {
     try {
-      return decodificar(new Uint8Array(await readFile(join(pasta, n.arquivo))));
+      return decodificar(new Uint8Array(await readFile(join(pasta, n.pagina ?? n.arquivo))));
     } catch {
-      if (!n.url) throw new Error(`arquivo ${n.arquivo} não está em ${pasta}`);
+      if (!n.url) throw new Error(`arquivo ${n.pagina ?? n.arquivo} não está em ${pasta}`);
     }
   }
   if (!n.url) throw new Error(`sem URL estável: salve a página de ${n.portal} como ${n.arquivo} e rode com --pasta`);

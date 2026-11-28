@@ -28,7 +28,9 @@ export function lerNorma(html, meta = {}) {
   }
   const { texto, faixa } = recortar(limpo, meta.recorte);
   const todos = artigos(texto);
-  return { lista: todos.filter((a) => dentroDaFaixa(a, faixa)), vigencia: faixa ? null : artigoDeVigencia(todos) };
+  const prefixo = meta.recorte?.prefixo;
+  const lista = todos.filter((a) => dentroDaFaixa(a, faixa)).map((a) => (prefixo ? { ...a, rotulo: `${prefixo}, ${a.rotulo}` } : a));
+  return { lista, vigencia: faixa ? null : artigoDeVigencia(todos) };
 }
 
 function notaDe(meta, item, vigencia, versaoNova) {

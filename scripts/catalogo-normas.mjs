@@ -9,7 +9,10 @@
  *   portal                         onde achar a página quando não há URL estável; o carregador
  *                                  então exige o arquivo salvo em --pasta
  *   arquivo                        nome do arquivo em --pasta (páginas salvas pelo navegador)
- *   recorte                        { ate: marco onde a leitura para, artigos: [de, até] }
+ *   recorte                        { desde: marco onde a leitura começa, ate: marco onde para,
+ *                                    artigos: [de, até], prefixo: "ADCT" (antes de "art. N") }
+ *   pagina                         arquivo salvo de onde ler, quando duas entradas usam a mesma
+ *                                  página (CF e ADCT vêm de constituicao.htm)
  *   modo: "documento"              soluções de consulta e pareceres: guarda só a ementa
  *
  * As URLs do Planalto seguem o padrão do site (ccivil_03). Se alguma mudar, o carregador
@@ -44,6 +47,13 @@ export const CATALOGO = [
     ementa: "Constituição da República Federativa do Brasil: Sistema Tributário Nacional (arts. 145 a 162).",
     url: `${P}/constituicao/constituicao.htm`,
     recorte: { ate: "ATO DAS DISPOSI[CÇ][OÕ]ES CONSTITUCIONAIS TRANSIT[OÓ]RIAS", artigos: [145, 162] },
+  },
+  {
+    grupo: "reforma", arquivo: "constituicao-adct.htm", pagina: "constituicao.htm",
+    tipo: "CF", numero: "1988-ADCT", ano: "1988", publicada: "2023-12-21", apelido: "ADCT (CF/1988)",
+    ementa: "Ato das Disposições Constitucionais Transitórias: regras de transição da Reforma Tributária (arts. 124 a 138), incluídas pela EC 132/2023.",
+    url: `${P}/constituicao/constituicao.htm`,
+    recorte: { desde: "ATO DAS DISPOSI[CÇ][OÕ]ES CONSTITUCIONAIS TRANSIT[OÓ]RIAS", artigos: [124, 138], prefixo: "ADCT" },
   },
   {
     grupo: "federal", arquivo: "l5172compilado.htm",
@@ -150,6 +160,122 @@ export const CATALOGO = [
     url: `${P}/leis/lcp/lcp116.htm`,
   },
 
+  // ── Processo e cobrança: mandado de segurança, CADIN e parcelamentos, transação, crimes ──
+  {
+    grupo: "federal", arquivo: "l12016.htm",
+    tipo: "LEI", numero: "12016", ano: "2009", publicada: "2009-08-10", apelido: "Lei 12.016/2009 (Mandado de Segurança)",
+    ementa: "Disciplina o mandado de segurança individual e coletivo.",
+    url: `${P}/_ato2007-2010/2009/lei/l12016.htm`,
+  },
+  {
+    grupo: "federal", arquivo: "l10522.htm",
+    tipo: "LEI", numero: "10522", ano: "2002", publicada: "2002-07-22", apelido: "Lei 10.522/2002 (CADIN e parcelamento)",
+    ementa: "Dispõe sobre o Cadastro Informativo dos créditos não quitados de órgãos e entidades federais (CADIN) e o parcelamento de débitos.",
+    url: `${P}/leis/2002/l10522.htm`,
+  },
+  {
+    grupo: "federal", arquivo: "l13988.htm",
+    tipo: "LEI", numero: "13988", ano: "2020", publicada: "2020-04-14", apelido: "Lei 13.988/2020 (Transação tributária)",
+    ementa: "Dispõe sobre a transação nas hipóteses que especifica (cobrança da dívida ativa e contencioso tributário).",
+    url: `${P}/_ato2019-2022/2020/lei/l13988.htm`,
+  },
+  {
+    grupo: "federal", arquivo: "l8137.htm",
+    tipo: "LEI", numero: "8137", ano: "1990", publicada: "1990-12-27", apelido: "Lei 8.137/1990 (Crimes contra a ordem tributária)",
+    ementa: "Define crimes contra a ordem tributária, econômica e contra as relações de consumo.",
+    url: `${P}/leis/l8137.htm`,
+  },
+  {
+    grupo: "federal", arquivo: "l11457.htm",
+    tipo: "LEI", numero: "11457", ano: "2007", publicada: "2007-03-16", apelido: "Lei 11.457/2007 (Receita Federal do Brasil)",
+    ementa: "Dispõe sobre a Administração Tributária Federal e a Secretaria da Receita Federal do Brasil.",
+    url: `${P}/_ato2007-2010/2007/lei/l11457.htm`,
+  },
+  {
+    grupo: "federal", arquivo: "lcp105.htm",
+    tipo: "LC", numero: "105", ano: "2001", publicada: "2001-01-10", apelido: "LC 105/2001 (Sigilo bancário)",
+    ementa: "Dispõe sobre o sigilo das operações de instituições financeiras.",
+    url: `${P}/leis/lcp/lcp105.htm`,
+  },
+
+  // ── Contribuições previdenciárias e IR das pessoas físicas ──
+  {
+    grupo: "federal", arquivo: "l8212cons.htm",
+    tipo: "LEI", numero: "8212", ano: "1991", publicada: "1991-07-24", apelido: "Lei 8.212/1991 (Custeio da Seguridade Social)",
+    ementa: "Dispõe sobre a organização da Seguridade Social e institui plano de custeio.",
+    url: `${P}/leis/l8212cons.htm`,
+  },
+  {
+    grupo: "federal", arquivo: "l7713.htm",
+    tipo: "LEI", numero: "7713", ano: "1988", publicada: "1988-12-22", apelido: "Lei 7.713/1988 (IRPF)",
+    ementa: "Altera a legislação do imposto de renda (pessoas físicas).",
+    url: `${P}/leis/l7713.htm`,
+  },
+  {
+    grupo: "federal", arquivo: "l9250.htm",
+    tipo: "LEI", numero: "9250", ano: "1995", publicada: "1995-12-26", apelido: "Lei 9.250/1995 (IRPF)",
+    ementa: "Altera a legislação do imposto de renda das pessoas físicas.",
+    url: `${P}/leis/l9250.htm`,
+  },
+  {
+    grupo: "federal", arquivo: "l12973.htm",
+    tipo: "LEI", numero: "12973", ano: "2014", publicada: "2014-05-13", apelido: "Lei 12.973/2014",
+    ementa: "Altera a legislação do IRPJ, da CSLL, do PIS/Pasep e da Cofins (convergência contábil e lucros no exterior).",
+    url: `${P}/_ato2011-2014/2014/lei/l12973.htm`,
+  },
+  {
+    grupo: "federal", arquivo: "l14596.htm",
+    tipo: "LEI", numero: "14596", ano: "2023", publicada: "2023-06-14", apelido: "Lei 14.596/2023 (Preços de transferência)",
+    ementa: "Dispõe sobre as regras de preços de transferência relativas ao IRPJ e à CSLL.",
+    url: `${P}/_ato2023-2026/2023/lei/l14596.htm`,
+  },
+
+  // ── ICMS: convênios e benefícios; comércio exterior ──
+  {
+    grupo: "federal", arquivo: "lcp24.htm",
+    tipo: "LC", numero: "24", ano: "1975", publicada: "1975-01-09", apelido: "LC 24/1975 (Convênios de ICMS)",
+    ementa: "Dispõe sobre os convênios para a concessão de isenções do imposto sobre operações relativas à circulação de mercadorias.",
+    url: `${P}/leis/lcp/lcp24.htm`,
+  },
+  {
+    grupo: "federal", arquivo: "lcp160.htm",
+    tipo: "LC", numero: "160", ano: "2017", publicada: "2017-08-08", apelido: "LC 160/2017 (Convalidação de benefícios de ICMS)",
+    ementa: "Dispõe sobre convênio que permite aos Estados deliberar sobre a remissão e a reinstituição de benefícios fiscais de ICMS.",
+    url: `${P}/leis/lcp/lcp160.htm`,
+  },
+  {
+    grupo: "federal", arquivo: "d6759.htm",
+    tipo: "DECRETO", numero: "6759", ano: "2009", publicada: "2009-02-06", apelido: "Regulamento Aduaneiro (Decreto 6.759/2009)",
+    ementa: "Regulamenta a administração das atividades aduaneiras e a fiscalização, o controle e a tributação das operações de comércio exterior.",
+    url: `${P}/_ato2007-2010/2009/decreto/d6759.htm`,
+  },
+  {
+    grupo: "federal", arquivo: "l6404consol.htm",
+    tipo: "LEI", numero: "6404", ano: "1976", publicada: "1976-12-17", apelido: "Lei 6.404/1976 (Sociedades por Ações)",
+    ementa: "Dispõe sobre as sociedades por ações (base contábil do lucro real).",
+    url: `${P}/leis/l6404consol.htm`,
+  },
+
+  // ── Apoio ao tributarista: Código Civil, CPC e processo administrativo ──
+  {
+    grupo: "apoio", arquivo: "l10406compilada.htm",
+    tipo: "LEI", numero: "10406", ano: "2002", publicada: "2002-01-11", apelido: "Código Civil",
+    ementa: "Institui o Código Civil.",
+    url: `${P}/leis/2002/l10406compilada.htm`,
+  },
+  {
+    grupo: "apoio", arquivo: "l13105.htm",
+    tipo: "LEI", numero: "13105", ano: "2015", publicada: "2015-03-17", apelido: "CPC",
+    ementa: "Código de Processo Civil.",
+    url: `${P}/_ato2015-2018/2015/lei/l13105.htm`,
+  },
+  {
+    grupo: "apoio", arquivo: "l9784.htm",
+    tipo: "LEI", numero: "9784", ano: "1999", publicada: "1999-02-01", apelido: "Lei 9.784/1999 (Processo administrativo federal)",
+    ementa: "Regula o processo administrativo no âmbito da Administração Pública Federal.",
+    url: `${P}/leis/l9784.htm`,
+  },
+
   // ── Receita Federal: instruções normativas (Sijut, sem URL estável por ato) ──
   {
     grupo: "receita", arquivo: "in-rfb-2121-2022.html",
@@ -198,8 +324,9 @@ export const CATALOGO = [
 ];
 
 export const GRUPOS = {
-  reforma: "EC 132/2023 e LC 214/2025",
-  federal: "CF (arts. 145 a 162), CTN, PAF, LEF, PIS/Cofins, IPI, IRPJ/CSLL, RIR, RIPI, LC 123, LC 87, LC 116",
+  reforma: "EC 132/2023, LC 214/2025 e o ADCT da Reforma (arts. 124 a 138)",
+  federal: "CF (arts. 145 a 162), CTN, PAF, LEF, PIS/Cofins, IPI, IRPJ/CSLL, RIR, RIPI, LC 123, LC 87, LC 116, LC 24, LC 160, LC 105, mandado de segurança, CADIN, transação, crimes tributários, custeio previdenciário, IRPF, preços de transferência, Regulamento Aduaneiro, Lei das S.A.",
+  apoio: "Código Civil, CPC e Lei 9.784/1999 (processo administrativo), usados pelo tributarista como apoio",
   receita: "instruções normativas da Receita (páginas salvas do Sijut)",
   sp: "ICMS do Estado de São Paulo e ISS da capital (páginas salvas dos portais)",
   solucoes: "soluções de consulta da Receita (pasta com uma página salva por solução)",

@@ -51,3 +51,32 @@ duas saídas:
 
 Na nuvem, o `fetch` do Node só usa o proxy com `NODE_USE_ENV_PROXY=1`:
 `NODE_USE_ENV_PROXY=1 npm run base-estatica`.
+
+## Primeira carga (28/11/2026)
+
+Rodada no ambiente de nuvem **advfin**: 38 normas do Planalto, 8.287 dispositivos, 51 partes
+(7,3 MB em `public/base/`). Todas "Aguardando o curador", com vigência provisória.
+
+Conferência por amostragem: 64 artigos sorteados em 8 normas (CF, EC 132, LC 214, CTN, RIR,
+Lei 9.430, Código Civil, CPC), comparados palavra por palavra, na ordem, com a página oficial.
+Todos batem; o que falta em relação à página é só a redação tachada e as notas de alteração,
+que o leitor tira de propósito.
+
+Falhas do leitor achadas e corrigidas nesta carga (com testes em `planalto.test.ts`):
+
+- páginas antigas sem charset declarado eram lidas como UTF-8 e viravam "�": agora caem em
+  Windows-1252 quando os bytes não são UTF-8 válido (afetava todas as normas);
+- `&#150;` virava caractere de controle em vez de travessão;
+- o último artigo engolia o fecho, as assinaturas e o índice da página (CC, art. 2.046), e
+  títulos como "CAPÍTULO V ..." colavam no fim do artigo anterior;
+- redação revogada marcada por estilo (`text-decoration:line-through` ou a classe `msoDel`)
+  entrava no texto como se estivesse em vigor;
+- nota de alteração quebrada em duas linhas ficava no texto, e artigos só com a nota
+  "(Revogado...)" ou "Vigência" entravam vazios.
+
+Restam três notas com erro de digitação na própria página do Planalto ("Redação da pela",
+parêntese sem fechar), que ficam no texto como estão: CTN art. 70, Lei 6.404 art. 124 e
+Lei 8.212 art. 80.
+
+Ficam para a próxima rodada: atos da Receita (INs, soluções de consulta), CARF, PGFN, ICMS e
+ISS de São Paulo, e a jurisprudência do STF e do STJ.

@@ -8,11 +8,11 @@
  */
 import Anthropic from "@anthropic-ai/sdk";
 import { recuperarLocal } from "./base-local";
-import { SISTEMA_PESQUISA, lerResposta, montarMensagem, respostaExtrativa, type DocumentoAnexo } from "./geracao";
+import { SISTEMA_PESQUISA, lerResposta, montarMensagem, respostaExtrativa, type DocumentoAnexo, type TurnoAnterior } from "./geracao";
 import type { DesfechoPesquisa, Diagnostico, RespostaModelo, Trecho } from "./tipos";
 import { verificarCitacoes } from "./verificador";
 
-export type ModoLab = "extrativo" | "simulado-inventado" | "anthropic" | "groq";
+export type ModoLab = "extrativo" | "simulado-inventado" | "anthropic" | "groq" | "openrouter";
 
 /** Preço da Anthropic em US$ por milhão de tokens (entrada, saída). */
 export const MODELOS_LAB = [
@@ -32,22 +32,38 @@ export const MODELOS_GROQ = [
   { id: "qwen/qwen3-32b", nome: "Qwen 3 32B", entrada: 0, saida: 0 },
 ] as const;
 
+/**
+ * OpenRouter: aceita chamadas direto do navegador (o Groq, não) e tem modelos gratuitos
+ * (sufixo ":free"). É o caminho grátis da demonstração estática, que não tem servidor.
+ */
+export const URL_OPENROUTER = "https://openrouter.ai/api/v1";
+export const MODELOS_OPENROUTER = [
+  { id: "meta-llama/llama-3.3-70b-instruct:free", nome: "Llama 3.3 70B", entrada: 0, saida: 0 },
+  { id: "deepseek/deepseek-chat-v3-0324:free", nome: "DeepSeek V3", entrada: 0, saida: 0 },
+  { id: "google/gemma-3-27b-it:free", nome: "Gemma 3 27B", entrada: 0, saida: 0 },
+] as const;
+
 /** Modo que usa modelo de verdade (chave do próprio usuário). */
-export const usaModelo = (m: ModoLab) => m === "anthropic" || m === "groq";
+export const usaModelo = (m: ModoLab) => m === "anthropic" || m === "groq" || m === "openrouter";
 
 export class ErroGroq extends Error {
   constructor(
     mensagem: string,
     readonly status: number,
+    readonly quem: "groq" | "openrouter" = "groq",
   ) {
     super(mensagem);
   }
 }
 
-async function chamarGroq(chave: string, modelo: string, sistema: string, mensagem: string) {
-  const r = await fetch(`${URL_GROQ}/chat/completions`, {
+async function chamarGroq(chave: string, modelo: string, sistema: string, mensagem: string, quem: "groq" | "openrouter" = "groq") {
+  const r = await fetch(`${quem === "groq" ? URL_GROQ : URL_OPENROUTER}/chat/completions`, {
     method: "POST",
-    headers: { "content-type": "application/json", authorization: `Bearer ${chave}` },
+    headers: {
+      "content-type": "application/json",
+      authorization: `Bearer ${chave}`,
+      ...(quem === "openrouter" ? { "x-title": "AdvFin (teste)" } : {}),
+    },
     body: JSON.stringify({
       model: modelo,
       max_tokens: 4096,
@@ -59,7 +75,7 @@ async function chamarGroq(chave: string, modelo: string, sistema: string, mensag
       ],
     }),
   });
-  if (!r.ok) throw new ErroGroq(((await r.text().catch(() => "")) || r.statusText).slice(0, 300), r.status);
+  if (!r.ok) throw new ErroGroq(((await r.text().catch(() => "")) || r.statusText).slice(0, 300), r.status, quem);
   const j = await r.json();
   return {
     modelo: (j.model as string) ?? modelo,
@@ -76,6 +92,8 @@ export interface PedidoLab {
   chave?: string;
   modelo?: string;
   documentos?: DocumentoAnexo[];
+  /** Turnos anteriores da conversa, para perguntas de seguimento. */
+  historico?: TurnoAnterior[];
 }
 
 /**
@@ -105,11 +123,24 @@ async function chamarAnthropic(chave: string, modelo: string, sistema: string, m
   return { r, texto };
 }
 
+export const MSG_GROQ_NAVEGADOR =
+  "O Groq não aceita chamadas direto do navegador, então aqui, sem servidor, a chave dele não funciona. Ela funciona no app com servidor. Para testar grátis nesta demonstração, use uma chave do OpenRouter (openrouter.ai/keys).";
+
+export function mensagemErroGratis(status: number, quem: "groq" | "openrouter") {
+  const nome = quem === "groq" ? "Groq" : "OpenRouter";
+  const prefixo = quem === "groq" ? "gsk_" : "sk-or-";
+  if (status === 401) return `O ${nome} recusou a chave. Confira se ela foi colada inteira (começa com ${prefixo}).`;
+  if (status === 402) return `O ${nome} pediu crédito para este modelo. Escolha um dos modelos grátis da lista.`;
+  if (status === 404) return `O ${nome} não encontrou este modelo agora. Escolha outro da lista.`;
+  if (status === 429) return `Limite do plano grátis do ${nome} atingido. Espere um minuto e tente de novo, ou troque de modelo.`;
+  return `O ${nome} não respondeu (erro ${status}). Tente de novo ou troque de modelo.`;
+}
+
 export async function rodarLab(p: PedidoLab): Promise<{ desfecho: DesfechoPesquisa; diagnostico: Diagnostico }> {
   const inicio = performance.now();
   const id = `lab-${Date.now()}`;
   const nomeProvedor =
-    p.modo === "anthropic" ? "anthropic (navegador)" : p.modo === "groq" ? "groq (navegador, grátis)" : p.modo === "extrativo" ? "extrativo" : "simulado";
+    p.modo === "anthropic" ? "anthropic (navegador)" : p.modo === "groq" ? "groq (navegador, grátis)" : p.modo === "openrouter" ? "openrouter (navegador, grátis)" : p.modo === "extrativo" ? "extrativo" : "simulado";
   const diag: Diagnostico = {
     provedor: nomeProvedor,
     modelo: usaModelo(p.modo) ? (p.modelo ?? "") : nomeProvedor,
@@ -128,7 +159,13 @@ export async function rodarLab(p: PedidoLab): Promise<{ desfecho: DesfechoPesqui
   };
 
   let t = performance.now();
-  const fontes = recuperarLocal(p.pergunta, p.data);
+  // Pergunta de seguimento ("e o PIS?"): se a busca sozinha acha pouco, soma a pergunta anterior.
+  const anterior = p.historico?.at(-1)?.pergunta;
+  let fontes = recuperarLocal(p.pergunta, p.data);
+  if (anterior && fontes.length < 3) {
+    const juntas = recuperarLocal(`${p.pergunta} ${anterior}`, p.data);
+    if (juntas.length > fontes.length) fontes = juntas;
+  }
   diag.ms.recuperacao = Math.round(performance.now() - t);
   if (fontes.length === 0) return fim({ status: "sem_resultado", id, fontes: [] });
 
@@ -139,7 +176,7 @@ export async function rodarLab(p: PedidoLab): Promise<{ desfecho: DesfechoPesqui
       if (!p.chave) throw new Error("Cole sua chave da Anthropic para usar o modelo de verdade.");
       const modelo = p.modelo ?? MODELOS_LAB[0].id;
       diag.sistema = SISTEMA_PESQUISA;
-      diag.mensagem = montarMensagem(p.pergunta, p.data, fontes, p.documentos ?? []);
+      diag.mensagem = montarMensagem(p.pergunta, p.data, fontes, p.documentos ?? [], p.historico ?? []);
       const { r, texto } = await chamarAnthropic(p.chave, modelo, diag.sistema, diag.mensagem);
       diag.modelo = r.model;
       diag.saidaBruta = texto || `(sem texto; stop_reason: ${r.stop_reason})`;
@@ -151,12 +188,13 @@ export async function rodarLab(p: PedidoLab): Promise<{ desfecho: DesfechoPesqui
         return fim({ status: "erro", id, mensagem: "O modelo recusou a pergunta (stop_reason: refusal).", fontes });
       }
       resposta = lerResposta(texto);
-    } else if (p.modo === "groq") {
-      if (!p.chave) throw new Error("Cole sua chave grátis do Groq para usar o modelo.");
-      const modelo = p.modelo && !p.modelo.startsWith("claude") ? p.modelo : MODELOS_GROQ[0].id;
+    } else if (p.modo === "groq" || p.modo === "openrouter") {
+      if (!p.chave) throw new Error("Cole sua chave grátis para usar o modelo.");
+      const lista: readonly { id: string }[] = p.modo === "groq" ? MODELOS_GROQ : MODELOS_OPENROUTER;
+      const modelo = p.modelo && lista.some((m) => m.id === p.modelo) ? p.modelo : lista[0].id;
       diag.sistema = SISTEMA_PESQUISA;
-      diag.mensagem = montarMensagem(p.pergunta, p.data, fontes, p.documentos ?? []);
-      const g = await chamarGroq(p.chave, modelo, diag.sistema, diag.mensagem);
+      diag.mensagem = montarMensagem(p.pergunta, p.data, fontes, p.documentos ?? [], p.historico ?? []);
+      const g = await chamarGroq(p.chave, modelo, diag.sistema, diag.mensagem, p.modo);
       diag.modelo = g.modelo;
       diag.saidaBruta = g.texto || "(sem texto)";
       diag.tokens = { entrada: g.entrada, saida: g.saida };
@@ -171,13 +209,11 @@ export async function rodarLab(p: PedidoLab): Promise<{ desfecho: DesfechoPesqui
     diag.erro = e instanceof ErroGroq ? `${e.status} ${e.message}` : e instanceof Anthropic.APIError ? `${e.status ?? ""} ${e.message}`.trim() : (e as Error).message;
     const mensagem =
       e instanceof ErroGroq
-        ? e.status === 401
-          ? "A chave do Groq foi recusada. Confira se colou a chave inteira (começa com gsk_)."
-          : e.status === 429
-            ? "Limite do plano grátis do Groq atingido. Espere um minuto e tente de novo."
-            : "O Groq não respondeu. Veja o erro técnico abaixo."
+        ? mensagemErroGratis(e.status, e.quem)
         : e instanceof TypeError
-          ? "Não foi possível falar com o fornecedor do modelo. Confira a conexão ou um bloqueador de anúncios."
+          ? p.modo === "groq"
+            ? MSG_GROQ_NAVEGADOR
+            : "O navegador não conseguiu falar com o fornecedor do modelo. Confira a conexão e desligue bloqueadores (o escudo do Brave, por exemplo) para este site."
           : e instanceof Anthropic.AuthenticationError
         ? "A chave da Anthropic foi recusada. Confira se colou a chave inteira."
         : e instanceof Anthropic.RateLimitError
@@ -201,4 +237,41 @@ export async function rodarLab(p: PedidoLab): Promise<{ desfecho: DesfechoPesqui
   }
   diag.ms.verificacao = Math.round(performance.now() - t);
   return fim(desfecho);
+}
+
+export type ProvedorNavegador = "anthropic" | "groq" | "openrouter";
+export const NOME_PROVEDOR: Record<ProvedorNavegador, string> = { anthropic: "Anthropic", groq: "Groq", openrouter: "OpenRouter" };
+
+/** De quem é a chave, pelo começo dela. */
+export function provedorDaChave(chave: string): ProvedorNavegador | null {
+  const c = chave.trim();
+  if (c.startsWith("sk-ant-")) return "anthropic";
+  if (c.startsWith("sk-or-")) return "openrouter";
+  if (c.startsWith("gsk_")) return "groq";
+  return null;
+}
+
+/** Confere a chave com uma chamada leve, sem gastar tokens. */
+export async function testarChave(provedor: ProvedorNavegador, chave: string): Promise<{ ok: boolean; mensagem: string }> {
+  const c = chave.trim();
+  const nome = NOME_PROVEDOR[provedor];
+  if (!c) return { ok: false, mensagem: "Cole a chave antes de salvar." };
+  const dona = provedorDaChave(c);
+  if (dona && dona !== provedor) return { ok: false, mensagem: `Essa chave é do ${NOME_PROVEDOR[dona]}, não do ${nome}. Troque a opção em Resposta.` };
+  try {
+    if (provedor === "anthropic") {
+      await new Anthropic({ apiKey: c, dangerouslyAllowBrowser: true }).models.list({ limit: 1 });
+      return { ok: true, mensagem: "Chave válida. Conectado à Anthropic." };
+    }
+    const url = provedor === "groq" ? `${URL_GROQ}/models` : `${URL_OPENROUTER}/key`;
+    const r = await fetch(url, { headers: { authorization: `Bearer ${c}` } });
+    if (!r.ok) return { ok: false, mensagem: mensagemErroGratis(r.status, provedor) };
+    return { ok: true, mensagem: `Chave válida. Conectado ao ${nome}, nos modelos grátis.` };
+  } catch (e) {
+    if (e instanceof Anthropic.AuthenticationError) return { ok: false, mensagem: "A Anthropic recusou a chave. Confira se ela foi colada inteira (começa com sk-ant-)." };
+    if (e instanceof Anthropic.PermissionDeniedError) return { ok: false, mensagem: "A chave da Anthropic não tem permissão para a API. Confira no console da Anthropic." };
+    if (e instanceof Anthropic.APIError && e.status) return { ok: false, mensagem: `A Anthropic respondeu com erro ${e.status}. Tente de novo.` };
+    if (provedor === "groq") return { ok: false, mensagem: MSG_GROQ_NAVEGADOR };
+    return { ok: false, mensagem: `O navegador não conseguiu falar com o ${nome}. Confira a conexão e desligue bloqueadores (o escudo do Brave, por exemplo) para este site.` };
+  }
 }

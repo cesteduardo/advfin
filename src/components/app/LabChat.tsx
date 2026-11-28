@@ -13,7 +13,8 @@ const MODOS: { id: ModoLab; nome: string }[] = [
   { id: "extrativo", nome: "Sem IA" },
   { id: "simulado-inventado", nome: "Citação inventada" },
   { id: "anthropic", nome: "Claude (minha chave)" },
-  { id: "groq", nome: "Groq grátis" },
+  { id: "openrouter", nome: "Grátis · OpenRouter" },
+  { id: "groq", nome: "Groq" },
 ];
 
 /**
@@ -24,13 +25,15 @@ export function LabChat() {
   const [modo, setModo] = useState<ModoLab>("extrativo");
   const claude = useChave("anthropic");
   const groq = useChave("groq");
-  const c = modo === "groq" ? groq : claude;
+  const livre = useChave("openrouter");
+  const c = modo === "groq" ? groq : modo === "openrouter" ? livre : claude;
   const [pergunta, setPergunta] = useState("");
   const [data, setData] = useState(hoje);
   const [rodadas, setRodadas] = useState<Rodada[]>([]);
   const [pendente, setPendente] = useState(false);
 
-  const semChave = (modo === "anthropic" || modo === "groq") && !c.chave.trim();
+  const comChave = modo === "anthropic" || modo === "groq" || modo === "openrouter";
+  const semChave = comChave && !c.chave.trim();
   const podeEnviar = !pendente && pergunta.trim().length >= 8 && !semChave;
 
   const enviar = async () => {
@@ -65,10 +68,12 @@ export function LabChat() {
           {modo === "anthropic" &&
             "Chama a API da Anthropic direto deste navegador, com a sua chave. O custo sai da sua conta, e cada pergunta custa centavos."}
           {modo === "groq" &&
-            "Chama o Groq direto deste navegador, com a sua chave grátis (console.groq.com/keys). Modelos abertos, sem custo, com limite diário."}
+            "O Groq bloqueia chamadas direto do navegador (CORS); aqui serve para ver o erro. No app com servidor, use LLM_PROVEDOR=groq."}
+          {modo === "openrouter" &&
+            "Chama o OpenRouter direto deste navegador, com a sua chave grátis (openrouter.ai/keys). Modelos abertos com sufixo :free, sem custo, com limite diário."}
         </p>
 
-        {(modo === "anthropic" || modo === "groq") && <CamposChave key={modo} c={c} />}
+        {comChave && <CamposChave key={modo} c={c} trocar={(p) => setModo(p)} />}
       </div>
 
       <form

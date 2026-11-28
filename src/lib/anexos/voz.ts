@@ -42,7 +42,7 @@ function navegadorSemServico(): string | null {
 
 const SEM_SERVICO = (quem: string | null) =>
   `${quem ? `Neste navegador (${quem.replace(/^o /, "")})` : "Neste navegador"}, o ditado não tem o serviço de voz por trás, mesmo com internet. ` +
-  "Abra no Google Chrome, no Edge ou no Safari, ou cole uma chave grátis do Groq em Resposta para gravar e transcrever aqui.";
+  "Para ditar, abra no Google Chrome, no Edge ou no Safari. Digitar segue funcionando normalmente aqui.";
 
 const ERROS: Record<string, string> = {
   "not-allowed": "O navegador não deu acesso ao microfone. Libere nas permissões do site.",

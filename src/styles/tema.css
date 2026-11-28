@@ -253,3 +253,49 @@
 /* O véu do campo passa um pouco das bordas da coluna, para nenhum fio do conteúdo aparecer ao lado. */
 .pesquisa-rodape, :root[data-dock-recolhida] .pesquisa-rodape { background: none; }
 .pesquisa-rodape::before { content: ""; position: absolute; z-index: -1; inset: 0 -14px; background: linear-gradient(to bottom, var(--m-fundo-0), var(--m-fundo) 22px); pointer-events: none; }
+
+/* Enviar sempre à vista; com o campo vazio ele esmaece e a conversa por voz fica ao lado, em tom de pílula. */
+.mesa .compositor .compositor-voz:not([data-ligado]) { background: var(--m-pilula); color: var(--ink); }
+.mesa .compositor .compositor-voz:not([data-ligado]):hover { background: var(--m-pilula-2); }
+.compositor-enviar[data-vazio] { opacity: .45; }
+.compositor-enviar[data-vazio]:hover { opacity: .7; }
+.compositor-dir { display: inline-flex; align-items: center; gap: 8px; }
+
+/* Ações de cada mensagem: copiar, editar e gerar de novo, discretas como nos chats de IA. */
+.pesquisa-msg-acoes { display: flex; align-items: center; gap: 2px; margin-top: -10px; }
+.pesquisa-msg-acoes-pergunta { justify-self: end; justify-content: flex-end; }
+.pesquisa-msg-botao { position: relative; display: inline-grid; place-items: center; width: 34px; height: 34px; padding: 0; border: 0; border-radius: 10px; background: transparent; color: var(--muted); cursor: pointer; transition: background .2s var(--ease), color .2s var(--ease), opacity .2s var(--ease); }
+.pesquisa-msg-botao .ico { width: 17px; height: 17px; }
+.pesquisa-msg-botao:hover:not(:disabled) { background: var(--m-pilula); color: var(--ink); }
+.pesquisa-msg-botao:disabled { opacity: .35; cursor: default; }
+.pesquisa-msg-botao:focus-visible { outline: 2px solid var(--azul); outline-offset: 1px; }
+.pesquisa-msg-botao[data-feito] { color: var(--verde); }
+[data-tema="escuro"] .pesquisa-msg-botao[data-feito] { color: #7fd3a4; }
+.pesquisa-msg-dica { position: absolute; bottom: calc(100% + 4px); left: 50%; transform: translateX(-50%); padding: 3px 8px; border-radius: 8px; background: var(--ink); color: var(--bg); font-size: 12px; font-weight: 600; white-space: nowrap; pointer-events: none; }
+.pesquisa-msg-dica:empty { display: none; }
+.pesquisa-msg-editada { margin-right: 6px; color: var(--muted); font-size: 12.5px; }
+/* No computador, as ações da pergunta aparecem ao passar o mouse; no toque ficam sempre visíveis. */
+@media (hover: hover) and (pointer: fine) {
+  .pesquisa-msg-acoes-pergunta .pesquisa-msg-botao { opacity: 0; }
+  .pesquisa-turno:hover .pesquisa-msg-acoes-pergunta .pesquisa-msg-botao, .pesquisa-msg-acoes-pergunta .pesquisa-msg-botao:focus-visible, .pesquisa-msg-acoes-pergunta .pesquisa-msg-botao[data-feito] { opacity: 1; }
+}
+
+.pesquisa-editar { justify-self: end; display: grid; gap: 10px; width: min(100%, 640px); padding: 14px; border-radius: 20px; background: var(--m-cartao); box-shadow: 0 0 0 1px var(--anel); }
+.pesquisa-editar textarea { width: 100%; min-height: 64px; padding: 10px 12px; border: 0; border-radius: 12px; background: var(--m-fundo); color: var(--ink); font: inherit; line-height: 1.5; resize: vertical; box-shadow: inset 0 0 0 1px var(--anel); }
+.pesquisa-editar textarea:focus { outline: none; box-shadow: inset 0 0 0 1.5px var(--enfase); }
+.pesquisa-editar-nota { margin: 0; color: var(--muted); font-size: 12.5px; }
+.pesquisa-editar-pe { display: flex; justify-content: flex-end; gap: 8px; }
+.pesquisa-editar-pe .mesa-botao { min-height: 38px; padding: 7px 18px; font-size: 14px; }
+.pesquisa-sem-ia { margin: 4px 0 0; padding: 10px 14px; border-radius: 12px; background: var(--m-pilula); color: var(--ink-2); font-size: 13.5px; }
+/* Gravando: o microfone vira um quadrado de parar, em vermelho, com o pulso de gravação. */
+.compositor-botao[data-ligado] .ico { width: 15px; height: 15px; }
+.compositor-botao[data-ligado] .ico rect { fill: currentColor; }
+.lab-chave-resumo { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; }
+.lab-chave-resumo .lab-chave-status { flex: 0 1 auto; }
+.lab-chave-resumo .lab-chave-link { color: var(--ink-2); font-size: 13.5px; font-weight: 600; }
+.demo-origem[data-conectado] { padding-block: 12px; }
+/* Gravando: vermelho inequívoco, com o quadrado de parar em branco. */
+.compositor .compositor-botao[data-ligado] { background: #c2412f; color: #fff; box-shadow: none; }
+[data-tema="escuro"] .compositor .compositor-botao[data-ligado] { background: #d4553f; color: #fff; }
+/* Seletores de duas ou mais opções dentro de cartões: trilho em tom mais fundo e contorno fino neutro, como no claro. */
+[data-tema="escuro"] .mesa :is(.mesa-cartao, .mesa-sub, .lab-config, .calc-campos, form) .segmentado-trilha:not(.nav-trilha) { background: var(--m-fundo-2); box-shadow: inset 0 0 0 1px rgb(241 234 219 / .09); }

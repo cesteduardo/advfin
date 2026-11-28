@@ -13,7 +13,7 @@ import { Seletor } from "@/components/ui/Seletor";
 import { CampoData } from "@/components/ui/CampoData";
 import { lerAnexo, TIPOS_ACEITOS } from "@/lib/anexos/ler";
 import { calar, falar, falaSuportada, useDitado, type Transcrever } from "@/lib/anexos/voz";
-import type { DocumentoAnexo } from "@/lib/pesquisa/geracao";
+import type { DocumentoAnexo, TurnoAnterior } from "@/lib/pesquisa/geracao";
 
 const MAX_ANEXOS = 3;
 
@@ -166,7 +166,7 @@ export function PesquisaMesa({
   notaAnexos,
   transcrever,
 }: {
-  executar: (pergunta: string, data: string, caso?: string | null, documentos?: DocumentoAnexo[]) => Promise<Desfecho>;
+  executar: (pergunta: string, data: string, caso?: string | null, documentos?: DocumentoAnexo[], historico?: TurnoAnterior[]) => Promise<Desfecho>;
   aoConcluir?: () => void;
   falhaRede?: string;
   /** Data de vigência ao abrir (preferência do perfil); sem ela, hoje. */
@@ -273,8 +273,16 @@ export function PesquisaMesa({
   // A conversa acompanha o fim, como num chat, a cada pergunta e enquanto a resposta é digitada.
   const rolarAoFim = (suave = true) => fim.current?.scrollIntoView({ behavior: suave && !movimentoReduzido() ? "smooth" : "auto", block: "end" });
 
+  const [aviso, setAviso] = useState<string | null>(null);
   const enviar = (q = pergunta) => {
-    if (q.trim().length < 8 || pendente || lendo) return;
+    if (pendente) return;
+    if (lendo) return setAviso("Espere o anexo terminar de ser lido e envie de novo.");
+    if (q.trim().length < 8) {
+      setAviso(q.trim() ? "Escreva um pouco mais: a pergunta precisa de pelo menos 8 letras para a busca nas normas." : "Escreva a pergunta antes de enviar.");
+      campo.current?.focus();
+      return;
+    }
+    setAviso(null);
     ditado.parar();
     calar();
     setFalando(false);
@@ -282,7 +290,7 @@ export function PesquisaMesa({
     const documentos: DocumentoAnexo[] = prontos.map((a) => ({ nome: a.nome, texto: a.texto! }));
     const lerEmVoz = modoVoz.current;
     modoVoz.current = false;
-    const turno: Turno = { id: novoId(), texto: q.trim(), data, hora: hora(), desfecho: null, anexos: prontos.map((a) => ({ nome: a.nome, imagem: a.imagem })) };
+    const turno: Turno = { id: novoId(), texto: q.trim(), data, hora: hora(), desfecho: null, anexos: prontos.map((a) => ({ nome: a.nome, imagem: a.imagem })), documentos };
     const aplicar = () => {
       setTurnos((t) => [...t, turno]);
       setPergunta("");
@@ -299,11 +307,23 @@ export function PesquisaMesa({
       [vt.ready, vt.finished, vt.updateCallbackDone].forEach((p) => p?.catch(() => {}));
     } else aplicar();
     requestAnimationFrame(() => rolarAoFim());
+    rodar(turno, historicoDe(turnos), lerEmVoz);
+  };
+
+  /** Perguntas e respostas anteriores a um turno, para o modelo entender o seguimento. */
+  const historicoDe = (lista: Turno[]): TurnoAnterior[] =>
+    lista
+      .filter((x) => x.desfecho)
+      .slice(-3)
+      .map((x) => ({ pergunta: x.texto, resposta: x.desfecho?.status === "respondida" ? x.desfecho.paragrafos.join(" ") : "" }));
+
+  /** Pede a resposta de um turno já na conversa (novo, editado ou gerado de novo). */
+  const rodar = (turno: Turno, historico: TurnoAnterior[], lerEmVoz = false) => {
     iniciar(async () => {
       const inicio = performance.now();
       let r: Desfecho;
       try {
-        r = await executar(q, data, caso || null, documentos);
+        r = await executar(turno.texto, turno.data, caso || null, turno.documentos, historico);
       } catch {
         r = { status: "erro", id: "", mensagem: falhaRede, fontes: [] };
       }
@@ -321,18 +341,23 @@ export function PesquisaMesa({
   };
   enviarRef.current = enviar;
 
-  const alternarVoz = () => {
-    if (falando) {
-      calar();
-      return setFalando(false);
-    }
-    if (ditado.ouvindo) {
-      ditado.parar();
-      return;
-    }
-    modoVoz.current = true;
-    ditado.iniciar(pergunta);
+  /** Editar uma pergunta substitui ela e tudo o que veio depois, como nos chats de IA. */
+  const reenviar = (id: string, texto: string, editada: boolean) => {
+    if (pendente || texto.trim().length < 8) return;
+    calar();
+    setFalando(false);
+    const i = turnos.findIndex((x) => x.id === id);
+    if (i < 0) return;
+    const antigo = turnos[i];
+    const novo: Turno = { ...antigo, id: novoId(), texto: texto.trim(), hora: hora(), desfecho: null, editada: antigo.editada || editada };
+    setTurnos((t) => [...t.slice(0, i), novo]);
+    setAtiva(null);
+    setEmFoco(novo.id);
+    setPainel(false);
+    requestAnimationFrame(() => rolarAoFim());
+    rodar(novo, historicoDe(turnos.slice(0, i)));
   };
+
 
   const focar = (turno: string, ref: string) => {
     setEmFoco(turno);
@@ -354,8 +379,7 @@ export function PesquisaMesa({
   const refAtiva = ativa && ativa.turno === turnoFoco?.id ? ativa.ref : null;
   const foco = exibidas.find((f) => f.ref === refAtiva) ?? exibidas[0];
 
-  const temTexto = pergunta.trim().length >= 8;
-  const mostrarVoz = ditado.suportado && !temTexto && !pendente;
+  const temTexto = pergunta.trim().length > 0 || anexos.length > 0;
   const formulario = (
     <form
       className="mesa-campo compositor"
@@ -401,7 +425,10 @@ export function PesquisaMesa({
         ref={campo}
         rows={turnos.length ? 1 : 2}
         value={pergunta}
-        onChange={(e) => setPergunta(e.target.value)}
+        onChange={(e) => {
+          setPergunta(e.target.value);
+          if (aviso) setAviso(null);
+        }}
         onKeyDown={(e) => {
           if (e.key === "Enter" && !e.shiftKey) {
             e.preventDefault();
@@ -456,36 +483,24 @@ export function PesquisaMesa({
                 modoVoz.current = false;
                 ditado.iniciar(pergunta);
               }}
-              aria-label={ditado.ouvindo ? "Parar o ditado" : "Ditar a pergunta"}
-              title={ditado.ouvindo ? "Parar o ditado" : "Ditar a pergunta"}
+              aria-label={ditado.transcrevendo ? "Transcrevendo" : ditado.ouvindo ? "Parar a gravação" : "Ditar a pergunta"}
+              title={ditado.transcrevendo ? "Transcrevendo…" : ditado.ouvindo ? "Parar a gravação" : "Ditar a pergunta"}
             >
-              <Icone nome="microfone" />
+              <Icone nome={ditado.ouvindo ? "parar" : "microfone"} />
             </button>
           )}
-          {mostrarVoz || falando ? (
-            <button
-              type="button"
-              className="app-enviar compositor-voz"
-              data-ligado={(ditado.ouvindo && modoVoz.current) || falando ? "" : undefined}
-              onClick={alternarVoz}
-              aria-label={falando ? "Parar a leitura" : ditado.ouvindo && modoVoz.current ? "Parar de ouvir" : "Conversar por voz"}
-              title={falando ? "Parar a leitura" : "Conversar por voz: pergunte falando e ouça a resposta"}
-            >
-              <Icone nome={falando ? "parar" : "voz"} />
-            </button>
-          ) : (
-            <button className="app-enviar" disabled={pendente || lendo || !temTexto} aria-label="Pesquisar">
-              <Icone nome="enviar" />
-            </button>
-          )}
+          <button className="app-enviar compositor-enviar" data-vazio={temTexto ? undefined : ""} disabled={pendente} aria-label="Enviar a pergunta" title="Enviar (Enter)">
+            <Icone nome="enviar" />
+          </button>
         </span>
       </div>
       {arrastando && <div className="compositor-solte" aria-hidden="true">Solte o PDF ou a imagem para ler o texto</div>}
     </form>
   );
-  const avisos = (ditado.erro || (notaAnexos && anexos.length > 0)) && (
-    <p className="compositor-aviso" role={ditado.erro ? "alert" : undefined}>
-      {ditado.erro ?? notaAnexos}
+  const textoAviso = aviso ?? ditado.erro ?? (notaAnexos && anexos.length > 0 ? notaAnexos : null);
+  const avisos = textoAviso && (
+    <p className="compositor-aviso" role={aviso || ditado.erro ? "alert" : undefined}>
+      {textoAviso}
     </p>
   );
   const opcoes = (
@@ -566,6 +581,10 @@ export function PesquisaMesa({
             focar={(ref) => focar(t.id, ref)}
             exportar={exportar}
             novaPergunta={() => campo.current?.focus()}
+            ultimo={t.id === turnos[turnos.length - 1].id}
+            dicaSemIa={!!opcoesCampo}
+            ocupado={pendente}
+            reenviar={(texto, editada) => reenviar(t.id, texto, editada)}
             verFontes={() => {
               setEmFoco(t.id);
               setPainel(true);
@@ -616,6 +635,9 @@ interface Turno {
   hora: string;
   desfecho: Desfecho | null;
   anexos: { nome: string; imagem: boolean }[];
+  /** Texto dos anexos, para reenviar ou gerar de novo com os mesmos documentos. */
+  documentos: DocumentoAnexo[];
+  editada?: boolean;
 }
 
 let seq = 0;
@@ -668,6 +690,10 @@ function TurnoChat({
   exportar,
   novaPergunta,
   verFontes,
+  ultimo,
+  ocupado,
+  reenviar,
+  dicaSemIa,
 }: {
   t: Turno;
   etapa: number;
@@ -679,7 +705,22 @@ function TurnoChat({
   exportar?: (id: string) => ReactNode;
   novaPergunta: () => void;
   verFontes: () => void;
+  ultimo: boolean;
+  dicaSemIa: boolean;
+  ocupado: boolean;
+  reenviar: (texto: string, editada: boolean) => void;
 }) {
+  const [editando, setEditando] = useState(false);
+  const [rascunho, setRascunho] = useState(t.texto);
+  const caixa = useRef<HTMLTextAreaElement>(null);
+  useEffect(() => {
+    if (!editando) return;
+    const c = caixa.current;
+    if (c) {
+      c.focus();
+      c.setSelectionRange(c.value.length, c.value.length);
+    }
+  }, [editando]);
   const d = t.desfecho;
   const paragrafos = d?.status === "respondida" ? d.paragrafos : [];
   const { mostrados, total } = useDigitacao(paragrafos, digitar, aoDigitar, aoTerminar);
@@ -712,6 +753,31 @@ function TurnoChat({
     );
   });
 
+  const textoResposta =
+    d?.status === "respondida"
+      ? [
+          ...d.paragrafos.map((p) => p.replace(/\[D(\d{1,2})\]/g, "[$1]")),
+          "",
+          "Fontes:",
+          ...[...new Set(d.citacoes.map((c) => c.ref))].map((ref) => {
+            const f = d.fontes.find((x) => x.ref === ref);
+            return `[${ref.slice(1)}] ${f ? `${f.norma}, ${f.rotulo}` : ref}`;
+          }),
+        ].join("\n")
+      : d && "mensagem" in d
+        ? d.mensagem
+        : "";
+  const acoesResposta = d && (d.status !== "respondida" || terminou) && (
+    <div className="pesquisa-msg-acoes pesquisa-surge">
+      {textoResposta && <BotaoCopiar texto={textoResposta} rotulo="Copiar a resposta" />}
+      {ultimo && (
+        <button type="button" className="pesquisa-msg-botao" disabled={ocupado} onClick={() => reenviar(t.texto, false)} aria-label="Gerar a resposta de novo" title="Gerar de novo">
+          <Icone nome="refazer" />
+        </button>
+      )}
+    </div>
+  );
+
   const etapas = [`Buscando dispositivos vigentes em ${dataBR(t.data)}`, "Conferindo cada citação na base versionada", "Confirmando a vigência das fontes"];
 
   return (
@@ -726,7 +792,75 @@ function TurnoChat({
           ))}
         </ul>
       )}
-      <p className="mesa-pergunta pesquisa-bolha">{t.texto}</p>
+      {editando ? (
+        <form
+          className="pesquisa-editar"
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (rascunho.trim().length < 8 || ocupado) return;
+            setEditando(false);
+            reenviar(rascunho, rascunho.trim() !== t.texto);
+          }}
+        >
+          <label className="so-leitor" htmlFor={`editar-${t.id}`}>
+            Editar a pergunta
+          </label>
+          <textarea
+            id={`editar-${t.id}`}
+            ref={caixa}
+            rows={2}
+            value={rascunho}
+            maxLength={2000}
+            onChange={(e) => setRascunho(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Escape") {
+                setEditando(false);
+                setRascunho(t.texto);
+              } else if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                e.currentTarget.form?.requestSubmit();
+              }
+            }}
+          />
+          <p className="pesquisa-editar-nota">Ao enviar, esta pergunta e o que veio depois dela são substituídos.</p>
+          <div className="pesquisa-editar-pe">
+            <button
+              type="button"
+              className="mesa-botao secundario"
+              onClick={() => {
+                setEditando(false);
+                setRascunho(t.texto);
+              }}
+            >
+              Cancelar
+            </button>
+            <button type="submit" className="mesa-botao" disabled={rascunho.trim().length < 8 || ocupado}>
+              Enviar
+            </button>
+          </div>
+        </form>
+      ) : (
+        <>
+          <p className="mesa-pergunta pesquisa-bolha">{t.texto}</p>
+          <div className="pesquisa-msg-acoes pesquisa-msg-acoes-pergunta">
+            {t.editada && <span className="pesquisa-msg-editada">Editada</span>}
+            <BotaoCopiar texto={t.texto} rotulo="Copiar a pergunta" />
+            <button
+              type="button"
+              className="pesquisa-msg-botao"
+              disabled={ocupado}
+              onClick={() => {
+                setRascunho(t.texto);
+                setEditando(true);
+              }}
+              aria-label="Editar a pergunta"
+              title="Editar a pergunta"
+            >
+              <Icone nome="editar" />
+            </button>
+          </div>
+        </>
+      )}
 
       {!d && (
         <div className="pesquisa-pensando" role="status">
@@ -743,6 +877,9 @@ function TurnoChat({
             </p>
             {provisorio && <p className="alerta aviso pesquisa-surge">Fontes ainda não conferidas pelo tributarista curador. Use como ponto de partida, não em peça.</p>}
             {corpo}
+            {terminou && !d.redigida && dicaSemIa && (
+              <p className="mesa-nota pesquisa-surge pesquisa-sem-ia">Sem IA conectada, mostro só os trechos literais das normas. Para uma resposta redigida, que conversa e responde a perguntas de seguimento, escolha uma IA em Resposta, logo abaixo do campo.</p>
+            )}
             {terminou && (
               <p className="mesa-aviso-ia pesquisa-surge">
                 Ferramenta de apoio para advogados. Não é parecer e não substitui a análise do profissional, que confere as fontes e
@@ -834,6 +971,38 @@ function TurnoChat({
           {d.mensagem}
         </p>
       )}
+      {acoesResposta}
     </div>
+  );
+}
+
+/** Copia para a área de transferência e confirma no próprio botão. */
+function BotaoCopiar({ texto, rotulo }: { texto: string; rotulo: string }) {
+  const [feito, setFeito] = useState(false);
+  useEffect(() => {
+    if (!feito) return;
+    const t = setTimeout(() => setFeito(false), 1600);
+    return () => clearTimeout(t);
+  }, [feito]);
+  const copiar = async () => {
+    try {
+      await navigator.clipboard.writeText(texto);
+    } catch {
+      const a = document.createElement("textarea");
+      a.value = texto;
+      a.style.position = "fixed";
+      a.style.opacity = "0";
+      document.body.appendChild(a);
+      a.select();
+      document.execCommand("copy");
+      a.remove();
+    }
+    setFeito(true);
+  };
+  return (
+    <button type="button" className="pesquisa-msg-botao" data-feito={feito ? "" : undefined} onClick={copiar} aria-label={feito ? "Copiado" : rotulo} title={feito ? "Copiado" : rotulo}>
+      <Icone nome={feito ? "ok" : "copiar"} />
+      <span className="pesquisa-msg-dica" aria-hidden="true">{feito ? "Copiado" : ""}</span>
+    </button>
   );
 }

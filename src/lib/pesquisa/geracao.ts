@@ -12,6 +12,8 @@ Regras inegociáveis:
 3. Para cada marca usada, inclua em "citacoes" um trecho copiado LITERALMENTE do texto do dispositivo (ao menos uma oração completa), sem reescrever, resumir ou corrigir.
 4. Se os dispositivos não bastarem para responder, devolva "semBase": true e explique em um parágrafo o que faltou, sem marcas.
 5. Não dê conselho definitivo nem prometa resultado: a decisão é do advogado.
+6. Responda de verdade à pergunta, como numa conversa: comece pela resposta direta (sim, não, a data, a alíquota), depois explique em linguagem natural, em 1 a 4 parágrafos curtos. Não liste trechos soltos.
+7. Se houver <conversa_anterior>, use-a só para entender perguntas de seguimento ("e o PIS?", "e depois?"). As afirmações jurídicas continuam sustentadas apenas nos dispositivos.
 
 Formato da resposta (JSON):
 {"paragrafos": ["... [D1].", "... [D2]."], "citacoes": [{"ref": "D1", "trecho": "texto literal"}], "semBase": false}`;
@@ -26,7 +28,7 @@ export interface DocumentoAnexo {
 export const MAX_DOCUMENTOS = 3;
 export const MAX_TEXTO_DOCUMENTO = 12000;
 
-const limpar = (s: string) => s.replace(/<\/?(documento|documentos_do_cliente|dispositivos?|pergunta)[^>]*>/gi, "");
+const limpar = (s: string) => s.replace(/<\/?(documento|documentos_do_cliente|dispositivos?|pergunta|conversa_anterior)[^>]*>/gi, "");
 
 function blocoDocumentos(documentos: DocumentoAnexo[]): string {
   if (!documentos.length) return "";
@@ -42,7 +44,25 @@ ${docs}
 </documentos_do_cliente>`;
 }
 
-export function montarMensagem(pergunta: string, dataReferencia: string, trechos: Trecho[], documentos: DocumentoAnexo[] = []): string {
+/** Pergunta e resposta anteriores da mesma conversa, para perguntas de seguimento. */
+export interface TurnoAnterior {
+  pergunta: string;
+  resposta: string;
+}
+
+function blocoConversa(historico: TurnoAnterior[]): string {
+  const h = historico.slice(-3).filter((x) => x.pergunta.trim());
+  if (!h.length) return "";
+  const linhas = h.map((x) => `Advogado: ${limpar(x.pergunta).slice(0, 600)}\nAdvFin: ${limpar(x.resposta).replace(/\[D\d{1,2}\]/g, "").slice(0, 1200) || "(sem resposta)"}`);
+  return `
+
+<conversa_anterior>
+Contexto da conversa, só para entender a pergunta atual. Não é fonte normativa e não deve ser citado.
+${linhas.join("\n\n")}
+</conversa_anterior>`;
+}
+
+export function montarMensagem(pergunta: string, dataReferencia: string, trechos: Trecho[], documentos: DocumentoAnexo[] = [], historico: TurnoAnterior[] = []): string {
   const blocos = trechos
     .map(
       (t) =>
@@ -53,7 +73,7 @@ export function montarMensagem(pergunta: string, dataReferencia: string, trechos
 
 <dispositivos>
 ${blocos}
-</dispositivos>${blocoDocumentos(documentos)}
+</dispositivos>${blocoDocumentos(documentos)}${blocoConversa(historico)}
 
 <pergunta>
 ${pergunta}

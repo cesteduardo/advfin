@@ -275,6 +275,15 @@
 .lab-config .segmentado { justify-self: start; max-width: 100%; }
 .lab-chave { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 12px 16px; }
 .lab-chave .caixa-aceite { grid-column: 1 / -1; margin: 0; }
+.lab-chave-aviso, .lab-chave-pe, .lab-chave-nota { grid-column: 1 / -1; margin: 0; }
+.lab-chave-pe { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; }
+.lab-chave-pe .mesa-botao { min-height: 40px; padding: 8px 18px; font-size: 14px; }
+.lab-chave-status { flex: 1 1 260px; margin: 0; color: var(--muted); font-size: 13.5px; line-height: 1.45; }
+.lab-chave-status.ok { color: var(--verde, #1f7a4d); font-weight: 600; }
+.lab-chave-status.erro { color: var(--vermelho, #b3261e); }
+.lab-chave-link { padding: 0; border: 0; background: none; color: inherit; font: inherit; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+[data-tema="escuro"] .lab-chave-status.ok { color: #7fd3a4; }
+[data-tema="escuro"] .lab-chave-status.erro { color: #f2a9a0; }
 @media (max-width: 700px) { .lab-chave { grid-template-columns: minmax(0, 1fr); } }
 
 /* ── Demonstração estática (/app no GitHub Pages) ── */

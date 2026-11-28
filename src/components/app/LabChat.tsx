@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Segmentado } from "@/components/Segmentado";
 import { rodarLab, type ModoLab } from "@/lib/pesquisa/laboratorio";
 import { BASE_LOCAL } from "@/lib/pesquisa/base-local";
-import { CamposChave, useChaveAnthropic } from "./ChaveAnthropic";
+import { CamposChave, useChave } from "./ChaveAnthropic";
 import { Icone } from "./Icone";
 import { RodadaView, hoje, type Rodada } from "./RodadaDev";
 import { CampoData } from "@/components/ui/CampoData";
@@ -13,6 +13,7 @@ const MODOS: { id: ModoLab; nome: string }[] = [
   { id: "extrativo", nome: "Sem IA" },
   { id: "simulado-inventado", nome: "Citação inventada" },
   { id: "anthropic", nome: "Claude (minha chave)" },
+  { id: "groq", nome: "Groq grátis" },
 ];
 
 /**
@@ -21,13 +22,15 @@ const MODOS: { id: ModoLab; nome: string }[] = [
  */
 export function LabChat() {
   const [modo, setModo] = useState<ModoLab>("extrativo");
-  const c = useChaveAnthropic();
+  const claude = useChave("anthropic");
+  const groq = useChave("groq");
+  const c = modo === "groq" ? groq : claude;
   const [pergunta, setPergunta] = useState("");
   const [data, setData] = useState(hoje);
   const [rodadas, setRodadas] = useState<Rodada[]>([]);
   const [pendente, setPendente] = useState(false);
 
-  const semChave = modo === "anthropic" && !c.chave.trim();
+  const semChave = (modo === "anthropic" || modo === "groq") && !c.chave.trim();
   const podeEnviar = !pendente && pergunta.trim().length >= 8 && !semChave;
 
   const enviar = async () => {
@@ -61,9 +64,11 @@ export function LabChat() {
             "Imita um modelo que inventa um dispositivo e uma citação. Serve para ver o verificador bloquear a resposta."}
           {modo === "anthropic" &&
             "Chama a API da Anthropic direto deste navegador, com a sua chave. O custo sai da sua conta, e cada pergunta custa centavos."}
+          {modo === "groq" &&
+            "Chama o Groq direto deste navegador, com a sua chave grátis (console.groq.com/keys). Modelos abertos, sem custo, com limite diário."}
         </p>
 
-        {modo === "anthropic" && <CamposChave c={c} />}
+        {(modo === "anthropic" || modo === "groq") && <CamposChave key={modo} c={c} />}
       </div>
 
       <form

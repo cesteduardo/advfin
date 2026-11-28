@@ -371,6 +371,22 @@
   .mesa-pessoa-info { grid-column: 1 / -1; grid-row: 2; }
 }
 
+/* Cada pessoa é um cartão próprio: a separação vem do respiro e do tom, não de linhas. */
+.mesa-pessoas { gap: 8px; padding: 0; border-radius: 0; background: none; box-shadow: none; }
+.mesa-pessoa { border-top: 0; border-radius: 16px; background: var(--m-cartao); box-shadow: 0 0 0 1px var(--anel); transition: background-color var(--t) var(--ease); }
+.mesa-pessoa:hover, .mesa-pessoa:has(.mesa-pessoa-gerir[aria-expanded="true"]) { background: var(--m-pilula); }
+/* Na linha realçada, as pílulas sobem um tom para não sumir no fundo. */
+.mesa-pessoa:is(:hover, :has(.mesa-pessoa-gerir[aria-expanded="true"])) :is(.selo.nivel-admin, .selo.nivel-membro, .selo.neutro, .mesa-pessoa-gerir:not([aria-expanded="true"])) { background: var(--m-pilula-2); }
+[data-tema="escuro"] .mesa-pessoa:is(:hover, :has(.mesa-pessoa-gerir[aria-expanded="true"])) .avatar { background: var(--m-pilula-2); }
+/* Colunas compartilhadas por todas as linhas: o nível alinha numa coluna só, junto das ações. */
+@media (min-width: 761px) {
+  .mesa-pessoas { grid-template-columns: minmax(0, 1fr) minmax(150px, max-content) minmax(96px, max-content); }
+  .mesa-pessoa { grid-column: 1 / -1; grid-template-columns: subgrid; gap: 10px 28px; }
+  .mesa-pessoa > .mesa-pessoa-quem { grid-column: 1; }
+  .mesa-pessoa > .mesa-pessoa-info { grid-column: 2; }
+  .mesa-pessoa > :nth-child(3) { grid-column: 3; justify-self: end; }
+}
+
 .mesa-filtros { display: flex; flex-wrap: wrap; gap: 10px; align-items: end; }
 .mesa-filtros .campo { margin: 0; min-width: 150px; }
 .mesa-filtros select, .mesa-filtros input { min-height: 40px; padding: 8px 12px; border: 0; border-radius: 12px; background: var(--m-cartao); box-shadow: inset 0 0 0 1px var(--anel); font-size: 14px; }

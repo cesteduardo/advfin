@@ -3,11 +3,11 @@
 /**
  * Revisão do texto ditado: o reconhecimento de voz devolve palavras soltas, sem pontuação
  * e às vezes sem acento. Aqui ele ganha maiúsculas, pontuação, siglas tributárias certas e,
- * com o corretor do Escritor (Hunspell + dicionário VERO, em public/vendor/orto), os acentos
+ * com o corretor do Escritor (Hunspell + dicionário VERO, em public/orto), os acentos
  * que faltaram. A revisão pelo modelo conectado, quando houver, vem depois disto.
  */
 
-const base = () => `${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/vendor/orto`;
+const base = () => `${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/orto`;
 
 /** Pontuação falada ("vírgula", "ponto de interrogação") vira sinal. */
 const FALADA: [RegExp, string][] = [

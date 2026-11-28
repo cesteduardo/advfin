@@ -89,23 +89,41 @@ export function Perguntas() {
 
       <div className="faq-palco vitrine">
         <IPhoneDuo classe="faq-duo">
+          {/* O mesmo chat do app: topo do celular, pergunta em balão marinho, resposta assinada pelo AdvFin e o campo fixo embaixo. */}
           <div className="viewport app tela-ajuda">
-            <div className="app-topo">
+            <div className="ajuda-topo">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h11M4 17h16" /></svg>
               <span className="app-marca">
                 <svg className="simbolo-app" viewBox="0 0 28 28" aria-hidden="true"><rect width="28" height="28" rx="9" fill="#0f2742" /><path d="M8 19.5h12M9.5 17V11.5M14 17V11.5M18.5 17V11.5M7.5 10 14 6.5l6.5 3.5" stroke="#d9bf86" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" fill="none" /></svg>
                 <span>Adv<i>Fin</i></span>
               </span>
-              <span className="app-data">Ajuda</span>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h7M15.5 4.5l4 4L9 19l-5 1 1-5Z" /></svg>
             </div>
             <div className="ajuda-conversa" key={aberta}>
               <p className="bolha eu">{atual.p}</p>
-              <p className="bolha ia">{atual.curta}</p>
+              <div className="ajuda-resposta">
+                <p className="ajuda-autor"><svg className="simbolo-app" viewBox="0 0 28 28" aria-hidden="true"><rect width="28" height="28" rx="9" fill="#0f2742" /><path d="M8 19.5h12M9.5 17V11.5M14 17V11.5M18.5 17V11.5M7.5 10 14 6.5l6.5 3.5" stroke="#d9bf86" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" fill="none" /></svg> AdvFin</p>
+                <p>{atual.curta}</p>
+              </div>
               <p className="ajuda-rotulo">Outras dúvidas</p>
               <div className="ajuda-sugestoes">
                 {proximas.map((q) => (
-                  <span key={q.p}>{q.p}</span>
+                  <span key={q.p}>
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5" /><path d="m16 16 4.5 4.5" /></svg>
+                    {q.p}
+                  </span>
                 ))}
               </div>
+            </div>
+            <div className="ajuda-campo" aria-hidden="true">
+              <span>Responder ou perguntar outra coisa…</span>
+              <span className="ajuda-campo-pe">
+                <i className="ajuda-mais">+</i>
+                <span>
+                  <svg viewBox="0 0 24 24"><rect x="9" y="3.5" width="6" height="11" rx="3" /><path d="M6 11.5a6 6 0 0 0 12 0M12 17.5V20" /></svg>
+                  <b><svg viewBox="0 0 16 16"><path d="M8 13V3M3.5 7.5 8 3l4.5 4.5" /></svg></b>
+                </span>
+              </span>
             </div>
           </div>
         </IPhoneDuo>

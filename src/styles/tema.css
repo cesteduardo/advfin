@@ -308,8 +308,44 @@
 [data-tema="escuro"] .tema-chave .tema-pilula { background: #2e3a52; box-shadow: 0 2px 8px -3px rgb(0 0 0 / .6); }
 @media (prefers-reduced-motion: reduce) { .tema-chave[data-pronta] .tema-pilula { transition: none; } }
 
-/* Troca de tema suave: só durante a troca, todas as cores atravessam juntas. */
+/* Troca de tema: revelação circular numa só imagem (View Transitions). Sem ela, cores atravessam juntas. */
+html.vt-tema::view-transition-old(root), html.vt-tema::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
+html.vt-tema::view-transition-old(root) { z-index: 1; }
+html.vt-tema::view-transition-new(root) { z-index: 2; }
 html.tema-trocando, html.tema-trocando *, html.tema-trocando *::before, html.tema-trocando *::after {
-  transition: background-color .28s ease, color .28s ease, border-color .28s ease, fill .28s ease, stroke .28s ease, box-shadow .28s ease !important;
+  transition: background-color .38s ease, color .38s ease, border-color .38s ease, fill .38s ease, stroke .38s ease, box-shadow .38s ease !important;
 }
 html.tema-trocando .tema-chave[data-pronta] .tema-pilula { transition: transform .42s cubic-bezier(.34, 1.4, .64, 1), width .42s cubic-bezier(.34, 1.4, .64, 1), background-color .28s ease !important; }
+.pesquisa-sem-fonte { display: flex; gap: 10px; align-items: flex-start; margin: 2px 0 4px; padding: 10px 14px; border-radius: 12px; background: var(--ouro-fundo); color: var(--ink-2); font-size: 13.5px; line-height: 1.45; }
+.pesquisa-sem-fonte > span { display: grid; place-items: center; flex: none; width: 20px; height: 20px; border-radius: 50%; background: var(--ouro); color: var(--marinho); font-size: 12px; font-weight: 800; }
+[data-tema="escuro"] .pesquisa-sem-fonte { background: rgb(217 191 134 / .1); color: var(--ink); }
+
+/* Caso: voltar discreto acima do título, barra de pergunta, conversas e notas da equipe. */
+.mesa-voltar { display: inline-flex; align-items: center; gap: 6px; margin: 0 0 6px; padding: 4px 2px; border: 0; background: none; color: var(--muted); font: inherit; font-size: 13.5px; font-weight: 600; cursor: pointer; transition: color .2s var(--ease); }
+.mesa-voltar:hover { color: var(--ink); }
+.mesa-voltar span { transition: transform .25s var(--ease); }
+.mesa-voltar:hover span { transform: translateX(-3px); }
+.mesa-voltar:focus-visible { outline: 2px solid var(--azul); outline-offset: 2px; border-radius: 6px; }
+.caso-pergunta { display: flex; align-items: flex-end; gap: 10px; margin: 4px 0 22px; padding: 10px 10px 10px 18px; }
+.caso-pergunta textarea { flex: 1; min-height: 40px; padding: 9px 0; border: 0; background: transparent; color: var(--ink); font: inherit; font-size: 15.5px; line-height: 1.45; resize: none; }
+.caso-pergunta textarea:focus { outline: none; }
+.caso-coluna { display: grid; gap: 18px; align-content: start; }
+.caso-conversas { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.caso-conversa { display: grid; gap: 4px; padding: 14px 18px; border-radius: 16px; background: var(--m-cartao); color: var(--ink); text-decoration: none; box-shadow: 0 0 0 1px var(--anel); transition: background-color .2s var(--ease), transform .25s var(--ease); }
+a.caso-conversa:hover { background: var(--m-pilula); }
+.caso-conversa strong { font-size: 15px; }
+.caso-conversa-resposta { color: var(--ink-2); font-size: 14px; line-height: 1.5; }
+.caso-conversa-meta { color: var(--muted); font-size: 12.5px; }
+.caso-conversa-antiga { opacity: .75; }
+.caso-notas { display: grid; gap: 8px; margin: 0 0 12px; padding: 0; list-style: none; }
+.caso-nota { display: flex; gap: 12px; align-items: flex-start; padding: 14px 16px; border-radius: 16px; background: var(--m-cartao); box-shadow: 0 0 0 1px var(--anel); }
+.caso-nota > div { min-width: 0; flex: 1; }
+.caso-nota-topo { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; margin: 0 0 4px; font-size: 14px; }
+.caso-nota-topo time { color: var(--muted); font-size: 12.5px; }
+.caso-nota-apagar { margin-left: auto; padding: 2px 8px; border: 0; border-radius: 8px; background: none; color: var(--muted); font: inherit; font-size: 12.5px; cursor: pointer; }
+.caso-nota-apagar:hover { background: var(--m-pilula); color: var(--ink); }
+.caso-nota-texto { margin: 0; color: var(--ink-2); font-size: 14.5px; line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; }
+.caso-nota-nova { display: grid; gap: 8px; }
+.caso-nota-nova textarea { width: 100%; min-height: 68px; padding: 12px 14px; border: 0; border-radius: 14px; background: var(--m-cartao); color: var(--ink); font: inherit; font-size: 14.5px; line-height: 1.5; resize: vertical; box-shadow: inset 0 0 0 1px var(--anel); }
+.caso-nota-nova textarea:focus { outline: none; box-shadow: inset 0 0 0 1.5px var(--enfase); }
+[data-tema="escuro"] .caso-nota-nova textarea { background: var(--m-fundo-2); }

@@ -46,6 +46,8 @@ export type DesfechoPesquisa =
     }
   | { status: "bloqueada_citacao"; id: string; motivos: string[]; fontes: Trecho[]; modelo: string }
   | { status: "sem_resultado"; id: string; fontes: [] }
+  /** Conversa livre do modelo, sem dispositivo da base por trás: nunca leva marca de fonte. */
+  | { status: "conversa"; id: string; paragrafos: string[]; fontes: Trecho[]; modelo: string }
   | { status: "erro"; id: string; mensagem: string; fontes: Trecho[] };
 
 /** Bastidores de uma consulta, para a página de desenvolvedor. Nunca vai para o advogado. */

@@ -5,15 +5,15 @@ import { chaveVozServidor } from "@/lib/anexos/voz-servidor";
 
 export const metadata = { title: "Pesquisa — AdvFin" };
 
-export default async function PaginaPesquisa({ searchParams }: { searchParams: Promise<{ caso?: string }> }) {
+export default async function PaginaPesquisa({ searchParams }: { searchParams: Promise<{ caso?: string; q?: string }> }) {
   const s = await exigirSessao();
-  const { caso } = await searchParams;
+  const { caso, q } = await searchParams;
   // Só os casos que a pessoa vê (RLS); o banco recusa de novo um caso invisível na hora de gravar.
   const casos = await noEscritorio(s, async (c) => (await c.query(`select id, titulo from casos order by criado_em desc limit 100`)).rows);
   return (
     <>
       <h1 className="so-leitor">Pesquisa fundamentada</h1>
-      <Pesquisa nome={s.nome.split(" ")[0]} dataInicial={vigenciaPadrao(s.preferencias)} casos={casos} casoInicial={casos.some((c) => c.id === caso) ? caso : undefined} voz={!!chaveVozServidor()} />
+      <Pesquisa nome={s.nome.split(" ")[0]} dataInicial={vigenciaPadrao(s.preferencias)} casos={casos} casoInicial={casos.some((c) => c.id === caso) ? caso : undefined} voz={!!chaveVozServidor()} perguntaInicial={q?.slice(0, 2000)} />
     </>
   );
 }

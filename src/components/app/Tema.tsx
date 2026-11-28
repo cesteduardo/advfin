@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 import { Icone, type NomeIcone } from "./Icone";
 
 /**
@@ -24,17 +25,42 @@ function ler(): Preferencia {
   }
 }
 
-/** Troca de tema feita pela pessoa: as cores atravessam em ~280 ms, sem piscar. */
-function suavizar() {
-  if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+type Transicao = { ready: Promise<void>; finished: Promise<void>; updateCallbackDone: Promise<void> };
+type DocVT = Document & { startViewTransition?: (f: () => void) => Transicao };
+
+/**
+ * Troca de tema feita pela pessoa: o novo tema se revela num círculo que nasce do botão
+ * clicado, numa só imagem (nada muda antes do resto). Sem View Transitions, as cores
+ * atravessam juntas; com movimento reduzido, troca na hora.
+ */
+function trocarSuave(mudar: () => void, origem?: { x: number; y: number }) {
+  const doc = document as DocVT;
   const h = document.documentElement;
-  h.classList.add("tema-trocando");
-  clearTimeout((window as unknown as { __temaT?: number }).__temaT);
-  (window as unknown as { __temaT?: number }).__temaT = window.setTimeout(() => h.classList.remove("tema-trocando"), 340);
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) return mudar();
+  if (!doc.startViewTransition) {
+    h.classList.add("tema-trocando");
+    mudar();
+    window.setTimeout(() => h.classList.remove("tema-trocando"), 420);
+    return;
+  }
+  const x = origem?.x ?? innerWidth / 2;
+  const y = origem?.y ?? innerHeight / 2;
+  const raio = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y));
+  h.classList.add("vt-tema");
+  const vt = doc.startViewTransition(() => flushSync(mudar));
+  vt.ready
+    .then(() => {
+      h.animate(
+        { clipPath: [`circle(0px at ${x}px ${y}px)`, `circle(${raio}px at ${x}px ${y}px)`] },
+        { duration: 560, easing: "cubic-bezier(.65, 0, .35, 1)", pseudoElement: "::view-transition-new(root)" },
+      );
+    })
+    .catch(() => {});
+  vt.finished.finally(() => h.classList.remove("vt-tema")).catch(() => {});
+  vt.updateCallbackDone.catch(() => {});
 }
 
-function aplicar(p: Preferencia, suave = false) {
-  if (suave) suavizar();
+function aplicar(p: Preferencia) {
   const escuro = p === "escuro" || (p === "sistema" && sistemaEscuro());
   document.documentElement.dataset.tema = escuro ? "escuro" : "claro";
   document.querySelector('meta[name="theme-color"]')?.setAttribute("content", escuro ? "#080b11" : "#0f2742");
@@ -67,13 +93,19 @@ const OPCOES: { p: Preferencia; icone: NomeIcone; rotulo: string }[] = [
 export function ChaveTema() {
   const [pref, setPref] = useState<Preferencia>("sistema");
   useEffect(() => setPref(ler()), []);
-  const escolher = (p: Preferencia) => {
-    setPref(p);
+  const escolher = (p: Preferencia, e?: React.MouseEvent<HTMLButtonElement>) => {
     try {
       if (p === "sistema") localStorage.removeItem(CHAVE);
       else localStorage.setItem(CHAVE, p);
     } catch {}
-    aplicar(p, true);
+    const r = e?.currentTarget.getBoundingClientRect();
+    trocarSuave(
+      () => {
+        setPref(p);
+        aplicar(p);
+      },
+      r ? { x: r.left + r.width / 2, y: r.top + r.height / 2 } : undefined,
+    );
   };
   // A pílula desliza até a opção escolhida, como nas abas e na dock.
   const trilha = useRef<HTMLSpanElement>(null);
@@ -90,7 +122,7 @@ export function ChaveTema() {
     <span className="tema-chave" role="group" aria-label="Tema" ref={trilha} data-pronta={pronta ? "" : undefined}>
       <span className="tema-pilula" aria-hidden="true" />
       {OPCOES.map((o) => (
-        <button key={o.p} type="button" aria-pressed={pref === o.p} aria-label={o.rotulo} title={o.rotulo} onClick={() => escolher(o.p)}>
+        <button key={o.p} type="button" aria-pressed={pref === o.p} aria-label={o.rotulo} title={o.rotulo} onClick={(e) => escolher(o.p, e)}>
           <Icone nome={o.icone} />
         </button>
       ))}

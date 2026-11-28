@@ -44,6 +44,7 @@ function Status({ d }: { d: DesfechoPesquisa | { status: "invalida"; mensagem: s
     sem_resultado: ["premissa", "Sem dispositivos recuperados"],
     erro: ["bloqueada", "Erro"],
     invalida: ["premissa", "Pergunta inválida"],
+    conversa: ["premissa", "Conversa sem fonte verificada"],
   };
   const [classe, rotulo] = mapa[d.status];
   return <span className={`selo ${classe}`}>{rotulo}</span>;
@@ -87,6 +88,7 @@ export function RodadaView({ rodada }: { rodada: Rodada }) {
         </div>
       )}
       {(d.status === "erro" || d.status === "invalida") && <p className="alerta erro">{d.mensagem}</p>}
+      {d.status === "conversa" && d.paragrafos.map((x, i) => <p key={i}>{x}</p>)}
       {g?.erro && <p className="alerta erro">Erro técnico: {g.erro}</p>}
 
       {"fontes" in d && d.fontes.length > 0 && (
